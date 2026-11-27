@@ -25,6 +25,18 @@ const player = add([
 loadEnemySprites();
 const enemyDirector = startEnemyDirector();
 
+// TEMP until the cycle director (portal → shop → next wave) exists:
+// start wave 1, and start the next wave a few seconds after each one ends.
+const TEMP_WAVE_GAP = 3; // s
+enemyDirector.startWave(1);
+getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
+  console.log(`wave ${wave} ended (${reason}), ${kills} kills`);
+  wait(TEMP_WAVE_GAP, () => {
+    enemyDirector.clear();
+    enemyDirector.startWave(wave + 1);
+  });
+});
+
 // TEMP debug until weapons.js lands: click an enemy to hurt it, log drops.
 onMousePress(() => {
   const m = toWorld(mousePos());
@@ -50,5 +62,9 @@ add([
 const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
 debugLabel.onUpdate(() => {
   const types = enemyDirector.activeTypes().map((t) => `${t} ${enemyDirector.alive(t)}`);
-  debugLabel.text = `enemy lvl ${enemyDirector.level()} · alive ${enemyDirector.alive()} · ${types.join(" · ")}`;
+  const d = enemyDirector;
+  const status = d.inWave()
+    ? `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.remaining()} remaining`
+    : `wave ${d.wave()} over — next wave soon`;
+  debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}`;
 });
