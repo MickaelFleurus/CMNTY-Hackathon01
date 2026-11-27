@@ -8,8 +8,11 @@
 //   walk back.
 // - During the break, getting close to the golem (< CYCLE.shopRadius from its
 //   body) opens the shop.
-// - Closing the shop (pick or skip) starts the next wave after
-//   CYCLE.nextWaveDelay.
+// - While the shop is open the game is paused (CYCLE.pauseInShop): the time
+//   scale is 0, so everything driven by dt (movement, timers, animations,
+//   coins, respawn countdown) stops, while input still reaches the shop UI.
+// - Closing the shop (pick or skip) resumes the game and starts the next wave
+//   after CYCLE.nextWaveDelay.
 // - On "run-over" everything stops.
 //
 // Contract (root events, no imports between systems):
@@ -32,6 +35,19 @@ export function startCycle() {
   const setPhase = (p, extra = {}) => {
     phase = p;
     root.trigger("cycle-phase", { phase: p, wave, ...extra });
+  };
+
+  // Pause while the shop is open: time scale 0, restored on close.
+  let savedTimeScale = null;
+  const pauseGame = () => {
+    if (!CYCLE.pauseInShop || savedTimeScale !== null) return;
+    savedTimeScale = debug.timeScale;
+    debug.timeScale = 0;
+  };
+  const resumeGame = () => {
+    if (savedTimeScale === null) return;
+    debug.timeScale = savedTimeScale;
+    savedTimeScale = null;
   };
 
   const base = () => get("base")[0];
@@ -69,6 +85,7 @@ export function startCycle() {
   });
 
   root.on("shop-close", () => {
+    resumeGame();
     if (phase !== "shop" || over) return;
     setPhase("starting");
     wait(CYCLE.nextWaveDelay, () => {
@@ -88,6 +105,7 @@ export function startCycle() {
     if (!p || p.down || p.frozen) return;
     if (distToBase() <= CYCLE.shopRadius) {
       setPhase("shop");
+      pauseGame();
       root.trigger("shop-open");
     }
   });
