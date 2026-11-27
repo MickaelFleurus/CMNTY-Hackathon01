@@ -6,6 +6,8 @@
 // Contract (no imports between systems):
 //   - attaches to the object tagged "base" (base.js) once it exists: adds
 //     health() + the "tower" tag → enemies.js targets it and hits it on contact
+//   - base.solidRect() → { x0, y0, x1, y1 }: the golem's visible body in world
+//     px (TOWER.body). Solid for enemies (enemies.js) and the player (here).
 //   - listens to getTreeRoot().on("shop-pick", { quadrant: "active-offense", level, params })
 //   - shots are "projectile"s with { damage } → enemies.js applies the hit
 //   - on destruction: getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })
@@ -13,6 +15,7 @@
 import boltUrl from "../../gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Magic_Bolt.png";
 import { TOWER } from "../config.js";
 import { levelStat, resolveStats } from "../util/levelStat.js";
+import { pushOutOfRect } from "../util/solid.js";
 
 const QUADRANT = "active-offense";
 const BOLT = "tower-bolt";
@@ -51,7 +54,13 @@ export function startTower() {
       if (base) tower = arm(base);
       return;
     }
-    if (over || !tower.exists()) return;
+    if (!tower.exists()) return;
+
+    // the player can't walk through the golem (it stays solid after the fall)
+    const player = get("player")[0];
+    if (player) pushOutOfRect(player, tower.solidRect(), TOWER.playerRadius);
+
+    if (over) return;
 
     cooldown -= dt();
     if (!shot || cooldown > 0) return;
@@ -65,6 +74,7 @@ export function startTower() {
   function arm(base) {
     const hp = maxHpFor(picks);
     base.use(health(hp, hp));
+    base.solidRect = () => solidRect(base);
     if (!base.has("color")) base.use(color(255, 255, 255)); // for the hurt flash
     base.tag("tower");
 
@@ -92,10 +102,10 @@ export function startTower() {
       {
         draw() {
           if (!base.exists()) return;
-          const box = base.worldArea().bbox();
-          const w = Math.max(60, box.width * 0.8);
-          const x = box.pos.x + box.width / 2 - w / 2;
-          const y = box.pos.y - 12;
+          const r = base.solidRect(); // sits just above the golem's head
+          const w = Math.max(60, (r.x1 - r.x0) * 0.8);
+          const x = (r.x0 + r.x1) / 2 - w / 2;
+          const y = r.y0 - 10;
           const ratio = Math.max(0, base.hp() / base.maxHP());
           drawRect({ pos: vec2(x - 1, y - 1), width: w + 2, height: 8, color: rgb(34, 24, 48) });
           drawRect({
@@ -110,6 +120,20 @@ export function startTower() {
 
     return base;
   }
+}
+
+/** The golem's visible body in world px: its area box minus TOWER.body insets. */
+function solidRect(base) {
+  const b = base.worldArea().bbox();
+  const { cell, left, top, right, bottom } = TOWER.body;
+  const sx = b.width / cell;
+  const sy = b.height / cell;
+  return {
+    x0: b.pos.x + left * sx,
+    y0: b.pos.y + top * sy,
+    x1: b.pos.x + b.width - right * sx,
+    y1: b.pos.y + b.height - bottom * sy,
+  };
 }
 
 /** Visual center of the base (its anchor is "bot"). */
