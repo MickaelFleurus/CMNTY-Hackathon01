@@ -27,6 +27,15 @@
 - Real assets go in `assets/`; keep individual files small (<200KB) for now.
 - Never commit generated/binary junk (`dist/`, `node_modules/`, OS junk).
 
+## Dev playtest switches
+
+On the dev server only (`npm run dev`; compiled out of production builds),
+see `src/systems/devtools.js`:
+
+- **K** toggles the player's attack on/off. `?noattack` in the URL starts with
+  it off. Useful to playtest enemies, the base/tower and auras without the
+  pistol clearing everything.
+
 ## Testing / verification
 
 Run `npm test` — it chains both gates (on the hackathon machine use

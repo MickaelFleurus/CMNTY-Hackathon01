@@ -390,3 +390,10 @@ export const ENEMY_TARGETING = {
 export const RESPAWN = {
   steps: [3, 5, 8, 12, 18], // s
 };
+
+// ---------------------------------------------------------------------------
+// Dev-only playtest switches (src/systems/devtools.js; dev server only)
+// ---------------------------------------------------------------------------
+export const DEV = {
+  toggleAttackKey: "k", // toggle the player's attack (also ?noattack in the URL)
+};

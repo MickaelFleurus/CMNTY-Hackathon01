@@ -10,6 +10,7 @@ import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
 import { startRespawn } from "./systems/respawn.js";
 import { startRunState } from "./systems/runstate.js";
+import { startDevTools } from "./systems/devtools.js";
 import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
@@ -63,6 +64,7 @@ startRegen();
 startTower();
 startRespawn(player);
 startRunState(player);
+startDevTools(player);
 
 // TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
 const TEMP_PICK_KEYS = {
