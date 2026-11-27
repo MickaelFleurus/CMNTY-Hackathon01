@@ -346,8 +346,10 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     const toTarget = goal.add(enemy.chaseOffset);
     const dist = toTarget.len();
     // Stop on arrival instead of jittering back and forth over the point.
-    if (dist > 1) enemy.move(toTarget.scale(Math.min(speed, dist / dt()) / dist));
+    const stepSpeed = dist > 1 && dt() > 0 ? Math.min(speed, dist / dt()) : 0;
+    if (stepSpeed > 0) enemy.move(toTarget.scale(stepSpeed / dist));
     enemy.flipX = goal.x < 0; // art faces right (always face the target)
+    updateMoveAnimSpeed(enemy, stepSpeed);
 
     // The tower is solid: never let an enemy (sprite) overlap it.
     if (targets.tower.avail) pushOutOfRect(enemy, targets.tower.rect, enemy.bodyRadius);
@@ -355,6 +357,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
 
   enemy.onHurt(() => {
     if (enemy.dead || enemy.hp() <= 0) return;
+    enemy.animSpeed = 1;
     enemy.play("hit");
   });
 
@@ -398,10 +401,23 @@ function killEnemy(enemy) {
 }
 
 /** Take an enemy out of play and play its death anim (destroyed at the end). */
+/** Move-anim speed follows the actual movement speed (ENEMY.anim). */
+function updateMoveAnimSpeed(enemy, moveSpeed) {
+  if (dt() === 0) return;
+  if (enemy.curAnim() !== "move") {
+    enemy.animSpeed = 1; // hit/death play at their authored speed
+    return;
+  }
+  const a = ENEMY.anim;
+  const goal = Math.min(a.max, Math.max(a.idle, moveSpeed / a.refSpeed));
+  enemy.animSpeed += (goal - enemy.animSpeed) * (1 - Math.exp(-a.easeRate * dt()));
+}
+
 function playDeath(enemy) {
   // Out of play: no more targeting / hits while the death anim runs.
   enemy.untag("enemy");
   enemy.tag("enemy-dying");
+  enemy.animSpeed = 1;
   enemy.play("death");
 }
 

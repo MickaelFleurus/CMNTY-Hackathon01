@@ -20,6 +20,17 @@ export const ENEMY = {
   // the overlapping horde fans out a bit instead of stacking on one pixel.
   chaseOffset: 18,
 
+  // Move-animation speed follows how fast the enemy actually moves:
+  // animSpeed = actual speed / refSpeed, clamped to [idle, max], eased.
+  // So bats flap faster than zombies, golems lumber, enemies slowed by an aura
+  // animate slower, and enemies standing still (attacking) idle gently.
+  anim: {
+    refSpeed: 70, // px/s that plays the art at its normal 8 fps (zombie speed)
+    idle: 0.35, // multiplier when standing still
+    max: 2.2,
+    easeRate: 8, // 1/s, how fast it adapts
+  },
+
   // Optional soft spacing between enemies. 0 = off (enemies overlap freely).
   // Try ~16-22 for a spread-out crowd; costs a little CPU.
   separationRadius: 0,
