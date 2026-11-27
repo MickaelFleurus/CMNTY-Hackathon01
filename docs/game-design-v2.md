@@ -285,6 +285,52 @@ being hit and how much HP it has left:
   tower HP bar, so they can watch whether the tower will hold until they're
   back.
 
+## The golem awakening flow (revising the run structure)
+
+The base starts as an **inert golem statue**, and the run opens in classic
+survivors mode. This changes the early game and adds a golem identity pick:
+
+- **Wave 1 is player-only.** Enemies attack only the player, and the
+  statue ignores (and is ignored by) them. Losing this wave is a real
+  run-over — **no respawn yet**, deaths only become a respawn timer once
+  the golem is awake and is your life total.
+- **At the end of wave 1** the golem reanimates, and the player picks
+  **1 of 3 golem styles** for this life:
+  - **Guardian** (passive-centered): defensive auras and shields,
+    protects the player while they roam near it.
+  - **Berserker** (offense-centered): fights mobs itself — swipes,
+    charges, kills for you.
+  - a third style (open — e.g. **Warden**: crowd-control/slow, or
+    **Summoner**: spawns helpers). To iterate with playtests.
+- The style **can't be changed until you die** (new run = new pick), so
+  the choice shapes the whole run like the shop quadrants do.
+- **Golem self-defense (all styles, built in):** a Minecraft-golem-style
+  **AOE knockback swipe** — anything that hits the golem gets flung far
+  away (optionally a small amount of damage). Reason: without it the
+  golem is guaranteed to die once enough mobs surround it; the swipe
+  keeps the ring of enemies at bay so the tower's death is a slow
+  pressure race, not an instant loss.
+- **Wave-1 alternative (not decided — don't build unless we agree the
+  golem mechanic isn't fun early):** keep the statue as a pure
+  **respawn point**; the golem "activates" fully after wave 5 instead.
+  Parked until playtested.
+- **Golem skill tree (later, needs wave-5+ pacing):** after roughly 5
+  waves with a golem style picked, spend currency on **per-style skill
+  trees** — e.g. Berserker unlocks a flamethrower or lifesteal (the
+  more enemies it damages/kills, the more HP you/the golem regain);
+  Guardian unlocks stronger auras/shields. The existing shop-pick
+  upgrades and the tree should not duplicate each other — shop = generic
+  power, tree = style identity.
+- **Upgrade UI rework:** the current golem upgrade interface is rough.
+  Rebuild it as the skill tree UI, **keyboard-driven** (keys 1–9 per
+  node, visible key hints on each node), same interaction style as the
+  level-up screen.
+
+Open question for review: do golem styles *replace* the 2×2
+passive/active shop grid, or sit on top of it as a separate layer?
+(Working answer: sit on top — the shop stays generic; the golem style is
+the run's identity pick.)
+
 ## Boss + gimmick sketch (needs iteration)
 
 - Boss waves are announced a wave ahead (HUD warning) so the player can shop
