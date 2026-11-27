@@ -397,6 +397,43 @@ export const RESPAWN = {
 };
 
 // ---------------------------------------------------------------------------
+// XP, pickups, level up, HUD (owner: chippe — src/systems/{xp,upgrades,hud}.js)
+// ---------------------------------------------------------------------------
+export const XP = {
+  firstLevel: 5, // xp needed to reach level 2
+  levelStep: 5, // extra xp needed per level after that
+  pickupRadius: 90, // px; pickups inside this fly to the player
+  collectRadius: 20, // px; pickups this close are collected
+  magnetSpeed: 420, // px/s when a pickup flies to the player
+  pickupScale: 3, // sprite scale (16px art)
+  pickupLifetime: 60, // s before an uncollected pickup despawns
+  heartHeal: 20, // hp restored by a "heart" drop
+};
+
+// Drop kind (from enemies.js "drop" event) -> pickup sprite file
+export const PICKUP_SPRITES = {
+  "xp-blue": "Pickup_XP_Blue.png",
+  "xp-green": "Pickup_XP_Green.png",
+  "xp-red": "Pickup_XP_Red.png",
+  "xp-purple": "Pickup_XP_Purple_Big.png",
+  heart: "Pickup_Heart.png",
+};
+
+export const UPGRADE = {
+  choices: 3, // cards shown per level up
+  magnetBonus: 40, // pickup radius added per Magnet level
+};
+
+export const HUD = {
+  margin: 16,
+  textSize: 22,
+  xpBarHeight: 10,
+  hpBarWidth: 40, // px, drawn under the player
+  hpBarHeight: 5,
+  hpBarOffset: 22, // px below the player's center
+};
+
+// ---------------------------------------------------------------------------
 // Dev-only playtest switches (src/systems/devtools.js; dev server only)
 // ---------------------------------------------------------------------------
 export const DEV = {

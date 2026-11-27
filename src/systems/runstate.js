@@ -19,7 +19,7 @@
 
 // Objects that move or animate on their own: paused in place with the run.
 // (The camera stops itself on "run-over" in camera.js.)
-const FROZEN_TAGS = ["coin", "portal", "aura", "base"];
+const FROZEN_TAGS = ["coin", "portal", "aura", "base", "xp-gem", "pickup"];
 
 // Short-lived objects with lifespan(): KAPLAY destroys those from a global
 // timer that pausing doesn't stop, so a "frozen" knife would still vanish a

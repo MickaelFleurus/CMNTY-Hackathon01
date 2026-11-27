@@ -5,6 +5,9 @@ import { followCamera } from "./systems/camera.js";
 import { makePlayer } from "./systems/player.js";
 import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
+import { loadXpAssets, initXp } from "./systems/xp.js";
+import { loadUpgradeAssets, initUpgrades } from "./systems/upgrades.js";
+import { initHud } from "./systems/hud.js";
 import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
@@ -50,6 +53,8 @@ loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_
   anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
 });
 loadEnemySprites();
+loadXpAssets();
+loadUpgradeAssets();
 loadTowerSprites();
 loadBaseSprites();
 loadPortalSprites();
@@ -59,6 +64,9 @@ buildGround();
 const player = makePlayer();
 followCamera(player);
 makeWeapon(player);
+initXp();
+initUpgrades();
+initHud();
 const enemyDirector = startEnemyDirector();
 startAuras();
 startRegen();
@@ -74,9 +82,13 @@ const TEMP_PICK_KEYS = {
   3: "active-defense",
   4: "active-offense",
 };
+// Global key handlers still fire while the level up screen pauses the game
+// (upgrades.js uses keys 1-3), so the TEMP debug keys skip while paused.
+const gamePaused = () => getTreeRoot().paused;
 const tempPickLevels = {};
 for (const [key, quadrant] of Object.entries(TEMP_PICK_KEYS)) {
   onKeyPress(key, () => {
+    if (gamePaused()) return;
     const level = (tempPickLevels[quadrant] = (tempPickLevels[quadrant] ?? 0) + 1);
     getTreeRoot().trigger("shop-pick", { id: `temp-${quadrant}`, quadrant, level, params: {} });
     console.log(`shop-pick ${quadrant} lvl ${level}`);
@@ -109,8 +121,11 @@ add([
 ]);
 
 // TEMP debug: P teleports home. C grants 50 coins.
-onKeyPress("c", () => addCoins(50));
+onKeyPress("c", () => {
+  if (!gamePaused()) addCoins(50);
+});
 onKeyPress("p", () => {
+  if (gamePaused()) return;
   const p = get("player")[0];
   if (p) p.pos = vec2(SHOP.home.x + 80, SHOP.home.y);
 });
