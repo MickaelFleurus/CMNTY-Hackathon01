@@ -25,6 +25,12 @@ case "$cmd" in
     title=${2:-}
     git fetch "$REPO"
     git rebase "$REPO/$MAIN"
+    # Cross-system contracts (docs/tasks.md). Breaks gameplay silently if
+    # violated, so it blocks the push. See AGENTS.md "Before you open or merge".
+    if ! node scripts/check-contracts.mjs; then
+      echo "✗ fix the contract violations above (rebased on latest $MAIN), then run finish again" >&2
+      exit 1
+    fi
     git push -u "$REPO" HEAD
     if ! gh pr list --head "$(git branch --show-current)" --state open | grep -q .; then
       if [ -n "$title" ]; then
