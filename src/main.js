@@ -9,6 +9,7 @@ import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
 import { startRespawn } from "./systems/respawn.js";
+import { startRunState } from "./systems/runstate.js";
 import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
@@ -61,6 +62,7 @@ startAuras();
 startRegen();
 startTower();
 startRespawn(player);
+startRunState(player);
 
 // TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
 const TEMP_PICK_KEYS = {
@@ -124,7 +126,9 @@ const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
 debugLabel.onUpdate(() => {
   const types = enemyDirector.activeTypes().map((t) => `${t} ${enemyDirector.alive(t)}`);
   const d = enemyDirector;
-  const status = d.inWave()
+  const status = d.isOver()
+    ? `RUN OVER on wave ${d.wave()} · timer stopped at ${Math.ceil(d.timeLeft())}s`
+    : d.inWave()
     ? `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.remaining()} remaining`
     : `wave ${d.wave()} over — next wave soon`;
   const tc = targetCounts();
