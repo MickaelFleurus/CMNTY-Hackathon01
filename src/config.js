@@ -187,3 +187,37 @@ export const ENEMY_DROPS = [
   { kind: "xp-red", base: 0.0, perLevel: 0.005, max: 0.1, value: 10 },
   { kind: "heart", base: 0.01, perLevel: 0.0, max: 0.01, value: 0 },
 ];
+
+// ---------------------------------------------------------------------------
+// Player + weapon + map (owner: Akram — src/systems/{player,weapons,map}.js)
+// ---------------------------------------------------------------------------
+export const CFG = {
+  viewport: { width: 1280, height: 720 },
+
+  player: {
+    speed: 220, // px/s
+    maxHp: 100,
+    scale: 2, // sprite scale (16px art -> 32px on screen)
+  },
+
+  weapon: {
+    fireInterval: 1.0, // seconds between pistol shots
+    projectileSpeed: 480, // px/s
+    damage: 10,
+    range: 360, // px — acquire nearest enemy within this distance
+  },
+
+  map: {
+    // "infinite" gray zone: tiles are repositioned around the camera each frame
+    tileSize: 16, // source art is 16px; scaled by map.tileScale below
+    tileScale: 3, // 16px art -> 48px on screen
+    gridW: 30, // tiles across the visible band
+    gridH: 18, // tiles down the visible band
+  },
+
+  joystick: {
+    baseRadius: 60,
+    knobRadius: 28,
+    maxDrag: 56, // px from base center at which knob reads full input
+  },
+};

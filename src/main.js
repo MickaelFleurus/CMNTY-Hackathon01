@@ -1,10 +1,14 @@
 import kaplay from "kaplay";
+import { CFG } from "./config.js";
+import { buildGround } from "./systems/map.js";
+import { makePlayer } from "./systems/player.js";
+import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 
 kaplay({
   background: [26, 26, 38],
-  width: 1280,
-  height: 720,
+  width: CFG.viewport.width,
+  height: CFG.viewport.height,
   crisp: true,
   // Collision broadphase cell size (default 64). Enemies are ~24px and pack
   // densely around the player; 32px cells cut the pair checks roughly in half
@@ -12,17 +16,32 @@ kaplay({
   hashGridSize: 32,
 });
 
-// TODO: replace with real sprites — temporary colored squares for now
-const player = add([
-  rect(24, 24),
-  color(125, 255, 125),
-  pos(center()),
-  area(),
-  body(),
-  "player",
-]);
-
+// --- assets (Survivors Starter Kit, see docs/assets.md) ---
+// full character sheet (96x64): 6 cols x 4 rows, one animation per row
+// idle r0(4f) walk r1(4f) hit r2(2f) death r3(6f) — frame indices for sliceX:6
+loadSprite("hero-knight", "gfx/SurvivorsStarterKit_v1.0/Heroes/Hero_Knight.png", {
+  sliceX: 6,
+  sliceY: 4,
+  anims: {
+    idle: { from: 0, to: 3, loop: true, speed: 6 },
+    walk: { from: 6, to: 9, loop: true, speed: 10 },
+    hit: { from: 12, to: 13, speed: 12 },
+    death: { from: 18, to: 23, speed: 12 },
+  },
+});
+loadSprite("tiles-grass", "gfx/SurvivorsStarterKit_v1.0/Tiles/Tiles_Grass_16px.png", {
+  sliceY: 2, // row 0: 4 seamless variants; row 1: decorated
+  sliceX: 4,
+});
+loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Knife.png", {
+  sliceX: 4,
+  anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
+});
 loadEnemySprites();
+
+buildGround();
+const player = makePlayer();
+makeWeapon(player);
 const enemyDirector = startEnemyDirector();
 
 // TEMP until the cycle director (portal → shop → next wave) exists:
@@ -37,26 +56,12 @@ getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
   });
 });
 
-// TEMP debug until weapons.js lands: click an enemy to hurt it, log drops.
-onMousePress(() => {
-  const m = toWorld(mousePos());
-  for (const e of get("enemy")) if (e.pos.dist(m) < 16) e.hurt(1);
-});
-// TEMP debug: B fires the external "bat-swarm" spawn trigger.
-onKeyPress("b", () => getTreeRoot().trigger("enemy-trigger", "bat-swarm"));
-on("drop", "enemy", (_, drop) => console.log("drop", drop.kind, drop.value));
-
-let speed = 300;
-onKeyDown("left", () => player.move(-speed, 0));
-onKeyDown("right", () => player.move(speed, 0));
-onKeyDown("up", () => player.move(0, -speed));
-onKeyDown("down", () => player.move(0, speed));
-
 add([
-  text("Vampire Survivors — KAPLAY scaffolding\nWASD / arrows to move", {
-    size: 24,
+  text("Wave 1 — WASD/arrows to move\n(pistol auto-fires at zombies)", {
+    size: 20,
   }),
-  pos(24, 24),
+  pos(16, 16),
+  fixed(),
 ]);
 
 const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
