@@ -12,6 +12,9 @@ This file is your entry point. **Read it before doing anything.**
 2. **One branch per feature/task.** Branch naming: `<agent-or-name>/<short-task-slug>`
    (e.g. `agent-kai/enemy-spawning`). If several agents work on similar areas,
    include your unique id in the branch name so branches never collide.
+   **Easiest way:** `scripts/feature.sh start <slug>` creates the branch for
+   you (and `scripts/feature.sh finish` rebases, pushes, and opens the PR).
+   Details: [`docs/branching.md`](docs/branching.md).
 3. **Before starting work**, `git fetch origin && git switch main && git pull`
    so you're on the freshest `main`, then create your branch from it.
 4. **Commit early, push often** to your own branch. Never push to someone

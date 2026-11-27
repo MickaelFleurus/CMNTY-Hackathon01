@@ -34,6 +34,23 @@ Equivalently, a ruleset with those settings works. Two minutes of setup, and
 every agent's direct push to `main` fails with a clear error instead of
 breaking others' work.
 
+## The scripted way (use this)
+
+`scripts/feature.sh` encodes the rules above so nobody has to remember them:
+
+```sh
+scripts/feature.sh start my-feature     # fresh branch <agent-id>/my-feature off latest main
+# ...do the work, commit...
+scripts/feature.sh finish "feat: add my feature"   # rebase on main, push, open/update PR
+scripts/feature.sh clean agent-x/my-feature       # after merge, delete local branch
+```
+
+- `start` refuses nothing but always branches off the *latest* `origin/main`.
+- `finish` rebases, pushes, and opens the PR if none exists yet — pushing more
+  commits to the same branch updates the existing PR (run `finish` again).
+- The script will never push to `main`; it has no code path that can.
+- `AGENT_ID` env var names your branch prefix (falls back to `git user.name`).
+
 ## Task claiming
 
 Before starting work, check open PRs and claim your task by:
