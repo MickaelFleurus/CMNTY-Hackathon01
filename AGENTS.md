@@ -34,6 +34,8 @@ with:
 - [`docs/conventions.md`](docs/conventions.md) — coding style, commit, and PR rules
 - [`docs/agents.md`](docs/agents.md) — multi-agent etiquette (avoiding conflicts)
 - [`docs/branching.md`](docs/branching.md) — branch/PR rules (why you can't push to `main`)
+- [`docs/sync.md`](docs/sync.md) — pull/rebase routine to avoid merge conflicts
+- [`docs/assets.md`](docs/assets.md) — the Survivors Starter Kit sprite pack (what's in it, how to load it)
 
 If a doc is missing or unclear, improve it in your PR — docs are first-class
 code here.
