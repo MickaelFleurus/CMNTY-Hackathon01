@@ -144,6 +144,9 @@ export const ENEMY_WAVES = {
   durationPerWave: 10, // s added per wave
   maxDuration: 150, // s
   minClearTime: 3, // s, a wave can't count as cleared before this
+  // When a wave ends, remaining enemies die immediately (death anim, no drops,
+  // not counted as kills). false = they keep chasing until "enemy-clear".
+  killOnEnd: true,
 };
 
 // Enemy level comes from the wave number. An enemy keeps its spawn level.

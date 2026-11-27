@@ -40,8 +40,9 @@ PR.
     e.g. when the player ports home.
   - `getTreeRoot().on("wave-start", (n) => …)` and
     `getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)`, where
-    `reason` is `"cleared"` or `"timeout"`. After a timeout, leftovers keep
-    chasing until `"enemy-clear"`.
+    `reason` is `"cleared"` or `"timeout"`. Any leftovers die on the spot
+    when the wave ends: death animation, **no drops, no `"killed"` event**
+    (`ENEMY_WAVES.killOnEnd`).
   - `src/main.js` currently chains waves itself (TEMP, 3 s gap) until the
     cycle director takes over.
 - Kills/drops: `on("killed", "enemy", (e, { pos, level, tier, type }) => …)`

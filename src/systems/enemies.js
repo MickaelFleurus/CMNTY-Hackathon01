@@ -30,7 +30,8 @@
 //       getTreeRoot().on("wave-start", (n) => …)
 //       getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)
 //         reason: "cleared" (whole budget spawned + killed) or "timeout".
-//         After a timeout, leftover enemies keep chasing until "enemy-clear".
+//         Leftover enemies (timeout) die on the spot when the wave ends —
+//         death anim, no drops, not counted as kills (ENEMY_WAVES.killOnEnd).
 //   - External spawn triggers (for `{ trigger: "name" }` spawn conditions):
 //       getTreeRoot().trigger("enemy-trigger", "bat-swarm")   // no import needed
 //     or import { fireEnemyTrigger } from this file. Triggers stay on until
@@ -264,10 +265,27 @@ function killEnemy(enemy) {
     });
   }
 
+  playDeath(enemy);
+}
+
+/** Take an enemy out of play and play its death anim (destroyed at the end). */
+function playDeath(enemy) {
   // Out of play: no more targeting / hits while the death anim runs.
   enemy.untag("enemy");
   enemy.tag("enemy-dying");
   enemy.play("death");
+}
+
+/**
+ * Kill every live enemy on the spot: death animation, but no "killed" or
+ * "drop" events (no XP, doesn't count as a player kill).
+ */
+export function killAllEnemies() {
+  for (const e of [...live]) {
+    e.dead = true;
+    markGone(e);
+    playDeath(e);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -513,6 +531,7 @@ export function startEnemyDirector() {
   function endWave(reason) {
     inWave = false;
     for (const s of schedules) s.active = false;
+    if (ENEMY_WAVES.killOnEnd) killAllEnemies();
     root.trigger("wave-end", { wave, reason, kills: waveKills });
   }
 
