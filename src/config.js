@@ -11,6 +11,10 @@ export const ENEMY = {
   gridCell: 32, // px, spatial grid cell for hit tests
   defaultProjectileRadius: 6, // px, for projectiles with no hitRadius / area
   defaultPlayerRadius: 12, // px, if the player has no area()
+  // The tower (base) is solid for enemies: they're pushed out of its box so
+  // none can hide behind the golem sprite. They attack it from the edge, when
+  // their body is within this many px of the box.
+  towerContactSlack: 4, // px
 
   // Each enemy chases a random point within this many px of the player, so
   // the overlapping horde fans out a bit instead of stacking on one pixel.
