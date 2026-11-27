@@ -18,6 +18,7 @@ import { startRunState } from "./systems/runstate.js";
 import { startDevTools } from "./systems/devtools.js";
 import { startCycle } from "./systems/cycle.js";
 import { startGameOver } from "./systems/gameover.js";
+import { startPause } from "./systems/pause.js";
 import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
@@ -81,6 +82,7 @@ startRespawn(player);
 // "run-frozen" synchronously, so the stats snapshot must exist by then.
 startGameOver();
 startRunState(player);
+startPause();
 startDevTools(player);
 
 // TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
