@@ -19,6 +19,9 @@ export const ENEMY = {
   // Each enemy chases a random point within this many px of the player, so
   // the overlapping horde fans out a bit instead of stacking on one pixel.
   chaseOffset: 18,
+  // Groups keep their formation while farther than this from their target,
+  // then close up linearly so every member reaches it (and can hit).
+  formationHoldDistance: 220, // px
 
   // Move-animation speed follows how fast the enemy actually moves:
   // animSpeed = actual speed / refSpeed, clamped to [idle, max], eased.
@@ -58,10 +61,21 @@ export const ENEMY = {
 //     count       { base, perWave }: how many this type spawns in total in a
 //                 wave (its budget) = base + floor(perWave * (wave - 1))
 //     startInterval / minInterval / intervalDecayPerSec
-//                 seconds between spawn ticks within a wave; the ramp restarts
+//                 seconds between GROUP spawns within a wave; the ramp restarts
 //                 each wave, from when the type becomes active
-//     batch, batchPerLevel   enemies per tick = batch + floor(batchPerLevel*(lvl-1))
-//     cluster     px; if set, a batch spawns together around one edge point (swarm)
+//   behavior    optional; default: chase a target (player or tower).
+//               { kind: "sweep", returnDelay, aimSpread, exitMargin }: fly
+//               straight across the screen (aimed within aimSpread px of its
+//               center), leave it by exitMargin px, wait returnDelay s, then
+//               sweep back. Ignores player/tower as targets, flies over the
+//               golem (no collision, no tower attack), still hurts the player
+//               on contact.
+//     group       attack pattern: each spawn tick sends ONE group of
+//                 min..max enemies (random) from one edge point, laid out in a
+//                 formation of `radius` px with at least `spacing` px between
+//                 members. The group keeps its formation while travelling,
+//                 closes up near its target (ENEMY.formationHoldDistance), and
+//                 shares one target (player or tower).
 //     maxAlive    per-type cap (the global ENEMY_SPAWN.maxAlive still applies)
 //     when        spawn condition, checked every frame (omit = every wave):
 //       { fromWave: n } / { untilWave: n }      wave number
@@ -80,11 +94,11 @@ export const ENEMY_TYPES = [
     speed: 70,
     spawn: {
       count: { base: 40, perWave: 15 },
-      startInterval: 1.2,
-      minInterval: 0.15,
-      intervalDecayPerSec: 0.004,
-      batch: 1,
-      batchPerLevel: 0.5,
+      startInterval: 5,
+      minInterval: 1.8,
+      intervalDecayPerSec: 0.03,
+      // groups of 3-6, fairly spaced out
+      group: { min: 3, max: 6, radius: 90, spacing: 40 },
       maxAlive: 175, // per-type caps sum to ENEMY_SPAWN.maxAlive so late types are never starved
     },
   },
@@ -98,6 +112,8 @@ export const ENEMY_TYPES = [
     baseDamage: 2,
     speed: 135,
     tierMinHp: [0, 2, 4, 7, 10],
+    // Swarms sweep across the screen and come back; they don't target anyone.
+    behavior: { kind: "sweep", returnDelay: 3, aimSpread: 160, exitMargin: 60 },
     drops: [
       { kind: "xp-blue", base: 0.25, perLevel: 0, max: 0.25, value: 1 },
       { kind: "xp-green", base: 0.03, perLevel: 0.005, max: 0.1, value: 3 },
@@ -105,12 +121,11 @@ export const ENEMY_TYPES = [
     ],
     spawn: {
       count: { base: 15, perWave: 8 },
-      startInterval: 7,
-      minInterval: 2.5,
-      intervalDecayPerSec: 0.01,
-      batch: 5,
-      batchPerLevel: 0.3,
-      cluster: 50,
+      startInterval: 9,
+      minInterval: 4,
+      intervalDecayPerSec: 0.02,
+      // one big, tightly packed swarm of 9-14
+      group: { min: 9, max: 14, radius: 30, spacing: 10 },
       maxAlive: 100,
       // From wave 2, or as soon as the player reaches level 3, or when another
       // system fires the "bat-swarm" trigger (e.g. a night event).
@@ -129,11 +144,11 @@ export const ENEMY_TYPES = [
     sprite: "Enemy_Crystal_Golem.png",
     scale: 3, // bigger than the rest (48px)
     hitRadius: 16,
-    baseHp: 15,
+    baseHp: 45, // a lot of HP: 15x a zombie
     baseDamage: 12,
     speed: 40,
-    // HP 15 → 41 (lvl 6) → 73 (lvl 12) → 115 (lvl 20) → 167 (lvl 30)
-    tierMinHp: [0, 40, 70, 110, 160],
+    // HP 45 → 108 (wave 3) → 202 (wave 6) → 344 (wave 10) → 501 (wave 15)
+    tierMinHp: [0, 120, 210, 330, 480],
     drops: [
       { kind: "xp-green", base: 0.5, perLevel: 0, max: 0.5, value: 3 },
       { kind: "xp-red", base: 0.15, perLevel: 0.005, max: 0.3, value: 10 },
@@ -145,8 +160,8 @@ export const ENEMY_TYPES = [
       startInterval: 12,
       minInterval: 5,
       intervalDecayPerSec: 0.02,
-      batch: 1,
-      batchPerLevel: 0.1,
+      // always alone
+      group: { min: 1, max: 1, radius: 0, spacing: 0 },
       maxAlive: 25,
       // From wave 3, or once the player reaches level 5.
       when: { any: [{ fromWave: 3 }, { playerStat: "level", min: 5 }] },

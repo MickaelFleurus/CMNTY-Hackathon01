@@ -90,6 +90,18 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   - Ladder: `RESPAWN.steps`. +1 step per death; −1 per `wave-end` with
     reason `"cleared"` or per `boss-defeated` (the boss task should fire
     `getTreeRoot().trigger("boss-defeated")`).
+- **Enemy attack patterns** (`ENEMY_TYPES[].spawn.group` / `.behavior`):
+  - **Zombies** come in groups of 3–6, spaced out.
+  - **Golems** come alone, with a lot of HP.
+  - A group keeps its formation while travelling, closes up near its target,
+    and shares ONE target (player or tower) for the whole group.
+  - **Bats** (`behavior: "sweep"`) target nobody. A tight swarm of 9–14
+    flies straight across the screen, leaves it, waits `returnDelay` s,
+    then sweeps back. They fly over the golem (no collision, no tower
+    attack) but still hurt the player on contact. Their `target` is
+    always `null`.
+  - Walkers steer around the solid golem (shortest path via its corners)
+    unless the golem is their target.
 - **Smart enemy targeting** (`enemies.js`, tuning in `ENEMY_TARGETING`):
   each enemy picks the player or the tower. It focuses the clearly weaker
   one (hp fraction gap ≥ `focusMargin`), otherwise the horde splits
