@@ -174,6 +174,9 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
       damage: stats.damage,
       attackTimer: 0,
       dead: false,
+      // Each enemy aims at its own point near the player, so an overlapping
+      // horde fans out a little instead of stacking on one pixel.
+      chaseOffset: Vec2.fromAngle(rand(360)).scale(rand(0, ENEMY.chaseOffset)),
     },
   ]);
 
@@ -189,8 +192,11 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
       destroy(enemy); // silently recycle stragglers, no drop
       return;
     }
-    enemy.move(toPlayer.unit().scale(enemy.speed));
-    enemy.flipX = toPlayer.x < 0; // art faces right
+    const toTarget = toPlayer.add(enemy.chaseOffset);
+    const dist = toTarget.len();
+    // Stop on arrival instead of jittering back and forth over the point.
+    if (dist > 1) enemy.move(toTarget.scale(Math.min(enemy.speed, dist / dt()) / dist));
+    enemy.flipX = toPlayer.x < 0; // art faces right (always face the player)
   });
 
   enemy.onHurt(() => {

@@ -13,6 +13,10 @@ export const ENEMY = {
   defaultPlayerRadius: 12, // px, if the player has no area()
   maxHitRadius: 12, // px, >= the largest ENEMY_TYPES[].hitRadius
 
+  // Each enemy chases a random point within this many px of the player, so
+  // the overlapping horde fans out a bit instead of stacking on one pixel.
+  chaseOffset: 18,
+
   // Optional soft spacing between enemies. 0 = off (enemies overlap freely).
   // Try ~16-22 for a spread-out crowd; costs a little CPU.
   separationRadius: 0,
