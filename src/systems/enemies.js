@@ -46,6 +46,8 @@ const sheetUrl = (file) =>
   ENEMY_SHEETS[`../../gfx/SurvivorsStarterKit_v1.0/Enemies/${file}`];
 
 const TYPES = Object.fromEntries(ENEMY_TYPES.map((t) => [t.id, t]));
+// Largest enemy hit circle: hit queries widen their grid search by this much.
+const MAX_HIT_RADIUS = Math.max(...ENEMY_TYPES.map((t) => t.hitRadius));
 
 // Sheet: 6 columns x 3 rows of 16x16 — row 0 Move(4), row 1 Hit(2), row 2 Death(6)
 const SHEET_COLS = 6;
@@ -304,7 +306,7 @@ function resolveProjectileHits() {
     const { x, y, r } = hitCircle(proj, ENEMY.defaultProjectileRadius);
     proj.hitEnemies ??= new Set();
     proj.pierce ??= 1;
-    forEachEnemyNear(x, y, r + ENEMY.maxHitRadius, (e) => {
+    forEachEnemyNear(x, y, r + MAX_HIT_RADIUS, (e) => {
       if (e.dead || proj.hitEnemies.has(e) || !overlaps(e, x, y, r)) return false;
       proj.hitEnemies.add(e);
       e.hurt(proj.damage);
@@ -323,7 +325,7 @@ function resolvePlayerContact() {
   const player = getPlayer();
   if (!player || typeof player.hurt !== "function") return;
   const { x, y, r } = hitCircle(player, ENEMY.defaultPlayerRadius);
-  forEachEnemyNear(x, y, r + ENEMY.maxHitRadius, (e) => {
+  forEachEnemyNear(x, y, r + MAX_HIT_RADIUS, (e) => {
     if (e.dead || e.attackTimer > 0 || !overlaps(e, x, y, r)) return false;
     player.hurt(e.damage);
     e.attackTimer = ENEMY.attackCooldown;

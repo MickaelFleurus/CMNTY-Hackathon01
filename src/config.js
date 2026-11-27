@@ -11,7 +11,6 @@ export const ENEMY = {
   gridCell: 32, // px, spatial grid cell for hit tests
   defaultProjectileRadius: 6, // px, for projectiles with no hitRadius / area
   defaultPlayerRadius: 12, // px, if the player has no area()
-  maxHitRadius: 12, // px, >= the largest ENEMY_TYPES[].hitRadius
 
   // Each enemy chases a random point within this many px of the player, so
   // the overlapping horde fans out a bit instead of stacking on one pixel.
@@ -35,7 +34,7 @@ export const ENEMY = {
 // Enemy types. Each has its own stats, spawn schedule and spawn condition.
 //
 //   sprite      file in gfx/SurvivorsStarterKit_v1.0/Enemies/ (all 16x16 sheets)
-//   hitRadius   px, hit circle for projectiles / player contact (<= ENEMY.maxHitRadius)
+//   hitRadius   px, hit circle for projectiles / player contact
 //   baseHp / baseDamage   stats at enemy level 1 (scaled by ENEMY_LEVEL)
 //   speed       px/s chase speed
 //   tierMinHp   optional per-type HP thresholds for ENEMY_TIERS colors
@@ -67,7 +66,7 @@ export const ENEMY_TYPES = [
       intervalDecayPerSec: 0.004,
       batch: 1,
       batchPerLevel: 0.5,
-      maxAlive: 300,
+      maxAlive: 175, // per-type caps sum to ENEMY_SPAWN.maxAlive so late types are never starved
     },
   },
   {
@@ -91,7 +90,7 @@ export const ENEMY_TYPES = [
       batch: 5,
       batchPerLevel: 0.3,
       cluster: 50,
-      maxAlive: 120,
+      maxAlive: 100,
       // After 45s, or as soon as the player reaches level 3, or when another
       // system fires the "bat-swarm" trigger (e.g. a night event).
       when: {
@@ -101,6 +100,33 @@ export const ENEMY_TYPES = [
           { trigger: "bat-swarm" },
         ],
       },
+    },
+  },
+  {
+    // Slow, tough tank: rare, hits hard, rewarding to kill.
+    id: "golem",
+    sprite: "Enemy_Crystal_Golem.png",
+    scale: 3, // bigger than the rest (48px)
+    hitRadius: 16,
+    baseHp: 15,
+    baseDamage: 12,
+    speed: 40,
+    // HP 15 → 41 (lvl 6) → 73 (lvl 12) → 115 (lvl 20) → 167 (lvl 30)
+    tierMinHp: [0, 40, 70, 110, 160],
+    drops: [
+      { kind: "xp-green", base: 0.5, perLevel: 0, max: 0.5, value: 3 },
+      { kind: "xp-red", base: 0.15, perLevel: 0.005, max: 0.3, value: 10 },
+      { kind: "heart", base: 0.05, perLevel: 0, max: 0.05, value: 0 },
+    ],
+    spawn: {
+      startInterval: 12,
+      minInterval: 5,
+      intervalDecayPerSec: 0.02,
+      batch: 1,
+      batchPerLevel: 0.1,
+      maxAlive: 25,
+      // After 2 minutes, or once the player reaches level 5.
+      when: { any: [{ after: 120 }, { playerStat: "level", min: 5 }] },
     },
   },
 ];
@@ -129,7 +155,10 @@ export const ENEMY_TIERS = [
 
 // Spawn director (global): per-type schedules live in ENEMY_TYPES.
 export const ENEMY_SPAWN = {
-  maxAlive: 300, // hard cap on live enemies of all types (perf)
+  // Hard cap on live enemies of all types (perf). Keep the per-type
+  // ENEMY_TYPES[].spawn.maxAlive values summing to this (175 + 100 + 25), or
+  // the first type to fill up starves the ones that unlock later.
+  maxAlive: 300,
   edgeMargin: 48, // px beyond the screen edge to spawn at
 };
 
