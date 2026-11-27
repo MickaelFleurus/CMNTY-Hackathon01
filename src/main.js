@@ -8,6 +8,8 @@ import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
+import { startRespawn } from "./systems/respawn.js";
+import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
 import { loadShopSprites, makeShop } from "./systems/shop.js";
@@ -58,6 +60,7 @@ const enemyDirector = startEnemyDirector();
 startAuras();
 startRegen();
 startTower();
+startRespawn(player);
 
 // TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
 const TEMP_PICK_KEYS = {
@@ -124,5 +127,10 @@ debugLabel.onUpdate(() => {
   const status = d.inWave()
     ? `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.remaining()} remaining`
     : `wave ${d.wave()} over — next wave soon`;
-  debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}`;
+  const tc = targetCounts();
+  const respawn = player.down
+    ? `DEAD — respawn in ${player.respawnIn.toFixed(1)}s`
+    : `next death: ${player.nextRespawn}s respawn`;
+  debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}` +
+    `\ntargeting: player ${tc.player} · tower ${tc.tower} · ${respawn}`;
 });

@@ -1,19 +1,18 @@
-// Active offense (shop quadrant "active-offense"): a tower next to the base
-// that shoots the nearest enemy in range. It's the strongest pick, but it binds
-// you to the base: enemies near the tower attack it, and if it's destroyed the
-// run is over.
+// The base IS the tower (docs/game-design-v2.md): from the start of the run
+// the "base" object gets HP and the "tower" tag, enemies attack it, and when
+// it's destroyed the run is over. The active-offense shop pick makes it shoot
+// the nearest enemy in range; each further pick levels it up and repairs it.
 //
 // Contract (no imports between systems):
-//   - listens to getTreeRoot().on("shop-pick", { quadrant, level, params })
-//   - placed at the "base" object + TOWER.offset (waits until a base exists)
-//   - tagged "tower", with health(), hitRadius, aggroRange → enemies.js makes
-//     nearby enemies target and hit it
+//   - attaches to the object tagged "base" (base.js) once it exists: adds
+//     health() + the "tower" tag → enemies.js targets it and hits it on contact
+//   - listens to getTreeRoot().on("shop-pick", { quadrant: "active-offense", level, params })
 //   - shots are "projectile"s with { damage } → enemies.js applies the hit
 //   - on destruction: getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })
-//   - a new pick levels it up: stats rise and it's repaired to full HP
+//     (fired once). This is the run's ONLY lose condition.
 import boltUrl from "../../gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Magic_Bolt.png";
 import { TOWER } from "../config.js";
-import { resolveStats } from "../util/levelStat.js";
+import { levelStat, resolveStats } from "../util/levelStat.js";
 
 const QUADRANT = "active-offense";
 const BOLT = "tower-bolt";
@@ -26,87 +25,92 @@ export function loadTowerSprites() {
 }
 
 export function startTower() {
-  let tower = null;
-  let pending = null; // pick received before a base existed
+  let tower = null; // the base, once armed
+  let picks = 0; // active-offense pick level (0 = doesn't shoot)
+  let params = {};
+  let shot = null; // shooting stats, null until picked
+  let cooldown = 0;
+  let over = false;
+
+  const maxHpFor = (p) => Math.round(levelStat(params.hp ?? TOWER.hp, p + 1));
 
   getTreeRoot().on("shop-pick", (pick) => {
     if (pick?.quadrant !== QUADRANT) return;
-    pending = pick;
+    picks = pick.level ?? picks + 1;
+    params = pick.params ?? {};
+    shot = resolveStats(TOWER, picks, params);
+    if (tower) {
+      tower.setMaxHP(maxHpFor(picks));
+      tower.setHP(tower.maxHP()); // level-up repairs it
+    }
   });
 
   onUpdate(() => {
-    if (!pending) return;
-    const base = get("base")[0];
-    if (!base) return;
-    const level = pending.level ?? 1;
-    const stats = resolveStats(TOWER, level, pending.params);
-    pending = null;
-    if (!tower || !tower.exists()) tower = makeTower(base, stats);
-    tower.level = level;
-    Object.assign(tower.stats, stats);
-    tower.setMaxHP(stats.hp);
-    tower.setHP(stats.hp); // level-up repairs it
+    if (!tower) {
+      const base = get("base")[0];
+      if (base) tower = arm(base);
+      return;
+    }
+    if (over || !tower.exists()) return;
+
+    cooldown -= dt();
+    if (!shot || cooldown > 0) return;
+    const from = center(tower);
+    const target = nearestEnemy(from, shot.range);
+    if (!target) return;
+    cooldown = shot.fireInterval;
+    shoot(from, target.pos, shot);
   });
+
+  function arm(base) {
+    const hp = maxHpFor(picks);
+    base.use(health(hp, hp));
+    if (!base.has("color")) base.use(color(255, 255, 255)); // for the hurt flash
+    base.tag("tower");
+
+    base.onHurt(() => {
+      base.color = rgb(255, 140, 140);
+      wait(0.08, () => base.exists() && (base.color = rgb(255, 255, 255)));
+    });
+
+    base.onDeath(() => {
+      if (over) return;
+      over = true;
+      base.untag("tower"); // enemies stop targeting it
+      getTreeRoot().trigger("run-over", { reason: "tower-destroyed" });
+    });
+
+    // HP bar above the base (separate object so the base's scale doesn't apply)
+    add([
+      pos(0, 0),
+      z(50),
+      {
+        draw() {
+          if (!base.exists()) return;
+          const box = base.worldArea().bbox();
+          const w = Math.max(60, box.width * 0.8);
+          const x = box.pos.x + box.width / 2 - w / 2;
+          const y = box.pos.y - 12;
+          const ratio = Math.max(0, base.hp() / base.maxHP());
+          drawRect({ pos: vec2(x - 1, y - 1), width: w + 2, height: 8, color: rgb(34, 24, 48) });
+          drawRect({
+            pos: vec2(x, y),
+            width: w * ratio,
+            height: 6,
+            color: ratio > 0.3 ? rgb(110, 220, 120) : rgb(240, 80, 70),
+          });
+        },
+      },
+    ]);
+
+    return base;
+  }
 }
 
-function makeTower(base, stats) {
-  const offset = vec2(...stats.offset);
-  const tower = add([
-    rect(stats.size, stats.size, { radius: 6 }),
-    pos(base.pos.add(offset)),
-    anchor("center"),
-    color(120, 110, 150),
-    outline(3, rgb(34, 24, 48)), // pack outline colour #221830
-    health(stats.hp, stats.hp),
-    z(5),
-    "tower",
-    {
-      stats,
-      level: 1,
-      hitRadius: stats.hitRadius,
-      aggroRange: stats.aggroRange,
-      cooldown: 0,
-    },
-  ]);
-
-  tower.onUpdate(() => {
-    // stay attached to the base if it moves
-    const b = get("base")[0];
-    if (b) tower.pos = b.pos.add(offset);
-
-    tower.cooldown -= dt();
-    if (tower.cooldown > 0) return;
-    const target = nearestEnemy(tower.pos, tower.stats.range);
-    if (!target) return;
-    tower.cooldown = tower.stats.fireInterval;
-    shoot(tower.pos, target.pos, tower.stats);
-  });
-
-  tower.onHurt(() => {
-    tower.color = rgb(255, 120, 120);
-    wait(0.08, () => tower.exists() && (tower.color = rgb(120, 110, 150)));
-  });
-
-  tower.onDeath(() => {
-    destroy(tower);
-    getTreeRoot().trigger("run-over", { reason: "tower-destroyed" });
-  });
-
-  // HP bar above the tower
-  tower.onDraw(() => {
-    const w = stats.size + 12;
-    const ratio = Math.max(0, tower.hp() / tower.maxHP());
-    const y = -stats.size / 2 - 12;
-    drawRect({ pos: vec2(-w / 2, y), width: w, height: 5, color: rgb(34, 24, 48) });
-    drawRect({
-      pos: vec2(-w / 2, y),
-      width: w * ratio,
-      height: 5,
-      color: ratio > 0.3 ? rgb(110, 220, 120) : rgb(240, 80, 70),
-    });
-  });
-
-  return tower;
+/** Visual center of the base (its anchor is "bot"). */
+function center(obj) {
+  const b = obj.worldArea().bbox();
+  return vec2(b.pos.x + b.width / 2, b.pos.y + b.height / 2);
 }
 
 function nearestEnemy(from, range) {

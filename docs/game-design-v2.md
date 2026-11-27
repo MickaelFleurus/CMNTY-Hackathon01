@@ -141,9 +141,10 @@ how many attackers count as "enough", re-evaluation interval) go in
 - Does XP-leveling stay per-wave (resets each cycle) or persist across the
   run? (Leaning: persists; shop picks are the per-cycle power gain.)
 - Can the player skip the shop (save coins for a bigger pick)? Bank or not?
-- Is the tower always on the map (so the lose condition always applies), or
-  only after the active-offense pick? If it's pick-only, what ends a run for
-  players who never pick it?
+- ~~Is the tower always on the map, or only after the active-offense pick?~~
+  **Decided: the base is the tower.** It has HP from the start of the run,
+  enemies attack it, and its destruction ends the run. The active-offense
+  pick makes the base itself shoot and levels it up.
 - Coins vs XP as the shop currency — both exist already in the asset pack.
 - Are the 4 shop options fixed every cycle, or does the pool grow with
   unlocks? (Fixed = readable; growing = roguelite.)

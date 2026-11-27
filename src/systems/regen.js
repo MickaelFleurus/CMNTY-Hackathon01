@@ -36,7 +36,7 @@ export function startRegen() {
     }
 
     const base = get("base")[0];
-    if (!stats || !base) return;
+    if (!stats || !base || player.down) return;
     if (player.pos.dist(base.pos) > stats.range) {
       untilTick = Math.min(untilTick, stats.interval); // ready on re-entry
       return;
