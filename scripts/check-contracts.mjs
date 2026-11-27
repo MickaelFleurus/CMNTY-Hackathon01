@@ -54,7 +54,7 @@ for (const file of files) {
     }
     if (end < 0) continue;
     const body = src.slice(m.index, end);
-    if (/["'`]projectile["'`]/.test(body) && !/\bdamage\s*:/.test(body)) {
+    if (/["'`]projectile["'`]/.test(body) && !/\bdamage\s*[:,}]/.test(body)) {
       report(file, lineOf(src, m.index),
         'object tagged "projectile" has no `damage` prop: enemies.js only hits ' +
         "projectiles with a numeric `damage`. See docs/tasks.md → Shared contract.");
