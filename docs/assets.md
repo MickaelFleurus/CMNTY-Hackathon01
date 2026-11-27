@@ -37,7 +37,13 @@ that folder's `README.txt`; this doc is the quick index for agents.
    (simple) + `Enemy_Zombie` (basic horde) for Mickael's wave, `Pickup_XP_Blue`
    for chippe's gems, `Proj_Knife` or `Proj_Magic_Bolt` for the pistol
    stand-in, `Tiles_Grass` for the placeholder map.
-6. **Don't modify or rename files inside the pack** — it's vendored third-
+6. **Known art defect, fixed copies:** in the pickup strips XP Blue/Green/Red,
+   Heart and Magnet, the "bob up" frames (1-2) are drawn one pixel higher
+   but their top outline row was clipped off, so the top row vanishes while
+   they bob. `node scripts/fix-pickup-sprites.mjs` writes repaired copies
+   next to them as `*_fixed.png` (originals untouched). **Use the
+   `_fixed` files** (already done in `PICKUP_SPRITES`).
+7. **Don't modify or rename files inside the pack** — it's vendored third-
    party art; if you need a variant, add your own file next to it.
 
 Owners per `docs/tasks.md`: Akram wires the hero + projectile + tile map,
