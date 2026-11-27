@@ -43,12 +43,13 @@ function fire(from, targetPos) {
     move(dir, CFG.weapon.projectileSpeed),
     rotate(dir.angle()),
     offscreen({ destroy: true }),
+    opacity(1),
     lifespan(1.2, { fade: 0.2 }),
     "projectile",
   ]);
 
   // damage on contact — the shared contract from docs/tasks.md
   onCollideUpdate("projectile", "enemy", (_, enemy) => {
-    enemy.hp?.() !== undefined && enemy.hurt(CFG.weapon.damage);
+    if (enemy.hp?.() !== undefined) enemy.hurt(CFG.weapon.damage);
   });
 }
