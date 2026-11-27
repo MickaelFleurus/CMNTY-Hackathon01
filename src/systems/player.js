@@ -17,12 +17,30 @@ export function makePlayer() {
   const speed = CFG.player.speed;
   let joystickVec = vec2(0); // set by the joystick when active
 
+  // Opposite keys held together: the most recently pressed one wins (instead
+  // of cancelling out, which left the player walking vertically while the
+  // sprite still faced the old way).
+  const LEFT = ["left", "a"];
+  const RIGHT = ["right", "d"];
+  const UP = ["up", "w"];
+  const DOWN = ["down", "s"];
+  let lastX = 0;
+  let lastY = 0;
+  onKeyPress(LEFT, () => (lastX = -1));
+  onKeyPress(RIGHT, () => (lastX = 1));
+  onKeyPress(UP, () => (lastY = -1));
+  onKeyPress(DOWN, () => (lastY = 1));
+
+  const held = (keys) => keys.some((k) => isKeyDown(k));
+  const axis = (neg, pos, last) => {
+    const n = held(neg);
+    const p = held(pos);
+    if (n && p) return last; // both held: latest press wins
+    return (p ? 1 : 0) - (n ? 1 : 0);
+  };
+
   onUpdate(() => {
-    let dir = vec2(0);
-    if (isKeyDown("left") || isKeyDown("a")) dir.x -= 1;
-    if (isKeyDown("right") || isKeyDown("d")) dir.x += 1;
-    if (isKeyDown("up") || isKeyDown("w")) dir.y -= 1;
-    if (isKeyDown("down") || isKeyDown("s")) dir.y += 1;
+    let dir = vec2(axis(LEFT, RIGHT, lastX), axis(UP, DOWN, lastY));
     dir = dir.add(joystickVec).unit();
     player.move(dir.scale(speed));
 
@@ -30,7 +48,8 @@ export function makePlayer() {
     const moving = dir.len() > 0.01;
     if (moving) {
       if (player.curAnim() !== "walk") player.play("walk");
-      player.flipX = dir.x < 0;
+      // keep the current facing when moving purely vertically
+      if (Math.abs(dir.x) > 0.01) player.flipX = dir.x < 0;
     } else if (player.curAnim() !== "idle") {
       player.play("idle");
     }
