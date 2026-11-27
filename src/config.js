@@ -228,6 +228,81 @@ export const CFG = {
 // ---------------------------------------------------------------------------
 // Camera (owner: Mickael — src/systems/camera.js)
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Base + shop + portal (owner: Akram — src/systems/{base,shop,portal}.js)
+// ---------------------------------------------------------------------------
+export const SHOP = {
+  // Where the base sits (world px). makePlayer() spawns at the same spot.
+  home: { x: 640, y: 360 },
+  spriteScale: 4, // 32px boss art -> 128px structure
+
+  coins: {
+    perKill: 1, // coins granted per enemy kill
+    perLevelBonus: 0.25, // extra coins per enemy level (floored)
+    magnetRadius: 110, // px at which coins fly to the player
+    collectRadius: 24, // px at which a coin is collected
+    flySpeed: 420, // px/s while flying to the player
+    lifetime: 30, // s before an uncollected coin vanishes
+  },
+
+  // The four shop options (2x2 grid, one pick per cycle — see
+  // docs/game-design-v2.md). The shop only SELLS: on purchase it fires
+  // "shop-pick" with { id, quadrant, level, params } and the effect systems
+  // (auras/regen/tower — tasks-v2 #3) apply them. params are opaque data.
+  options: [
+    {
+      id: "armor-aura",
+      quadrant: "passive-defense",
+      name: "Armor Aura",
+      icon: "icon-armor",
+      desc: "Protective aura around the base.\nUpgrades grow its range.",
+      baseCost: 10,
+      costGrowth: 1.6,
+      maxLevel: 8,
+      params: { stat: "armor", amountPerLevel: 1, baseRange: 120, rangePerLevel: 60 },
+    },
+    {
+      id: "might-aura",
+      quadrant: "passive-offense",
+      name: "Might Aura",
+      icon: "icon-might",
+      desc: "Your hits hit harder near base.\nUpgrades grow its range.",
+      baseCost: 12,
+      costGrowth: 1.6,
+      maxLevel: 8,
+      params: { stat: "might", amountPerLevel: 0.15, baseRange: 120, rangePerLevel: 60 },
+    },
+    {
+      id: "regen-beacon",
+      quadrant: "active-defense",
+      name: "Regen Beacon",
+      icon: "icon-regen",
+      desc: "Heals you every few seconds\nwhile you're in range.",
+      baseCost: 15,
+      costGrowth: 1.7,
+      maxLevel: 8,
+      params: { hpPerTick: 4, interval: 3, baseRange: 160, rangePerLevel: 40 },
+    },
+    {
+      id: "turret",
+      quadrant: "active-offense",
+      name: "Turret",
+      icon: "icon-lightning",
+      desc: "The base fights for you.\nIf it dies, you die.",
+      baseCost: 20,
+      costGrowth: 1.8,
+      maxLevel: 8,
+      params: { damage: 8, damagePerLevel: 4, interval: 1.2, range: 260 },
+    },
+  ],
+
+  portal: {
+    offset: 90, // px to the player's right where the portal appears
+    enterRadius: 28, // px — walk this close to enter
+    scale: 2.5,
+  },
+};
+
 export const CAMERA = {
   // How fast the camera catches up with its target (1/s, frame-rate
   // independent exponential smoothing). Higher = tighter follow.
