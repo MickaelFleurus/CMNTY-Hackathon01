@@ -66,6 +66,26 @@ export function makeShop() {
       { x: 480, y: 330, opt: q.find((o) => o.quadrant === "active-offense") },
     ];
 
+    // Skip button (click / tap), same as the skip keys.
+    const skip = ui.add([
+      rect(300, 56, { radius: 6 }),
+      pos(480, 540),
+      area(),
+      fixed(),
+      color(60, 52, 80),
+      outline(2, rgb(150, 140, 180)),
+      anchor("topleft"),
+      "shop-skip",
+    ]);
+    skip.add([
+      text(`Skip — no upgrade (${SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ")})`, { size: 14 }),
+      pos(150, 28),
+      anchor("center"),
+    ]);
+    skip.onClick(close);
+    skip.onHover(() => (skip.color = rgb(84, 74, 110)));
+    skip.onHoverEnd(() => (skip.color = rgb(60, 52, 80)));
+
     for (const c of cells) {
       if (!c.opt) continue;
       buildCell(ui, c.opt, c.x, c.y, levels, buy);
@@ -97,9 +117,9 @@ export function makeShop() {
 
   getTreeRoot().on("shop-open", open);
 
-  // E closes the shop without buying (skip pick for now — cycle director
-  // decides what happens; for MVP the next wave starts on pick OR skip)
-  onKeyPress("e", () => ui && close());
+  // Skip without buying: SHOP.skipKeys or the Skip button. The cycle
+  // director starts the next wave on shop-close, as after a pick.
+  onKeyPress(SHOP.skipKeys, () => ui && close());
 
   return { open, close, isOpen, levels: () => ({ ...levels }) };
 }
