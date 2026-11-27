@@ -39,10 +39,13 @@ built** and everything below depends on it — that's chippe's task 1.
   - `active-defense`: heals the player near the base. Keys `range`,
     `interval`, `heal`, plus a shield from `shieldFromLevel` (`shield`,
     `shieldDuration`).
-  - `active-offense`: a tower next to the base shoots enemies. Keys `hp`,
-    `range`, `fireInterval`, `damage`, `aggroRange`. Enemies near it attack
-    it. When it's destroyed: `getTreeRoot().trigger("run-over", { reason:
-    "tower-destroyed" })`. A new pick levels it up and repairs it.
+  - `active-offense`: **the base is the tower** (decided in
+    game-design-v2). From the start of the run, `tower.js` gives the `"base"`
+    object `health()` and the `"tower"` tag, and enemies attack it. The pick
+    makes it shoot. Keys `hp`, `range`, `fireInterval`, `damage`. A new pick
+    levels it up and repairs it. When it's destroyed:
+    `getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })`, the
+    **only** lose condition.
   - `level` = how many times that quadrant has been picked (1, 2, 3…).
     The shop sends it.
 - **Player buffs** (written by `auras.js` every frame, `1` outside auras):
@@ -52,9 +55,24 @@ built** and everything below depends on it — that's chippe's task 1.
   before damage by `enemies.js`.
 - **Run over**: `getTreeRoot().on("run-over", ({ reason }) => …)`. A game-over
   screen should listen to it (`main.js` shows a TEMP text until then).
-- **Base**: effects center on the first object tagged `"base"`. `main.js`
-  adds a TEMP stand-in at the start position if none exists, and TEMP keys
-  1–4 fire shop picks, until `base.js` / `shop.js` land.
+- **Player death → respawn** (`respawn.js`). Player death is not game over:
+  - `player.down` is true while dead. Movement, weapons, regen and enemies
+    all skip a downed player, so **any new player-driven system must check
+    it**. The player is hidden and parked at the base.
+  - `player.respawnIn` (s left), `player.respawnStep`, and
+    `player.nextRespawn` (what the next death costs) are for the HUD.
+  - Root events: `player-down` `{ respawnIn, step }`, `player-respawn`,
+    and `respawn-step` `{ step, nextRespawn }`.
+  - Ladder: `RESPAWN.steps`. +1 step per death; −1 per `wave-end` with
+    reason `"cleared"` or per `boss-defeated` (the boss task should fire
+    `getTreeRoot().trigger("boss-defeated")`).
+- **Smart enemy targeting** (`enemies.js`, tuning in `ENEMY_TARGETING`):
+  each enemy picks the player or the tower. It focuses the clearly weaker
+  one (hp fraction gap ≥ `focusMargin`), otherwise the horde splits
+  (`towerShare`). Targets are re-evaluated every ~0.75 s with stickiness.
+  When only one target is available, everyone goes for it.
+- **Base**: effects center on the first object tagged `"base"` (`base.js`).
+  TEMP keys 1–4 in `main.js` still fire shop picks for testing.
 - **Tags added in wave 2**: `"base"`, `"portal"`, `"tower"`, `"aura"`.
   Existing wave-1 tags (`"player"`, `"enemy"`, `"projectile"`, `"xp-gem"`)
   unchanged.
