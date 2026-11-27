@@ -555,3 +555,17 @@ export const CYCLE = {
   nextWaveDelay: 2, // s between closing the shop and the next wave
   pauseInShop: true, // freeze the game (time scale 0) while the shop is open
 };
+
+// ---------------------------------------------------------------------------
+// Damage numbers (owner: Akram — src/systems/damage-numbers.js)
+// floating hit numbers over enemies (dealt) / player & tower (taken)
+// ---------------------------------------------------------------------------
+export const DAMAGE_NUMBERS = {
+  size: 16, // text size in px
+  lifetime: 0.6, // s a number lives
+  fade: 0.3, // s of fade-out at the end of its life
+  riseSpeed: 40, // px/s upward drift
+  lift: 12, // px spawned above the hit point
+  jitter: 8, // px of horizontal scatter so stacked hits stay readable
+  maxPerFrame: 12, // cap: hordes hitting at once must not spawn 100 texts
+};

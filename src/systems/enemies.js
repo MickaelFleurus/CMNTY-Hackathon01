@@ -667,6 +667,7 @@ function resolveProjectileHits() {
       if (e.dead || proj.hitEnemies.has(e) || !overlaps(e, x, y, r)) return false;
       proj.hitEnemies.add(e);
       e.hurt(proj.damage);
+      getTreeRoot().trigger("damage-dealt", { pos: e.pos, amount: proj.damage });
       // a siege boss hit by the PLAYER (not the tower) turns on the player
       if (e.behavior === "siege" && proj.source !== "tower") {
         e.provokedUntil = time() + (TYPES[e.type].behavior.provokeDuration ?? 5);
@@ -706,7 +707,10 @@ function damagePlayer(player, amount) {
     player.shield -= absorbed;
     dmg -= absorbed;
   }
-  if (dmg > 0) player.hurt(Math.max(1, Math.round(dmg)));
+  if (dmg > 0) {
+    player.hurt(Math.max(1, Math.round(dmg)));
+    getTreeRoot().trigger("damage-taken", { kind: "player", pos: player.pos, amount: Math.max(1, Math.round(dmg)) });
+  }
 }
 
 /** Enemies touching `target` hit it (per-enemy attack cooldown). */
@@ -738,6 +742,7 @@ function resolveTowerContact() {
     if (e.dead || e.attackTimer > 0) return false;
     if (rectDistance(e.pos.x, e.pos.y, r).d > e.bodyRadius + ENEMY.towerContactSlack) return false;
     t.hurt(e.damage);
+    getTreeRoot().trigger("damage-taken", { kind: "tower", pos: t.pos, amount: e.damage });
     playAttack(e);
     e.attackTimer = ENEMY.attackCooldown;
     return false;
