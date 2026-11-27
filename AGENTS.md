@@ -8,10 +8,13 @@ This file is your entry point. **Read it before doing anything.**
 
 1. **Never commit or push directly to `main`.** `main` is the integration
    branch and must remain stable. All work goes through a feature branch and a
-   pull request.
+   pull request. Full rules: [`docs/branching.md`](docs/branching.md).
 2. **One branch per feature/task.** Branch naming: `<agent-or-name>/<short-task-slug>`
    (e.g. `agent-kai/enemy-spawning`). If several agents work on similar areas,
    include your unique id in the branch name so branches never collide.
+   **Easiest way:** `scripts/feature.sh start <slug>` creates the branch for
+   you (and `scripts/feature.sh finish` rebases, pushes, and opens the PR).
+   Details: [`docs/branching.md`](docs/branching.md).
 3. **Before starting work**, `git fetch origin && git switch main && git pull`
    so you're on the freshest `main`, then create your branch from it.
 4. **Commit early, push often** to your own branch. Never push to someone
@@ -30,6 +33,7 @@ with:
 - [`docs/architecture.md`](docs/architecture.md) — how the code is organized
 - [`docs/conventions.md`](docs/conventions.md) — coding style, commit, and PR rules
 - [`docs/agents.md`](docs/agents.md) — multi-agent etiquette (avoiding conflicts)
+- [`docs/branching.md`](docs/branching.md) — branch/PR rules (why you can't push to `main`)
 
 If a doc is missing or unclear, improve it in your PR — docs are first-class
 code here.
