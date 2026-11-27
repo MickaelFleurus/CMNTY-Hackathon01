@@ -141,7 +141,9 @@ debugLabel.onUpdate(() => {
   const status = d.isOver()
     ? `RUN OVER on wave ${d.wave()} · timer stopped at ${Math.ceil(d.timeLeft())}s`
     : d.inWave()
-    ? `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.remaining()} remaining`
+    ? d.isBossWave()
+      ? `BOSS WAVE ${d.wave()} · ${d.remaining()} remaining`
+      : `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.remaining()} remaining`
     : cycle.phase() === "shop"
     ? `wave ${d.wave()} cleared — shop open`
     : cycle.phase() === "starting"
