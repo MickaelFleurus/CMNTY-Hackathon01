@@ -46,10 +46,9 @@ function fire(from, targetPos) {
     opacity(1),
     lifespan(1.2, { fade: 0.2 }),
     "projectile",
+    // Damage on contact is applied by enemies.js (enemies aren't in KAPLAY's
+    // collision system — see the shared contract in docs/tasks.md): it hurts
+    // each overlapped enemy once and destroys the knife after `pierce` hits.
+    { damage: CFG.weapon.damage },
   ]);
-
-  // damage on contact — the shared contract from docs/tasks.md
-  onCollideUpdate("projectile", "enemy", (_, enemy) => {
-    if (enemy.hp?.() !== undefined) enemy.hurt(CFG.weapon.damage);
-  });
 }
