@@ -4,7 +4,8 @@
 // Reads (no imports from other owners' systems):
 //   - getTreeRoot().on("wave-start", n)              wave number (enemies.js)
 //   - on("killed", "enemy", ...)                      kill count (enemies.js)
-//   - player.hp() / player.maxHP() / player.coins     player object
+//   - getTreeRoot().on("coins-changed", n)           coin total (base.js)
+//   - player.hp() / player.maxHP()                    player object
 //   - player.shield                                   from regen.js (shown when > 0)
 import { xpState } from "./xp.js";
 import { HUD } from "../config.js";
@@ -12,17 +13,22 @@ import { HUD } from "../config.js";
 export const hudState = {
   wave: 0,
   kills: 0,
+  coins: 0,
 };
 
 export function initHud() {
   hudState.wave = 0;
   hudState.kills = 0;
+  hudState.coins = 0;
 
   getTreeRoot().on("wave-start", (n) => {
     hudState.wave = n;
   });
   on("killed", "enemy", () => {
     hudState.kills += 1;
+  });
+  getTreeRoot().on("coins-changed", (n) => {
+    hudState.coins = n;
   });
 
   const hud = add([fixed(), z(900), "hud"]);
@@ -49,7 +55,7 @@ export function initHud() {
     waveLabel.text = hudState.wave > 0 ? `WAVE ${hudState.wave}` : "";
     const hp = p?.hp ? `HP ${Math.max(0, Math.ceil(p.hp()))}/${p.maxHP()}` : "";
     const shield = p?.shield > 0 ? `\nShield ${Math.ceil(p.shield)}` : "";
-    stats.text = `LV ${xpState.level}\n${hp}${shield}\nCoins ${p?.coins ?? 0}\nKills ${hudState.kills}`;
+    stats.text = `LV ${xpState.level}\n${hp}${shield}\nCoins ${hudState.coins}\nKills ${hudState.kills}`;
   });
 
   // small hp bar that follows the player (world space)

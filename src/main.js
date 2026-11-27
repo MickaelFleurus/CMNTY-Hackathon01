@@ -1,5 +1,5 @@
 import kaplay from "kaplay";
-import { CFG } from "./config.js";
+import { CFG, SHOP } from "./config.js";
 import { buildGround } from "./systems/map.js";
 import { followCamera } from "./systems/camera.js";
 import { makePlayer } from "./systems/player.js";
@@ -11,6 +11,9 @@ import { initHud } from "./systems/hud.js";
 import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
+import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
+import { loadPortalSprites, makePortal } from "./systems/portal.js";
+import { loadShopSprites, makeShop } from "./systems/shop.js";
 
 kaplay({
   background: [26, 26, 38],
@@ -48,6 +51,9 @@ loadEnemySprites();
 loadXpAssets();
 loadUpgradeAssets();
 loadTowerSprites();
+loadBaseSprites();
+loadPortalSprites();
+loadShopSprites();
 
 buildGround();
 const player = makePlayer();
@@ -60,21 +66,6 @@ const enemyDirector = startEnemyDirector();
 startAuras();
 startRegen();
 startTower();
-
-// TEMP until Akram's base.js lands: a stand-in base where the player starts,
-// so the base effects have something to center on. base.js replaces it.
-if (!get("base").length) {
-  add([
-    rect(56, 56, { radius: 8 }),
-    pos(player.pos),
-    anchor("center"),
-    color(200, 180, 120),
-    outline(3, rgb(34, 24, 48)),
-    z(-4),
-    "base",
-    "temp-base",
-  ]);
-}
 
 // TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
 const TEMP_PICK_KEYS = {
@@ -98,6 +89,10 @@ getTreeRoot().on("run-over", ({ reason }) => {
   add([text(`RUN OVER — ${reason}`, { size: 36 }), pos(center()), anchor("center"), fixed(), z(1000)]);
 });
 
+makeBase();
+makePortal();
+makeShop();
+
 // TEMP until the cycle director (portal → shop → next wave) exists:
 // start wave 1, and start the next wave a few seconds after each one ends.
 const TEMP_WAVE_GAP = 3; // s
@@ -117,6 +112,18 @@ add([
   pos(16, 16),
   fixed(),
 ]);
+
+// TEMP debug for the base/shop PR: N fires the wave-end→portal→shop chain
+// (cycle director replaces this). P teleports home. C grants 50 coins.
+onKeyPress("n", () => {
+  getTreeRoot().trigger("wave-end", { wave: enemyDirector.wave(), reason: "debug", kills: 0 });
+  getTreeRoot().trigger("portal-enter");
+});
+onKeyPress("c", () => addCoins(50));
+onKeyPress("p", () => {
+  const p = get("player")[0];
+  if (p) p.pos = vec2(SHOP.home.x + 80, SHOP.home.y);
+});
 
 const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
 debugLabel.onUpdate(() => {

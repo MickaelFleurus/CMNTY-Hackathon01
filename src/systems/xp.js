@@ -1,14 +1,13 @@
-// XP gems + other pickups (hearts, coins) and the leveling curve.
+// XP gems + heart pickups and the leveling curve. Coins are Akram's (base.js).
 //
 // Contract with the other systems (no imports between systems):
 //   - Listens to on("drop", "enemy", (enemy, { kind, pos, value })) from
 //     enemies.js and spawns a pickup there. Kinds: "xp-*" give xp,
-//     "heart" heals the player, "coin"/"coin-bag" give coins.
+//     "heart" heals the player. Other kinds are ignored.
 //   - Pickups are tagged "xp-gem" (xp) or "pickup" (others). Collection is a
 //     distance check, not area(), so lots of gems stay cheap.
 //   - Writes to the player object so others can read it without imports:
 //       player.level   current level (enemies.js spawn conditions read this)
-//       player.coins   coin total (the shop spends it by lowering it)
 //   - On level up: player.trigger("levelup", level)
 import { XP, PICKUP_SPRITES } from "../config.js";
 
@@ -72,8 +71,6 @@ function collect(p, pickup) {
     addXp(value);
   } else if (kind === "heart") {
     p.heal?.(XP.heartHeal);
-  } else if (kind.startsWith("coin")) {
-    p.coins = (p.coins ?? 0) + (value || XP.coinValue);
   }
 }
 
@@ -100,7 +97,6 @@ export function initXp() {
   const p = player();
   if (p) {
     p.level = 1;
-    p.coins = p.coins ?? 0;
     // health(hp) without a max lets heal() overshoot; cap at the starting hp
     if (p.maxHP?.() == null && p.hp) p.setMaxHP(p.hp());
   }
