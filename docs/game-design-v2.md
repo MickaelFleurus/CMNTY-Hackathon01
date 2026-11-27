@@ -221,6 +221,16 @@ real interface:
   move direction is fine) or make the play view fill the screen with a
   proper **top navigation/info bar** (the redesigned HUD strip above)
   instead of text floating over the playfield.
+- **Portrait on phones.** The web player currently letterboxes the
+  1280x720 view, which stays widescreen (and tiny) on a phone in
+  portrait. If feasible, switch the mobile layout to a portrait-friendly
+  view: pick a portrait design resolution (e.g. 720x1280), detect a
+  narrow/portrait screen and swap the game's aspect + HUD arrangement
+  accordingly (HUD strips along the top/bottom, joystick bottom center).
+  Desktop keeps the widescreen letterboxed view. If a full portrait
+  layout is too much, a middle ground is asking the player to rotate
+  the phone (with an on-screen hint), but a real portrait layout is the
+  goal.
 
 ### Pause
 
