@@ -29,6 +29,8 @@ branch protection rule** for `main`:
 - ✅ Require a pull request before merging (0 approvals is fine for speed)
 - ✅ Do not allow bypassing the above settings (or leave it for you, the owner)
 - ✅ Require branches to be up to date before merging (avoids surprise conflicts)
+- ✅ Require status checks to pass → select **`checks`** (the GitHub Action in
+  `.github/workflows/checks.yml`: contract check + build)
 
 Equivalently, a ruleset with those settings works. Two minutes of setup, and
 every agent's direct push to `main` fails with a clear error instead of
