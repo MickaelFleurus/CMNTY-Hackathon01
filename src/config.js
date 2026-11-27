@@ -221,3 +221,18 @@ export const CFG = {
     maxDrag: 56, // px from base center at which knob reads full input
   },
 };
+
+// ---------------------------------------------------------------------------
+// Camera (owner: Mickael — src/systems/camera.js)
+// ---------------------------------------------------------------------------
+export const CAMERA = {
+  // How fast the camera catches up with its target (1/s, frame-rate
+  // independent exponential smoothing). Higher = tighter follow.
+  followRate: 10,
+  // Look ahead of the player in the direction they're moving, so there's
+  // more room to see what you're walking into.
+  lookahead: 70, // px
+  // How fast the lookahead swings to a new direction (1/s). Low = the small,
+  // smooth drift when the player changes direction.
+  lookaheadRate: 3,
+};

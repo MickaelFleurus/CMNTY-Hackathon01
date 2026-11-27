@@ -1,6 +1,7 @@
 import kaplay from "kaplay";
 import { CFG } from "./config.js";
 import { buildGround } from "./systems/map.js";
+import { followCamera } from "./systems/camera.js";
 import { makePlayer } from "./systems/player.js";
 import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
@@ -41,6 +42,7 @@ loadEnemySprites();
 
 buildGround();
 const player = makePlayer();
+followCamera(player);
 makeWeapon(player);
 const enemyDirector = startEnemyDirector();
 
