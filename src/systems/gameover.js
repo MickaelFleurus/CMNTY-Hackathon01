@@ -3,9 +3,9 @@
 // best-run record, and restarts the run on Space/Enter or click.
 //
 // Events it reads (no imports from other owners' systems):
-//   - "run-over" { reason }    from tower.js — reason + stats snapshot
-//   - "run-frozen"             from runstate.js — opens the screen
-// Restarts by reloading the page — every system boots fresh in main.js, and a
+//   - "run-over" { reason }    from tower.js - reason + stats snapshot
+//   - "run-frozen"             from runstate.js - opens the screen
+// Restarts by reloading the page - every system boots fresh in main.js, and a
 // reload cannot leak module state (coins, xpState, cycle phase, upgrades).
 import { hudState } from "./hud.js";
 import { xpState } from "./xp.js";

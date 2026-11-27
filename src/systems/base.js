@@ -1,16 +1,16 @@
 // The player's home base: a fixed structure at CFG.home that anchors the v2
 // loop (wave out → portal home → shop). The base itself is a visual anchor
-// for now — passives/actives chosen in the shop attach to it (tasks-v2 #3,
+// for now - passives/actives chosen in the shop attach to it (tasks-v2 #3,
 // Mickael). Enemies don't interact with it yet; the tower/boss tasks make it
 // targetable later.
 //
-// Contract (no imports needed — use KAPLAY tags/events):
+// Contract (no imports needed - use KAPLAY tags/events):
 //   - The base carries the "base" tag at SHOP.home.
 //   - Kills MAY pay out coins: listens on("drop","enemy") for kind "coin"
 //     (enemies.js rolls ONE drop per kill: XP, heart, coin or nothing) and
 //     spawns a coin pickup at the enemy's death position; coins fly to the player inside
 //     SHOP.coins.magnetRadius and are collected on contact. Coin count lives
-//     on root event state — read it via the exported getCoins()/addCoins()
+//     on root event state - read it via the exported getCoins()/addCoins()
 //     helpers or listen for the "coins-changed" root event.
 //   - getTreeRoot().on("coins-changed", (coins) => …)   every coin change
 //   - spawnCoins(n, pos)   helper for other systems to grant coins (boss rewards)
@@ -38,7 +38,7 @@ export function loadBaseSprites() {
 }
 
 // ---------------------------------------------------------------------------
-// coins (module state — one economy shared by base/shop/hud)
+// coins (module state - one economy shared by base/shop/hud)
 // ---------------------------------------------------------------------------
 let coins = 0;
 

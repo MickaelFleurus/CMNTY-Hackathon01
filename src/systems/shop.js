@@ -4,7 +4,7 @@
 //
 // The shop only SELLS: it deducts coins and fires the root event
 //   getTreeRoot().trigger("shop-pick", pick)
-// with pick = { id, quadrant, level, params } — the effect systems
+// with pick = { id, quadrant, level, params } - the effect systems
 // (auras/regen/tower, tasks-v2 #3, Mickael) apply the params. The pick's
 // level comes from this shop's purchase history (upgrading = buying the
 // same option again).
@@ -24,7 +24,7 @@ let spritesLoaded = false;
 export function loadShopSprites() {
   if (spritesLoaded) return;
   spritesLoaded = true;
-  // 20 upgrade icons in one sheet? No — individual Icon_*.png files.
+  // 20 upgrade icons in one sheet? No - individual Icon_*.png files.
   const icons = ["Armor", "Might", "Regen", "Lightning"];
   for (const name of icons) {
     loadSprite(
@@ -54,7 +54,7 @@ export function makeShop() {
       anchor("topleft"),
     ]);
     ui.add([
-      text("SHOP — pick one (coins: " + getCoins() + ")", { size: 26 }),
+      text("SHOP - pick one (coins: " + getCoins() + ")", { size: 26 }),
       pos(60, 40),
     ]);
 
@@ -78,7 +78,7 @@ export function makeShop() {
       "shop-skip",
     ]);
     skip.add([
-      text(`Skip — no upgrade (${SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ")})`, { size: 14 }),
+      text(`Skip - no upgrade (${SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ")})`, { size: 14 }),
       pos(150, 28),
       anchor("center"),
     ]);
@@ -147,7 +147,7 @@ function buildCell(ui, opt, x, y, levels, buy) {
     text(
       level >= opt.maxLevel
         ? "MAX"
-        : `lv ${level} — cost ${cost}`,
+        : `lv ${level} - cost ${cost}`,
       { size: 14 },
     ),
     pos(16, 140),

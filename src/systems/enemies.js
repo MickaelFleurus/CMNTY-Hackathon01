@@ -1,8 +1,8 @@
 // Enemies: factory, chase behaviour, contact attack, death + drops, and the
 // wave director (each wave spawns a budget of enemies, then ends when cleared
-// or when its timer runs out — see docs/game-design-v2.md).
+// or when its timer runs out - see docs/game-design-v2.md).
 //
-// Contract for other systems (no imports needed — use KAPLAY tags/events):
+// Contract for other systems (no imports needed - use KAPLAY tags/events):
 //   - Live enemies carry the "enemy" tag, a pos and a health() comp. Dying
 //     enemies lose "enemy", so they can't be targeted while the death anim plays.
 //   - Enemies have NO KAPLAY area(): they don't take part in KAPLAY's
@@ -19,10 +19,10 @@
 //         Use anchor("center") on projectiles so pos is the visual center.
 //       * PLAYER CONTACT: enemies overlapping the "player" hurt it. Damage is
 //         scaled by player.buffs.damageTaken (defense aura) and absorbed first
-//         by player.shield (regen shield) — see damagePlayer().
+//         by player.shield (regen shield) - see damagePlayer().
 //       * TARGETING (docs/game-design-v2.md → "Enemy targeting"): each enemy
 //         picks the player or the tower (object tagged "tower" with health();
-//         the base) — focus the clearly weaker one (hp fraction), otherwise
+//         the base) - focus the clearly weaker one (hp fraction), otherwise
 //         split the horde (ENEMY_TARGETING), re-evaluated on a short timer
 //         with stickiness. A downed player (player.down, respawn.js) isn't a
 //         target and can't be hit.
@@ -38,7 +38,7 @@
 //       only when the drop roll succeeds (xp.js spawns the gem/item)
 //   - Enemies damage the player on contact by calling `player.hurt(n)` if
 //     the "player" object has a health() comp.
-//   - WAVES (root events, no import needed — e.g. for the cycle director):
+//   - WAVES (root events, no import needed - e.g. for the cycle director):
 //       getTreeRoot().trigger("enemy-start-wave", n)   start wave n (omit n = next)
 //       getTreeRoot().trigger("enemy-clear")           despawn every enemy, no drops
 //       getTreeRoot().on("wave-start", (n) => …)
@@ -46,7 +46,7 @@
 //         reason: "cleared" (whole budget spawned + killed) or "timeout".
 //       On getTreeRoot().on("run-over"): the director freezes (timer stops,
 //         no spawns/hits/new waves, enemies paused in place).
-//         Leftover enemies (timeout) die on the spot when the wave ends —
+//         Leftover enemies (timeout) die on the spot when the wave ends -
 //         death anim, no drops, not counted as kills (ENEMY_WAVES.killOnEnd).
 //   - External spawn triggers (for `{ trigger: "name" }` spawn conditions):
 //       getTreeRoot().trigger("enemy-trigger", "bat-swarm")   // no import needed
@@ -624,7 +624,7 @@ function buildGrid() {
 
 /**
  * Call fn(enemy) for every live enemy whose center might be within `radius`
- * of (x, y) (cell-level filter — callers do the exact distance check).
+ * of (x, y) (cell-level filter - callers do the exact distance check).
  * Return true from fn to stop early.
  */
 function forEachEnemyNear(x, y, radius, fn) {

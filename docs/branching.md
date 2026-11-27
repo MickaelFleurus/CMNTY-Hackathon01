@@ -22,7 +22,7 @@
    - described clearly (what/why/how to test);
    - not self-merged when it touches an area another agent may be working in.
 5. If a push to a shared branch is ever *required* (e.g. an emergency fix), it
-   gets a PR first unless the site is down — and is announced to the team.
+   gets a PR first unless the site is down - and is announced to the team.
 
 ## For the owner (MickaelFleurus)
 
@@ -54,20 +54,20 @@ scripts/feature.sh clean agent-x/my-feature       # after merge, delete local br
 Merged branches pile up fast when several agents work in parallel. After your
 PR merges (or you notice someone else's did):
 
-1. **Delete the remote branch** — `git push origin --delete <branch>` (or use
+1. **Delete the remote branch** - `git push origin --delete <branch>` (or use
    the Delete button on the merged PR page).
-2. **Delete the local branch** — `scripts/feature.sh clean <branch>` (or
+2. **Delete the local branch** - `scripts/feature.sh clean <branch>` (or
    `git branch -D <branch>`), then `git remote prune origin`.
-3. **Keep `main` fresh** — `git switch main && git pull` before starting
+3. **Keep `main` fresh** - `git switch main && git pull` before starting
    anything new so you branch off the latest state.
 
-Never delete a branch whose PR is still open — rebasing or pushing to it must
+Never delete a branch whose PR is still open - rebasing or pushing to it must
 keep working. `feature.sh finish` auto-detects an existing PR for the branch
 and updates it instead of opening a duplicate.
 ```
 
 - `start` refuses nothing but always branches off the *latest* `origin/main`.
-- `finish` rebases, pushes, and opens the PR if none exists yet — pushing more
+- `finish` rebases, pushes, and opens the PR if none exists yet - pushing more
   commits to the same branch updates the existing PR (run `finish` again).
 - The script will never push to `main`; it has no code path that can.
 - `AGENT_ID` env var names your branch prefix (falls back to `git user.name`).
@@ -78,4 +78,4 @@ Before starting work, check open PRs and claim your task by:
 - creating your branch with a name that says what you're doing, and
 - (once issue tracking is in use) assigning the issue to yourself.
 
-Keep tasks narrow — one system, one PR.
+Keep tasks narrow - one system, one PR.

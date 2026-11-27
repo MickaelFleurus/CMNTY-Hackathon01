@@ -1,4 +1,4 @@
-# AGENTS.md — Agent Instructions
+# AGENTS.md - Agent Instructions
 
 **You are an agent working on this repo alongside other agents and humans.**
 
@@ -62,19 +62,19 @@ merging**:
 ## Read the docs before coding
 
 Context lives in `docs/`. **Read the relevant files there before touching
-code** — they explain the game design, architecture, and conventions. Start
+code** - they explain the game design, architecture, and conventions. Start
 with:
 
-- [`docs/game-design-v2.md`](docs/game-design-v2.md) — what we're building (survivors × tower-defense hybrid)
-- [`docs/game-design.md`](docs/game-design.md) — original concept (superseded, kept as baseline record)
-- [`docs/architecture.md`](docs/architecture.md) — how the code is organized
-- [`docs/conventions.md`](docs/conventions.md) — coding style, commit, and PR rules
-- [`docs/agents.md`](docs/agents.md) — multi-agent etiquette (avoiding conflicts)
-- [`docs/branching.md`](docs/branching.md) — branch/PR rules (why you can't push to `main`)
-- [`docs/sync.md`](docs/sync.md) — pull/rebase routine to avoid merge conflicts
-- [`docs/assets.md`](docs/assets.md) — the Survivors Starter Kit sprite pack (what's in it, how to load it)
+- [`docs/game-design-v2.md`](docs/game-design-v2.md) - what we're building (survivors × tower-defense hybrid)
+- [`docs/game-design.md`](docs/game-design.md) - original concept (superseded, kept as baseline record)
+- [`docs/architecture.md`](docs/architecture.md) - how the code is organized
+- [`docs/conventions.md`](docs/conventions.md) - coding style, commit, and PR rules
+- [`docs/agents.md`](docs/agents.md) - multi-agent etiquette (avoiding conflicts)
+- [`docs/branching.md`](docs/branching.md) - branch/PR rules (why you can't push to `main`)
+- [`docs/sync.md`](docs/sync.md) - pull/rebase routine to avoid merge conflicts
+- [`docs/assets.md`](docs/assets.md) - the Survivors Starter Kit sprite pack (what's in it, how to load it)
 
-If a doc is missing or unclear, improve it in your PR — docs are first-class
+If a doc is missing or unclear, improve it in your PR - docs are first-class
 code here.
 
 ## Project snapshot
@@ -85,7 +85,7 @@ code here.
 - **Stack:** JavaScript (ES modules), KAPLAY (`kaplay` npm package), Vite for
   dev server + bundling.
 - **Run locally:** `npm install && npm run dev`, then open the printed URL.
-- **Current state:** minimal scaffolding — a player rectangle that moves and
+- **Current state:** minimal scaffolding - a player rectangle that moves and
   a placeholder enemy. Everything else is to be built.
 
 ## Conflict avoidance (the important part)
@@ -94,14 +94,14 @@ Multiple agents may be active at once. To not step on each other:
 
 - **Claim your task before you start.** If there's a task list, check it and
   add yourself; if not, pick a narrow scope and say so in your branch/PR.
-- **Keep changes small and focused** — one feature per branch. Huge PRs are
+- **Keep changes small and focused** - one feature per branch. Huge PRs are
   hard to review and conflict-prone.
 - **Avoid editing shared files** (`index.html`, `package.json`, `vite.config.js`,
   `AGENTS.md`, `docs/*`) unless that IS your task. If you must, do it in a
   separate tiny PR.
 - **New systems in new files.** If you're adding an enemy type, weapon, UI
   element, etc., put it in its own module under `src/` and import it from
-  `src/main.js` (or a scene file) — don't append to someone else's file.
+  `src/main.js` (or a scene file) - don't append to someone else's file.
 - **Before opening a PR**, `git fetch origin && git rebase origin/main` on your
   branch to resolve conflicts early on your side.
 

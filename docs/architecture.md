@@ -24,7 +24,7 @@ docs/                 design + agent docs
 ```
 
 A system module exports plain functions (e.g. `spawnEnemy(pos)`, `makeWeapon(player, def)`)
-that use the global `kaplay()` context — KAPLAY's API is global-by-default, so
+that use the global `kaplay()` context - KAPLAY's API is global-by-default, so
 systems don't need to import engine internals. Keep system files independent of
 each other where possible; communication happens through KAPLAY component
 tags/objects (e.g. `"enemy"`, `"projectile"`, `"xp-gem"` tags) and events
@@ -34,17 +34,17 @@ tags/objects (e.g. `"enemy"`, `"projectile"`, `"xp-gem"` tags) and events
 
 - **Game objects + components**: `add([sprite/rect, pos, area, body, health(), "enemy"])`
 - **Tags** for grouping & collision groups (`"enemy"`, `"player"`, `"gem"`)
-- `onCollide(...)` for most collisions — **except enemies**, which skip
+- `onCollide(...)` for most collisions - **except enemies**, which skip
   KAPLAY collisions for perf; projectile→enemy and enemy→player hits are
   resolved in `enemies.js` (contract in [`tasks.md`](tasks.md#shared-contract-agree-before-merging))
 - **Scenes** (`scene("game", ...)` / `go("game")`) for game vs. level-up vs. death
-  (or use paused overlays for level-up — team's choice, document it here once decided)
+  (or use paused overlays for level-up - team's choice, document it here once decided)
 - **Camera**: `camScale`, `addLevel` or manual world coords with camera follow
 
 ## Decisions made
 
 - Vite over plain script tags (ES modules, fast reload).
-- Tuning constants centralized in `src/config.js` — no magic numbers in systems.
+- Tuning constants centralized in `src/config.js` - no magic numbers in systems.
 - JS not TS (hackathon speed; revisit if the codebase grows).
 
 ## Not yet decided

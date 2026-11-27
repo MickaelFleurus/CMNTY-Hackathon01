@@ -1,10 +1,10 @@
 // Portal: appears when a wave ends, teleports the player home to the base so
 // the shop opens (v2 cycle: wave → portal → shop → next wave). The
 // cycle director (tasks-v2 #3, Mickael) will own the phase sequencing; this
-// system is intentionally dumb — it listens to "wave-end"/"wave-start" and
+// system is intentionally dumb - it listens to "wave-end"/"wave-start" and
 // only fires "portal-enter" when the player walks into it.
 //
-// Contract (no imports needed — use KAPLAY tags/events):
+// Contract (no imports needed - use KAPLAY tags/events):
 //   - Portal spawns near the player when the cycle director starts a break
 //     with a portal (cycle-phase { phase: "break", portal: true }, i.e. the
 //     player is far from the golem); despawns on any other phase and on

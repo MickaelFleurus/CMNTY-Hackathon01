@@ -11,7 +11,7 @@
 
 ## Code style
 
-- Plain JS ES modules, 2-space indent, no build-time lint config yet — match
+- Plain JS ES modules, 2-space indent, no build-time lint config yet - match
   the style of existing files.
 - **No magic numbers.** Tuning values (speeds, timers, spawn rates, HP, XP)
   live in `src/config.js` as named constants and are imported from there.
@@ -38,14 +38,14 @@ see `src/systems/devtools.js`:
 
 ## Testing / verification
 
-Run `npm test` — it chains both gates (on the hackathon machine use
+Run `npm test` - it chains both gates (on the hackathon machine use
 `/usr/bin/npm test`; the nvm-shimmed npm doesn't run scripts). Both need the
 dev server on :5173 (`npx vite` in a background terminal):
 
-1. **`scripts/smoke.mjs`** — boots the game in headless Chromium for ~10s,
+1. **`scripts/smoke.mjs`** - boots the game in headless Chromium for ~10s,
    fails on any console error/pageerror. Catches KAPLAY runtime crashes
    (missing sprites, component dependency errors) that `vite build` misses.
-2. **`scripts/playwright-test.mjs`** — simulates ~6s of real keyboard input,
+2. **`scripts/playwright-test.mjs`** - simulates ~6s of real keyboard input,
    asserts the game canvas exists, saves a screenshot to
    `/tmp/kaplay-playwright.png`. Catches "boots but doesn't play" bugs.
    First run needs `npx playwright install chromium`.

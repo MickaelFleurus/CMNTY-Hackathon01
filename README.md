@@ -1,4 +1,4 @@
-# CMNTY Hackathon 01 — Vampire Survivors
+# CMNTY Hackathon 01 - Golem Necromancer
 
 Vampire-survivors-style game built with [KAPLAY](https://kaplayjs.com/) + Vite.
 
@@ -19,5 +19,5 @@ Open the printed localhost URL in your browser.
 
 ## Structure
 
-- `index.html` — Vite entry point
-- `src/main.js` — game entry (KAPLAY scene setup)
+- `index.html` - Vite entry point
+- `src/main.js` - game entry (KAPLAY scene setup)

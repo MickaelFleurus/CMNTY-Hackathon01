@@ -29,6 +29,11 @@ kaplay({
   background: [26, 26, 38],
   width: CFG.viewport.width,
   height: CFG.viewport.height,
+  // Fill the browser window below the nav bar: the canvas takes #game-root's
+  // full size and the 1280x720 game view is letterboxed inside it (black
+  // bars), keeping the design aspect ratio on any screen, incl. mobile.
+  root: document.getElementById("game-root"),
+  letterbox: true,
   crisp: true,
   // Collision broadphase cell size (default 64). Enemies are ~24px and pack
   // densely around the player; 32px cells cut the pair checks roughly in half
@@ -38,7 +43,7 @@ kaplay({
 
 // --- assets (Survivors Starter Kit, see docs/assets.md) ---
 // full character sheet (96x64): 6 cols x 4 rows, one animation per row
-// idle r0(4f) walk r1(4f) hit r2(2f) death r3(6f) — frame indices for sliceX:6
+// idle r0(4f) walk r1(4f) hit r2(2f) death r3(6f) - frame indices for sliceX:6
 loadSprite("hero-knight", "gfx/SurvivorsStarterKit_v1.0/Heroes/Hero_Knight.png", {
   sliceX: 6,
   sliceY: 4,
@@ -119,7 +124,7 @@ getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
 });
 
 add([
-  text("Wave 1 — WASD/arrows to move\n(pistol auto-fires at zombies)", {
+  text("Wave 1 - WASD/arrows to move\n(pistol auto-fires at zombies)", {
     size: 20,
   }),
   pos(16, 16),
@@ -147,15 +152,15 @@ debugLabel.onUpdate(() => {
       ? `BOSS WAVE ${d.wave()} · ${d.remaining()} remaining`
       : `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.remaining()} remaining`
     : cycle.phase() === "shop"
-    ? `wave ${d.wave()} cleared — shop open`
+    ? `wave ${d.wave()} cleared - shop open`
     : cycle.phase() === "starting"
     ? `wave ${d.wave() + 1} incoming…`
-    : `wave ${d.wave()} over — go back to the golem for the shop`;
+    : `wave ${d.wave()} over - go back to the golem for the shop`;
   const tc = targetCounts();
   // down/respawnIn/nextRespawn are assigned dynamically by respawn.js
   const /** @type {any} */ respawnState = player;
   const respawn = respawnState.down
-    ? `DEAD — respawn in ${respawnState.respawnIn.toFixed(1)}s`
+    ? `DEAD - respawn in ${respawnState.respawnIn.toFixed(1)}s`
     : `next death: ${respawnState.nextRespawn}s respawn`;
   debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}` +
     `\ntargeting: player ${tc.player} · tower ${tc.tower} · ${respawn}`;

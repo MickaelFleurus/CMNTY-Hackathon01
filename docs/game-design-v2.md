@@ -1,4 +1,4 @@
-# Game Design v2 — Survivors × Tower Defense ("Waves & Walls")
+# Game Design v2 - Survivors × Tower Defense ("Waves & Walls")
 
 **Engine:** KAPLAY (web, JS) · **Status:** brainstormed conclusion, supersedes
 the pure-survivors loop in `game-design.md` (which stays as the movement/spawn
@@ -8,7 +8,7 @@ baseline we already built).
 
 Vampire Survivors mechanics (auto-attack, hordes, XP) grafted onto a
 tower-defense spine: you fight waves out in the field, then port home, spend,
-and **choose what your base becomes** — and that choice changes the entire
+and **choose what your base becomes** - and that choice changes the entire
 next run segment. The pick is the game.
 
 ## The identity hook
@@ -20,39 +20,39 @@ Every run the player shapes their base along two axes (defense/offense ×
 passive/active). Defense pick → play style: kite enemies into your base's
 reach. Offense pick → play style: mobile DPS hero. Passive pick → the base is
 a safe aura engine you can leave. Active pick → the base is a living thing you
-must protect — it becomes your life total.
+must protect - it becomes your life total.
 
 ## The core loop (one "cycle")
 
-1. **Plank** — you start with nothing but a plank (starter melee poke / the
+1. **Plank** - you start with nothing but a plank (starter melee poke / the
    humblest weapon). Wave 1 of enemies comes at you in the field.
-2. **Survive the wave** — survivors-style: move, auto-attack, XP gems drop,
+2. **Survive the wave** - survivors-style: move, auto-attack, XP gems drop,
    collect to level (level-ups still work survivors-style during the wave).
-3. **Portal opens** — when the wave is cleared (or timer expires), a
+3. **Portal opens** - when the wave is cleared (or timer expires), a
    teleport appears; stepping in returns you to your **base**.
-4. **Shop** — at base, a shop opens with **1 pick out of 4**, always the same
+4. **Shop** - at base, a shop opens with **1 pick out of 4**, always the same
    grid:
    | | Defense | Offense |
    |---|---|---|
    | **Passive** | base emits a **defense aura** (armor/slow/regen aura, growing range per upgrade) | base emits an **offense aura** (buffs your damage/attack speed; stronger the more you invest) |
    | **Active** | base **regens your HP every X s** while you're in range (flesh out: heal tick + brief shield on trigger?) | base **fights for you** (a tower that auto-attacks; stronger than passives) |
-5. **Next wave** — portal out, field wave harder than the last, repeat.
-6. **Boss** — a boss eventually spawns **near your base**. If your base (and
-   you) aren't strong enough by boss time, you lose — the boss punishes a
+5. **Next wave** - portal out, field wave harder than the last, repeat.
+6. **Boss** - a boss eventually spawns **near your base**. If your base (and
+   you) aren't strong enough by boss time, you lose - the boss punishes a
    weak or lopsided build. Gimmick idea (iterate): bosses demand a *specific*
    counter, so the 1-of-4 shop choice matters more than raw numbers.
 
 ## The passives/actives trade (the design heart)
 
 - **Passives** scale *reach*: every upgrade level grows the **aura radius**,
-  so eventually you don't need to camp home — freedom, and the horde still
+  so eventually you don't need to camp home - freedom, and the horde still
   comes to *you*.
 - **Actives** are *stronger per level but bind your fate to the base*: the
   active structure (e.g. the offense tower) is **targetable by enemies**, and
-  **if the tower dies, you die** — the tower effectively IS your life. You
+  **if the tower dies, you die** - the tower effectively IS your life. You
   become a bodyguard, not a roamer.
 - Defense vs offense passives: defense auras protect/restore, offense auras
-  multiply your killing speed — one says "outlast", the other says "delete".
+  multiply your killing speed - one says "outlast", the other says "delete".
 
 ## Lose condition + player respawn
 
@@ -175,9 +175,9 @@ sprite.
 Every hit shows a small floating number at the point of impact so the player
 can read the fight at a glance:
 
-- **Damage dealt** — pops over the enemy when a projectile or melee hit
+- **Damage dealt** - pops over the enemy when a projectile or melee hit
   lands. Bigger font for crit-scale hits (later). Rise + fade, then gone.
-- **Damage taken** — pops over the player (and over the tower when the
+- **Damage taken** - pops over the player (and over the tower when the
   tower is hit) in a different color (red for damage to us, white for
   damage to enemies), so incoming pressure is visible without watching
   the HP bars.
@@ -185,7 +185,7 @@ can read the fight at a glance:
   a combination of base damage, player level, level-up stat bonuses,
   weapon level and weapon type, plus the aura buffs. To keep one source
   of truth, every weapon computes its projectile `damage` through one
-  shared helper that takes those factors in — damage numbers then just
+  shared helper that takes those factors in - damage numbers then just
   display what that helper produced.
 - Implementation notes: spawn as short-lived text objects on the existing
   hit events (`on("hit", "projectile", …)` for dealt, the player/tower
@@ -198,13 +198,13 @@ can read the fight at a glance:
 The current HUD is a row of plain text on the top edge. It should become a
 real interface:
 
-- **HP orb (Diablo-style)** — a round vial on the left of the HUD bar:
+- **HP orb (Diablo-style)** - a round vial on the left of the HUD bar:
   the filled "liquid" height shows current HP vs the orb's full height as
   max HP, red liquid on a dark glass background, with the numeric value
   (e.g. `72/100`) overlaid. The orb replaces the flat HP bar for the
   player.
 - **HP bars are green-to-empty, not red.** The current bar reads as "full
-  health" when red and drops to black — invert that: full = green, low =
+  health" when red and drops to black - invert that: full = green, low =
   amber/red, empty segment dark gray (never pure black). Applies to the
   player bar if kept alongside the orb, the tower bar, and enemy HP bars.
 - **Weapon / level / XP get proper UI slots**, not free text: a weapon
@@ -225,10 +225,10 @@ real interface:
 ### Pause
 
 A pause toggle (**Space or Esc**) freezes the whole game behind a small
-overlay ("PAUSED — press Esc to resume"): enemies, spawns, wave timer,
+overlay ("PAUSED - press Esc to resume"): enemies, spawns, wave timer,
 weapons, regen and the survival timer all stop, while the HUD and overlay
 keep rendering. Pausing during the shop or the level-up screen is a no-op
-(those already hold the game). It never pauses on the game-over screen —
+(those already hold the game). It never pauses on the game-over screen -
 from there only Restart works.
 
 ### Game over screen (with run stats)
@@ -277,7 +277,7 @@ being hit and how much HP it has left:
 - **Danger state** when the tower drops below ~25% HP: a red pulse around
   the screen edges and a stronger arrow, so the player knows to go home now.
 - **Art direction for path visuals** (Akram, ComfyUI asset generation):
-  upgrade paths grow visually distinct per tier — offense paths drift
+  upgrade paths grow visually distinct per tier - offense paths drift
   toward red with tier, defense paths toward white/gray; actives get an
   aggressive silhouette (spikes/horns), passives stay soft-cornered.
   First asset passes by Akram.
@@ -292,34 +292,34 @@ survivors mode. This changes the early game and adds a golem identity pick:
 
 - **Wave 1 is player-only.** Enemies attack only the player, and the
   statue ignores (and is ignored by) them. Losing this wave is a real
-  run-over — **no respawn yet**, deaths only become a respawn timer once
+  run-over - **no respawn yet**, deaths only become a respawn timer once
   the golem is awake and is your life total.
 - **At the end of wave 1** the golem reanimates, and the player picks
   **1 of 3 golem styles** for this life:
   - **Guardian** (passive-centered): defensive auras and shields,
     protects the player while they roam near it.
-  - **Berserker** (offense-centered): fights mobs itself — swipes,
+  - **Berserker** (offense-centered): fights mobs itself - swipes,
     charges, kills for you.
-  - a third style (open — e.g. **Warden**: crowd-control/slow, or
+  - a third style (open - e.g. **Warden**: crowd-control/slow, or
     **Summoner**: spawns helpers). To iterate with playtests.
 - The style **can't be changed until you die** (new run = new pick), so
   the choice shapes the whole run like the shop quadrants do.
 - **Golem self-defense (all styles, built in):** a Minecraft-golem-style
-  **AOE knockback swipe** — anything that hits the golem gets flung far
+  **AOE knockback swipe** - anything that hits the golem gets flung far
   away (optionally a small amount of damage). Reason: without it the
   golem is guaranteed to die once enough mobs surround it; the swipe
   keeps the ring of enemies at bay so the tower's death is a slow
   pressure race, not an instant loss.
-- **Wave-1 alternative (not decided — don't build unless we agree the
+- **Wave-1 alternative (not decided - don't build unless we agree the
   golem mechanic isn't fun early):** keep the statue as a pure
   **respawn point**; the golem "activates" fully after wave 5 instead.
   Parked until playtested.
 - **Golem skill tree (later, needs wave-5+ pacing):** after roughly 5
   waves with a golem style picked, spend currency on **per-style skill
-  trees** — e.g. Berserker unlocks a flamethrower or lifesteal (the
+  trees** - e.g. Berserker unlocks a flamethrower or lifesteal (the
   more enemies it damages/kills, the more HP you/the golem regain);
   Guardian unlocks stronger auras/shields. The existing shop-pick
-  upgrades and the tree should not duplicate each other — shop = generic
+  upgrades and the tree should not duplicate each other - shop = generic
   power, tree = style identity.
 - **Upgrade UI rework:** the current golem upgrade interface is rough.
   Rebuild it as the skill tree UI, **keyboard-driven** (keys 1–9 per
@@ -328,7 +328,7 @@ survivors mode. This changes the early game and adds a golem identity pick:
 
 Open question for review: do golem styles *replace* the 2×2
 passive/active shop grid, or sit on top of it as a separate layer?
-(Working answer: sit on top — the shop stays generic; the golem style is
+(Working answer: sit on top - the shop stays generic; the golem style is
 the run's identity pick.)
 
 ## Boss + gimmick sketch (needs iteration)
@@ -342,7 +342,7 @@ the run's identity pick.)
     must lure it out.
   - **Phase counter**: each boss has a weakness matching one of the 4 shop
     quadrants, so the "right" pick differs per boss (but the player already
-    committed — so gimmick teaches, next run adapts).
+    committed - so gimmick teaches, next run adapts).
 - Losing condition: **the tower is destroyed** (see "Lose condition + player
   respawn"). Player death only starts the respawn timer.
 
@@ -350,31 +350,31 @@ the run's identity pick.)
 
 - Movement + touch joystick + infinite gray-zone ground (done, PR #5).
 - Enemy chase + spawn director + levels + drop events (done, PR #6).
-- XP gems, level-up pick-1-of-3, HUD — still wanted *during* field waves.
+- XP gems, level-up pick-1-of-3, HUD - still wanted *during* field waves.
 
 ## New build order (delta on top of the above)
 
-1. **Base entity + shop scene** — a base object at a fixed home location;
+1. **Base entity + shop scene** - a base object at a fixed home location;
    portal at wave end; shop UI with the 2×2 grid (one pick per cycle).
-2. **Cycle director** — wave N in field → clear → portal → shop → wave N+1.
+2. **Cycle director** - wave N in field → clear → portal → shop → wave N+1.
    Reuses Mickael's director with a "wave" wrapper.
-3. **Passive aura system** — growing-radius aura comps; read `docs/tasks.md`
+3. **Passive aura system** - growing-radius aura comps; read `docs/tasks.md`
    contract (tags) for implementation.
-4. **Active defense (HP regen tick)** — flesh out: regen X HP every Y s
+4. **Active defense (HP regen tick)** - flesh out: regen X HP every Y s
    in-range; maybe an on-take-damage shield proc as upgrade tiers rise.
-5. **Active offense (player-tethered tower)** — targetable base, tower HP,
+5. **Active offense (player-tethered tower)** - targetable base, tower HP,
    death = run death.
-6. **Player respawn ladder** — player death = timer instead of game over;
+6. **Player respawn ladder** - player death = timer instead of game over;
    step up per death, step down per wave cleared / boss defeated.
-7. **Smart enemy targeting** — focus the weaker target, else split between
+7. **Smart enemy targeting** - focus the weaker target, else split between
    player and tower (see "Enemy targeting").
-8. **Base-under-attack UI** — tower HP bar, hit flash, off-screen arrow,
+8. **Base-under-attack UI** - tower HP bar, hit flash, off-screen arrow,
    banner, danger state (see "UI we need").
-9. **Game over screen + stats + restart** — listens to `"run-over"`.
+9. **Game over screen + stats + restart** - listens to `"run-over"`.
    **Weapons & upgrades** (see "Weapons & upgrades catalog") can be built in
    parallel with 6–9: first wire the existing stat cards, then add weapons
    one per PR (one file each under `src/systems/`, like `knife.js`).
-10. **Boss wave + gimmick** — last; keep one boss, one gimmick for MVP.
+10. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
 
@@ -385,6 +385,6 @@ the run's identity pick.)
   **Decided: the base is the tower.** It has HP from the start of the run,
   enemies attack it, and its destruction ends the run. The active-offense
   pick makes the base itself shoot and levels it up.
-- Coins vs XP as the shop currency — both exist already in the asset pack.
+- Coins vs XP as the shop currency - both exist already in the asset pack.
 - Are the 4 shop options fixed every cycle, or does the pool grow with
   unlocks? (Fixed = readable; growing = roguelite.)
