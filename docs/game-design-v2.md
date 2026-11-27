@@ -97,6 +97,77 @@ Tuning values (how much weaker a target must be before enemies focus it,
 how many attackers count as "enough", re-evaluation interval) go in
 `src/config.js`.
 
+## Weapons & upgrades catalog (level-up pool)
+
+Everything the player can get from a **level-up card** during field waves
+(pick 1 of 3). Shop picks (the 2×2 base grid) are separate and listed above.
+Every entry has its own look, taken from the Survivors Starter Kit
+(`gfx/SurvivorsStarterKit_v1.0/`, see `docs/assets.md`): a projectile or
+effect sprite in the world, and an icon on its card.
+
+### Slots and levels
+
+- The player holds up to **4 weapons** and **4 stat upgrades**. Once the
+  slots are full, cards only offer levels for what you already have.
+- Each weapon goes up to **level 5**; each level adds one of the weapon
+  upgrades below (fixed path per weapon, so the card can say exactly what
+  you get).
+- Weapons all apply the global stats (Might, Cooldown, Area…) and the base
+  aura buffs (`player.buffs.damageMult`, `attackSpeedMult`).
+
+### Weapons
+
+How each one targets is its identity, and no two play the same:
+
+| Weapon | Targeting / behaviour | Look (projectile · icon) | Level path (Lv2 → Lv5) |
+|---|---|---|---|
+| **Plank** (starter) | **Hits in front of the player**: short poke in the facing direction | placeholder (no sprite in the pack yet) · `Icon_Axe` | +damage → +reach → hits behind too → +damage |
+| **Whip** | **Hits in front of the player**: wide horizontal slash in the facing direction | `Proj_Whip` · `Icon_Whip` | +area → also slashes behind → +damage → +area |
+| **Magic Bolt** | **Hits the nearest enemy**: homing bolt | `Proj_Magic_Bolt` · `Icon_Magic_Bolt` | +1 bolt → +damage → **rebound** 1 → +1 bolt |
+| **Knife** | **Throws several**: a fan of knives in the facing direction | `Proj_Knife` · `Icon_Knife` | every level: +1 knife per volley **and** **pierce** +1 (PR #41) |
+| **Axe** | **Goes through enemies**: thrown up in an arc, falls through the horde, high pierce | `Proj_Axe` · `Icon_Axe` | +damage → pierce +3 → +1 axe → +area |
+| **Boomerang** | **Goes through enemies** twice: flies out to the nearest enemy and comes back | `Proj_Boomerang` · `Icon_Boomerang` | pierce +2 → +1 boomerang → +speed → **rebound** off the screen edge |
+| **Fireball** | **Explodes**: flies to the nearest enemy, blows up on impact (area damage) | `Proj_Fireball` + `FX_Explosion` · `Icon_Fireball` | +blast area → +damage → +1 fireball → leaves a short burn |
+| **Lightning** | **Happens randomly on the screen**: strikes random enemies on screen | `Proj_Lightning` + `FX_Hit_Spark` · `Icon_Lightning` | +1 strike → +damage → **chains** to 1 nearby enemy → +1 strike |
+| **Holy Water** | **Happens randomly on the screen**: flasks land at random spots near the player and leave a burning puddle | `Proj_Holy_Water_Flask` → `Proj_Holy_Water_Flames` · `Icon_Holy_Water` | +duration → +1 flask → +area → +damage |
+| **Orbit Orb** | **Around the player**: orbs circle the player and hit what they touch | `Proj_Orbit_Orb` · `Icon_Orbit_Orb` | +1 orb → +speed → +1 orb → +radius |
+| **Aura** | **Around the player**: constant damage zone that also pushes enemies back a little | `Proj_Aura` · `Icon_Aura` | +area → +damage → knockback → +area |
+
+### Weapon upgrades (the building blocks of each level path)
+
+| Upgrade | What it does | Card icon |
+|---|---|---|
+| **Amount** | +1 projectile per attack (more knives / bolts / orbs / strikes) | the weapon's own icon |
+| **Pierce** | passes through N more enemies before disappearing (amount varies per weapon) | the weapon's own icon |
+| **Rebound** | after a hit, bounces to the nearest other enemy (or off the screen edge for Boomerang) | the weapon's own icon |
+| **Chain** | the hit jumps to a nearby enemy (Lightning only) | `Icon_Lightning` |
+| **Area** | bigger hitbox / blast / puddle / slash | `Icon_Area` |
+| **Damage** | +damage for that weapon only | the weapon's own icon |
+| **Speed** | faster projectile / orbit | the weapon's own icon |
+| **Duration** | effect stays longer (puddles, burns, orbs) | the weapon's own icon |
+
+### Stat upgrades (global, apply to every weapon / to the player)
+
+| Upgrade | Effect per level | Icon | Max |
+|---|---|---|---|
+| **Max HP** | +20 max health | `Icon_Max_HP` | 5 |
+| **Move Speed** | +10% movement speed | `Icon_Move_Speed` | 5 |
+| **Might** | +15% damage, all weapons | `Icon_Might` | 5 |
+| **Cooldown** | weapons fire 10% faster | `Icon_Cooldown` | 5 |
+| **Area** | +10% size of every hitbox / blast | `Icon_Area` | 5 |
+| **Armor** | −1 damage per hit taken | `Icon_Armor` | 5 |
+| **Regen** | heal 0.5 HP/s | `Icon_Regen` | 5 |
+| **Magnet** | pick up XP from further away | `Icon_Magnet` | 3 |
+| **Growth** | +10% XP gained | `Icon_Growth` | 5 |
+| **Luck** | better drops (hearts, coins) and more rare cards | `Icon_Luck` | 5 |
+
+Status in code: the level-up screen (`src/systems/upgrades.js`, PR #25)
+offers Max HP, Move Speed, Might, Cooldown, Magnet and Knife. On `main` only
+Magnet is applied. **PR #41** (chippe, in review) applies the other cards and
+adds the Knife (`src/systems/knife.js`). The current auto-attack "pistol"
+(`weapons.js`) behaves like Magic Bolt (nearest enemy) using the knife
+sprite.
+
 ## UI we need
 
 ### Game over screen (with run stats)
@@ -183,6 +254,9 @@ being hit and how much HP it has left:
 8. **Base-under-attack UI** — tower HP bar, hit flash, off-screen arrow,
    banner, danger state (see "UI we need").
 9. **Game over screen + stats + restart** — listens to `"run-over"`.
+   **Weapons & upgrades** (see "Weapons & upgrades catalog") can be built in
+   parallel with 6–9: first wire the existing stat cards, then add weapons
+   one per PR (one file each under `src/systems/`, like `knife.js`).
 10. **Boss wave + gimmick** — last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
