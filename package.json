@@ -1,0 +1,22 @@
+{
+  "name": "hackathon-game-vampsurvivors",
+  "version": "1.0.0",
+  "description": "Vampire-survivors-style hackathon game built with KAPLAY",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MickaelFleurus/CMNTY-Hackathon01.git"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "kaplay": "^3001.0.19"
+  },
+  "devDependencies": {
+    "vite": "^8.4.0"
+  }
+}
