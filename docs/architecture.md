@@ -34,7 +34,9 @@ tags/objects (e.g. `"enemy"`, `"projectile"`, `"xp-gem"` tags) and events
 
 - **Game objects + components**: `add([sprite/rect, pos, area, body, health(), "enemy"])`
 - **Tags** for grouping & collision groups (`"enemy"`, `"player"`, `"gem"`)
-- `onCollide("projectile", "enemy", ...)` for damage
+- `onCollide(...)` for most collisions — **except enemies**, which skip
+  KAPLAY collisions for perf; projectile→enemy and enemy→player hits are
+  resolved in `enemies.js` (contract in [`tasks.md`](tasks.md#shared-contract-agree-before-merging))
 - **Scenes** (`scene("game", ...)` / `go("game")`) for game vs. level-up vs. death
   (or use paused overlays for level-up — team's choice, document it here once decided)
 - **Camera**: `camScale`, `addLevel` or manual world coords with camera follow
