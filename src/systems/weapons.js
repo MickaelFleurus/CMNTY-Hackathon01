@@ -15,10 +15,12 @@ export function makeWeapon(player) {
     const target = nearestEnemy(player.pos, CFG.weapon.range);
     if (!target) return;
 
-    // offense aura (auras.js) sets player.buffs; 1 when outside every aura
+    // offense aura (auras.js) sets player.buffs; 1 when outside every aura.
+    // Level up cards (upgrade-effects.js) set player.stats; stacks on top.
     const buffs = player.buffs ?? {};
-    cooldown = CFG.weapon.fireInterval / (buffs.attackSpeedMult ?? 1);
-    fire(player.pos, target.pos, CFG.weapon.damage * (buffs.damageMult ?? 1));
+    const stats = player.stats ?? {};
+    cooldown = CFG.weapon.fireInterval / (buffs.attackSpeedMult ?? 1) / (stats.attackSpeedMult ?? 1);
+    fire(player.pos, target.pos, CFG.weapon.damage * (buffs.damageMult ?? 1) * (stats.damageMult ?? 1));
   });
 }
 

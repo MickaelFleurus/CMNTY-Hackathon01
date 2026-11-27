@@ -97,6 +97,14 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   When only one target is available, everyone goes for it.
 - **Base**: effects center on the first object tagged `"base"` (`base.js`).
   TEMP keys 1–4 in `main.js` still fire shop picks for testing.
+- **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
+  `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
+  It is separate from `player.buffs` (auras, rewritten every frame), so both
+  stack: `damage × buffs.damageMult × stats.damageMult`, `cooldown ÷
+  buffs.attackSpeedMult ÷ stats.attackSpeedMult`, `speed × stats.speedMult`.
+  Any new weapon should apply both, and skip firing while `player.down`,
+  `player.frozen` or `player.attackDisabled`.
+  Cards are announced as `player.trigger("upgrade", { id, level })`.
 - **Tags added in wave 2**: `"base"`, `"portal"`, `"tower"`, `"aura"`.
   Existing wave-1 tags (`"player"`, `"enemy"`, `"projectile"`, `"xp-gem"`)
   unchanged.
