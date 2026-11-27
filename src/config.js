@@ -31,13 +31,26 @@ export const ENEMY_LEVEL = {
   damageGrowth: 0.2, // damage = baseDamage * (1 + damageGrowth * (level - 1))
 };
 
+// Color-swap tiers: picked from the enemy's max HP when it spawns. The
+// highest tier whose minHp <= hp wins. Hotter color = tougher enemy, and its
+// XP drops are multiplied by xpMult (on top of the per-level XP scaling).
+// tint = target hue (RGB), amount = 0..1 how strongly the art is recolored.
+// With the HP curve above: tier 2 ≈ 1:30, tier 3 ≈ 4:30, tier 4 ≈ 8:30, tier 5 ≈ 13:00.
+export const ENEMY_TIERS = [
+  { minHp: 0, tint: null, amount: 0, xpMult: 1 }, // base art
+  { minHp: 6, tint: [255, 220, 60], amount: 0.75, xpMult: 1.5 }, // yellow
+  { minHp: 12, tint: [255, 140, 30], amount: 0.8, xpMult: 2 }, // orange
+  { minHp: 20, tint: [255, 50, 40], amount: 0.85, xpMult: 3 }, // red
+  { minHp: 30, tint: [255, 245, 220], amount: 0.9, xpMult: 5 }, // white-hot
+];
+
 // Spawn director: spawns just outside the visible screen, faster over time.
 export const ENEMY_SPAWN = {
   startInterval: 1.2, // seconds between spawns at t=0
   minInterval: 0.15, // floor for the spawn interval
   intervalDecayPerSec: 0.004, // interval shrinks by this many seconds per second survived
   batchPerLevel: 0.5, // extra enemies per spawn tick per enemy level (floored)
-  maxAlive: 300, // hard cap on live enemies
+  maxAlive: 300, // hard cap on live enemies (perf); spawning pauses at the cap
   edgeMargin: 48, // px beyond the screen edge to spawn at
 };
 
