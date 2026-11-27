@@ -433,6 +433,20 @@ export const PICKUP_SPRITES = {
 export const UPGRADE = {
   choices: 3, // cards shown per level up
   magnetBonus: 40, // pickup radius added per Magnet level
+  maxHpPerLevel: 20, // max hp added (and healed) per Max HP level
+  moveSpeedPerLevel: 0.1, // +10% move speed per level
+  mightPerLevel: 0.15, // +15% weapon damage per level
+  cooldownPerLevel: 0.1, // +10% fire rate per level
+};
+
+// Knife weapon unlocked by the "weapon-knife" upgrade (src/systems/knife.js)
+export const KNIFE = {
+  interval: 1.2, // s between volleys
+  damage: 8,
+  speed: 560, // px/s
+  lifetime: 0.9, // s
+  spread: 0.18, // radians between knives in one volley
+  // per knife level: knives per volley = level, pierce = 1 + level
 };
 
 export const HUD = {
