@@ -26,7 +26,10 @@ loadEnemySprites();
 const enemyDirector = startEnemyDirector();
 
 // TEMP debug until weapons.js lands: click an enemy to hurt it, log drops.
-onClick("enemy", (e) => e.hurt(1));
+onMousePress(() => {
+  const m = toWorld(mousePos());
+  for (const e of get("enemy")) if (e.pos.dist(m) < 16) e.hurt(1);
+});
 // TEMP debug: B fires the external "bat-swarm" spawn trigger.
 onKeyPress("b", () => getTreeRoot().trigger("enemy-trigger", "bat-swarm"));
 on("drop", "enemy", (_, drop) => console.log("drop", drop.kind, drop.value));

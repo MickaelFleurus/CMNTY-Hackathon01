@@ -2,9 +2,21 @@
 // spawn director that ramps difficulty over time.
 //
 // Contract for other systems (no imports needed — use KAPLAY tags/events):
-//   - Live enemies carry the "enemy" tag and a health() comp: weapons call
-//     `enemy.hurt(dmg)`. Dying enemies lose "enemy" (and their area), so they
-//     can't be targeted or hit while the death animation plays.
+//   - Live enemies carry the "enemy" tag, a pos and a health() comp. Dying
+//     enemies lose "enemy", so they can't be targeted while the death anim plays.
+//   - Enemies have NO KAPLAY area(): they don't take part in KAPLAY's
+//     collision pass at all (a dense horde made it collapse to ~3 fps), so
+//     onCollide*("…", "enemy") never fires. Instead this module does its own
+//     grid-based hit detection every frame:
+//       * PROJECTILES: any object tagged "projectile" with a numeric `damage`
+//         property hits enemies it overlaps. Optional props:
+//           hitRadius  px (default: half its area() bbox, else ENEMY.defaultProjectileRadius)
+//           pierce     how many enemies it can hit before being destroyed (default 1)
+//         Each projectile hits a given enemy at most once. This module calls
+//         enemy.hurt(damage), destroys the projectile when pierce runs out,
+//         and fires on("hit", "projectile", (proj, enemy) => …) for effects.
+//         Use anchor("center") on projectiles so pos is the visual center.
+//       * PLAYER CONTACT: enemies overlapping the "player" call player.hurt(n).
 //   - Each enemy also carries `type` (e.g. "zombie", "bat").
 //   - on("killed", "enemy", (enemy, { pos, level, tier, type }) => ...)   every kill (HUD)
 //   - on("drop",   "enemy", (enemy, { kind, pos, level, tier, type, value }) => ...)
@@ -148,16 +160,13 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     pos(p),
     anchor("center"),
     scale(type.scale),
-    // Enemies ignore each other in KAPLAY's collision pass: checking every
-    // enemy pair in a dense horde was the main frame-time cost. Spacing is
-    // handled by separateEnemies() instead.
-    area({ scale: 0.75, collisionIgnore: ["enemy"] }),
     health(stats.hp),
     ...(uniforms ? [shader(TINT_SHADER, uniforms)] : []),
     "enemy",
     {
       type: type.id,
       speed: type.speed,
+      hitRadius: type.hitRadius,
       drops: type.drops ?? ENEMY_DROPS,
       level,
       tier,
@@ -182,13 +191,6 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     }
     enemy.move(toPlayer.unit().scale(enemy.speed));
     enemy.flipX = toPlayer.x < 0; // art faces right
-  });
-
-  enemy.onCollideUpdate("player", (player) => {
-    if (enemy.dead || enemy.attackTimer > 0) return;
-    if (typeof player.hurt !== "function") return;
-    player.hurt(enemy.damage);
-    enemy.attackTimer = ENEMY.attackCooldown;
   });
 
   enemy.onHurt(() => {
@@ -231,54 +233,120 @@ function killEnemy(enemy) {
     });
   }
 
-  // Out of play: no more targeting / collisions while the death anim runs.
+  // Out of play: no more targeting / hits while the death anim runs.
   enemy.untag("enemy");
-  enemy.unuse("area");
   enemy.play("death");
 }
 
-// Soft separation so the horde spreads out instead of stacking on one point.
-// Bucket enemies into a grid of cells one separation-radius wide, then only
-// compare each enemy with its own + neighbouring cells. Plain number math,
-// no Vec2 allocations — this runs on up to maxAlive enemies every frame.
+// ---------------------------------------------------------------------------
+// Spatial grid + hit detection (replaces KAPLAY collisions for enemies)
+// ---------------------------------------------------------------------------
+
+// Rebuilt once per frame from the live set. Keyed by packed cell coords.
 const grid = new Map();
-function separateEnemies() {
-  const r = ENEMY.separationRadius;
-  const r2 = r * r;
-  const stiffness = ENEMY.separationStiffness;
+const cellKey = (cx, cy) => cx * 65536 + cy;
+
+function buildGrid() {
+  const c = ENEMY.gridCell;
   grid.clear();
   for (const e of live) {
-    const key = Math.floor(e.pos.x / r) * 65536 + Math.floor(e.pos.y / r);
+    const key = cellKey(Math.floor(e.pos.x / c), Math.floor(e.pos.y / c));
     let cell = grid.get(key);
     if (!cell) grid.set(key, (cell = []));
     cell.push(e);
   }
-  // A few relaxation passes let pressure spread outward through the crowd.
+}
+
+/**
+ * Call fn(enemy) for every live enemy whose center might be within `radius`
+ * of (x, y) (cell-level filter — callers do the exact distance check).
+ * Return true from fn to stop early.
+ */
+function forEachEnemyNear(x, y, radius, fn) {
+  const c = ENEMY.gridCell;
+  const x0 = Math.floor((x - radius) / c), x1 = Math.floor((x + radius) / c);
+  const y0 = Math.floor((y - radius) / c), y1 = Math.floor((y + radius) / c);
+  for (let cx = x0; cx <= x1; cx++) {
+    for (let cy = y0; cy <= y1; cy++) {
+      const cell = grid.get(cellKey(cx, cy));
+      if (!cell) continue;
+      for (const e of cell) if (fn(e)) return;
+    }
+  }
+}
+
+/** Center + radius of an object for hit tests (area bbox if it has one). */
+function hitCircle(obj, fallbackRadius) {
+  if (obj.hitRadius !== undefined) return { x: obj.pos.x, y: obj.pos.y, r: obj.hitRadius };
+  if (obj.has("area")) {
+    const b = obj.worldArea().bbox();
+    return { x: b.pos.x + b.width / 2, y: b.pos.y + b.height / 2, r: Math.min(b.width, b.height) / 2 };
+  }
+  return { x: obj.pos.x, y: obj.pos.y, r: fallbackRadius };
+}
+
+function overlaps(e, x, y, r) {
+  const dx = e.pos.x - x;
+  const dy = e.pos.y - y;
+  const rr = r + e.hitRadius;
+  return dx * dx + dy * dy < rr * rr;
+}
+
+function resolveProjectileHits() {
+  for (const proj of get("projectile")) {
+    if (typeof proj.damage !== "number") continue;
+    const { x, y, r } = hitCircle(proj, ENEMY.defaultProjectileRadius);
+    proj.hitEnemies ??= new Set();
+    proj.pierce ??= 1;
+    forEachEnemyNear(x, y, r + ENEMY.maxHitRadius, (e) => {
+      if (e.dead || proj.hitEnemies.has(e) || !overlaps(e, x, y, r)) return false;
+      proj.hitEnemies.add(e);
+      e.hurt(proj.damage);
+      proj.trigger("hit", e);
+      proj.pierce -= 1;
+      if (proj.pierce <= 0) {
+        destroy(proj);
+        return true; // stop: projectile used up
+      }
+      return false;
+    });
+  }
+}
+
+function resolvePlayerContact() {
+  const player = getPlayer();
+  if (!player || typeof player.hurt !== "function") return;
+  const { x, y, r } = hitCircle(player, ENEMY.defaultPlayerRadius);
+  forEachEnemyNear(x, y, r + ENEMY.maxHitRadius, (e) => {
+    if (e.dead || e.attackTimer > 0 || !overlaps(e, x, y, r)) return false;
+    player.hurt(e.damage);
+    e.attackTimer = ENEMY.attackCooldown;
+    return false;
+  });
+}
+
+// Optional soft spacing (ENEMY.separationRadius > 0). Off by default: enemies
+// overlap freely. Cheap either way since it only touches neighbouring cells.
+function separateEnemies() {
+  const r = ENEMY.separationRadius;
+  if (!r) return;
+  const r2 = r * r;
+  const stiffness = ENEMY.separationStiffness;
   for (let pass = 0; pass < ENEMY.separationPasses; pass++) {
     for (const e of live) {
-      const cx = Math.floor(e.pos.x / r);
-      const cy = Math.floor(e.pos.y / r);
-      for (let gx = cx - 1; gx <= cx + 1; gx++) {
-        for (let gy = cy - 1; gy <= cy + 1; gy++) {
-          const cell = grid.get(gx * 65536 + gy);
-          if (!cell) continue;
-          for (const o of cell) {
-            if (o.id <= e.id) continue; // each pair once
-            let dx = e.pos.x - o.pos.x;
-            let dy = e.pos.y - o.pos.y;
-            let d2 = dx * dx + dy * dy;
-            if (d2 >= r2) continue;
-            if (d2 < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = dx * dx + dy * dy; }
-            const d = Math.sqrt(d2);
-            // Position correction: resolve a fraction of the overlap each frame,
-            // split between both enemies. Holds spacing even when the whole
-            // horde is pressing in on the player.
-            const k = (0.5 * stiffness * (r - d)) / d;
-            e.pos.x += dx * k; e.pos.y += dy * k;
-            o.pos.x -= dx * k; o.pos.y -= dy * k;
-          }
-        }
-      }
+      forEachEnemyNear(e.pos.x, e.pos.y, r, (o) => {
+        if (o.id <= e.id) return false; // each pair once
+        let dx = e.pos.x - o.pos.x;
+        let dy = e.pos.y - o.pos.y;
+        let d2 = dx * dx + dy * dy;
+        if (d2 >= r2) return false;
+        if (d2 < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = dx * dx + dy * dy; }
+        const d = Math.sqrt(d2);
+        const k = (0.5 * stiffness * (r - d)) / d;
+        e.pos.x += dx * k; e.pos.y += dy * k;
+        o.pos.x -= dx * k; o.pos.y -= dy * k;
+        return false;
+      });
     }
   }
 }
@@ -382,7 +450,10 @@ export function startEnemyDirector() {
   }));
 
   onUpdate(() => {
+    buildGrid();
     separateEnemies();
+    resolveProjectileHits();
+    resolvePlayerContact();
     elapsed += dt();
     const level = enemyLevelAt(elapsed);
 

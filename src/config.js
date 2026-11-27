@@ -6,12 +6,18 @@
 // ---------------------------------------------------------------------------
 // Shared by every enemy type.
 export const ENEMY = {
-  // Soft spacing, not real collisions: enemies may overlap, they're just
-  // nudged apart. PERF: keep radius >= ~16. Below that the horde packs into
-  // a few collision cells and KAPLAY's broadphase collapses (3-6 fps at 300).
-  separationRadius: 18, // px — enemies closer than this get nudged apart
+  // Enemies are NOT in KAPLAY's collision system; enemies.js does its own
+  // grid-based hit tests (projectiles + player contact). See enemies.js header.
+  gridCell: 32, // px, spatial grid cell for hit tests
+  defaultProjectileRadius: 6, // px, for projectiles with no hitRadius / area
+  defaultPlayerRadius: 12, // px, if the player has no area()
+  maxHitRadius: 12, // px, >= the largest ENEMY_TYPES[].hitRadius
+
+  // Optional soft spacing between enemies. 0 = off (enemies overlap freely).
+  // Try ~16-22 for a spread-out crowd; costs a little CPU.
+  separationRadius: 0,
   separationStiffness: 0.6, // 0..1 share of the overlap resolved per pass
-  separationPasses: 2, // relaxation passes per frame (more = firmer crowd, more CPU)
+  separationPasses: 2, // relaxation passes per frame
 
   // Contact attack: damage applied to the player while touching, at most
   // once per cooldown per enemy.
@@ -25,6 +31,7 @@ export const ENEMY = {
 // Enemy types. Each has its own stats, spawn schedule and spawn condition.
 //
 //   sprite      file in gfx/SurvivorsStarterKit_v1.0/Enemies/ (all 16x16 sheets)
+//   hitRadius   px, hit circle for projectiles / player contact (<= ENEMY.maxHitRadius)
 //   baseHp / baseDamage   stats at enemy level 1 (scaled by ENEMY_LEVEL)
 //   speed       px/s chase speed
 //   tierMinHp   optional per-type HP thresholds for ENEMY_TIERS colors
@@ -46,6 +53,7 @@ export const ENEMY_TYPES = [
     id: "zombie",
     sprite: "Enemy_Zombie.png",
     scale: 2,
+    hitRadius: 11, // px, body hit circle (sprite is 32px drawn)
     baseHp: 3,
     baseDamage: 5,
     speed: 70,
@@ -63,6 +71,7 @@ export const ENEMY_TYPES = [
     id: "bat",
     sprite: "Enemy_Bat.png",
     scale: 2,
+    hitRadius: 9,
     baseHp: 1,
     baseDamage: 2,
     speed: 135,
