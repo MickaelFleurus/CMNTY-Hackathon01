@@ -341,6 +341,9 @@ export const SHOP = {
   // docs/game-design-v2.md). The shop only SELLS: on purchase it fires
   // "shop-pick" with { id, quadrant, level, params } and the effect systems
   // (auras/regen/tower — tasks-v2 #3) apply them. params are opaque data.
+  // Skip the shop without buying (the next wave starts as after a pick).
+  skipKeys: ["e", "escape"],
+
   options: [
     {
       id: "armor-aura",
