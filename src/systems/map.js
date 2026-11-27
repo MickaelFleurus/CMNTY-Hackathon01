@@ -4,6 +4,17 @@
 import { CFG } from "../config.js";
 
 const TILE_ART = "tiles-grass"; // 4 seamless variants in row 0 of the sheet
+const VARIANTS = 4;
+
+// Variant for a WORLD tile coordinate (stable hash), so a given spot on the
+// map always shows the same grass. Picking it from the tile's index inside
+// the band made every tile swap art whenever the band re-snapped, so the
+// grass looked like it was sliding along with the player.
+function variantAt(col, row) {
+  let h = (Math.imul(col, 73856093) ^ Math.imul(row, 19349663)) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177) >>> 0;
+  return (h >>> 16) % VARIANTS;
+}
 
 export function buildGround() {
   const { tileSize, tileScale, gridW, gridH } = CFG.map;
@@ -17,9 +28,8 @@ export function buildGround() {
 
   const tiles = [];
   for (let i = 0; i < gridW * gridH; i++) {
-    const variant = i % 4; // mix the 4 seamless ground variants randomly-ish
     tiles.push(ground.add([
-      sprite(TILE_ART, { frame: variant }),
+      sprite(TILE_ART, { frame: 0 }), // real variant set by placeAt()
       scale(tileScale),
       pos(
         (i % gridW) * size,
@@ -28,16 +38,27 @@ export function buildGround() {
     ]));
   }
 
+  // Band origin in world tile coords; re-snap + re-pick variants only when
+  // the camera has moved into a new tile.
+  let originCol = null;
+  let originRow = null;
+
+  function placeAt(col, row) {
+    originCol = col;
+    originRow = row;
+    ground.pos = vec2(col * size, row * size);
+    tiles.forEach((t, i) => {
+      t.frame = variantAt(col + (i % gridW), row + Math.floor(i / gridW));
+    });
+  }
+
   ground.onUpdate(() => {
     // snap the tile band to the camera so it always covers the viewport;
     // aligned to the tile grid so tiling never shifts under the player
-    const cam = camPos();
-    const startX = cam.x - (gridW * size) / 2;
-    const startY = cam.y - (gridH * size) / 2;
-    ground.pos = vec2(
-      Math.floor(startX / size) * size,
-      Math.floor(startY / size) * size,
-    );
+    const cam = getCamPos();
+    const col = Math.floor((cam.x - (gridW * size) / 2) / size);
+    const row = Math.floor((cam.y - (gridH * size) / 2) / size);
+    if (col !== originCol || row !== originRow) placeAt(col, row);
   });
 
   return ground;
