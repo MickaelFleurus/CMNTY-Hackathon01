@@ -5,6 +5,9 @@ import { followCamera } from "./systems/camera.js";
 import { makePlayer } from "./systems/player.js";
 import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
+import { loadXpAssets, initXp } from "./systems/xp.js";
+import { loadUpgradeAssets, initUpgrades } from "./systems/upgrades.js";
+import { initHud } from "./systems/hud.js";
 
 kaplay({
   background: [26, 26, 38],
@@ -39,11 +42,16 @@ loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_
   anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
 });
 loadEnemySprites();
+loadXpAssets();
+loadUpgradeAssets();
 
 buildGround();
 const player = makePlayer();
 followCamera(player);
 makeWeapon(player);
+initXp();
+initUpgrades();
+initHud();
 const enemyDirector = startEnemyDirector();
 
 // TEMP until the cycle director (portal → shop → next wave) exists:
