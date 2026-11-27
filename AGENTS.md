@@ -49,7 +49,8 @@ merging**:
 4. **Run the checks:**
    - `node scripts/check-contracts.mjs`: static contract checks.
      `scripts/feature.sh finish` runs it automatically and refuses to push on
-     failure.
+     failure. **CI runs it too** (`.github/workflows/checks.yml`, with
+     `npm run build`) on every PR. Never merge a PR whose `checks` job is red.
    - `node scripts/smoke.mjs`: no console errors.
    - **Actually play your feature on the rebased branch** and check its effect
      is still there (enemies die, damage lands, pickups collect…). "No errors"

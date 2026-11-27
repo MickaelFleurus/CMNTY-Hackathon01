@@ -1,0 +1,37 @@
+# Runs on every PR to main (and on main itself). Make the "checks" job a
+# required status check in branch protection so a failing PR can't merge.
+# What it guards: see AGENTS.md → "Before you open or merge a PR".
+name: checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Cross-system contracts from docs/tasks.md (silent gameplay breakage).
+      - name: Contract check
+        run: node scripts/check-contracts.mjs
+
+      # The game must still bundle.
+      - name: Build
+        run: npm run build
