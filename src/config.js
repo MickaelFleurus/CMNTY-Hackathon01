@@ -429,12 +429,14 @@ export const XP = {
 };
 
 // Drop kind (from enemies.js "drop" event) -> pickup sprite file
+// *_fixed.png: the pack's "bob up" frames had their top pixel row clipped
+// (scripts/fix-pickup-sprites.mjs restores it; see docs/assets.md).
 export const PICKUP_SPRITES = {
-  "xp-blue": "Pickup_XP_Blue.png",
-  "xp-green": "Pickup_XP_Green.png",
-  "xp-red": "Pickup_XP_Red.png",
-  "xp-purple": "Pickup_XP_Purple_Big.png",
-  heart: "Pickup_Heart.png",
+  "xp-blue": "Pickup_XP_Blue_fixed.png",
+  "xp-green": "Pickup_XP_Green_fixed.png",
+  "xp-red": "Pickup_XP_Red_fixed.png",
+  "xp-purple": "Pickup_XP_Purple_Big.png", // not affected
+  heart: "Pickup_Heart_fixed.png",
 };
 
 export const UPGRADE = {
