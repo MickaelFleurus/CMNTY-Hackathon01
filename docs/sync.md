@@ -39,6 +39,22 @@ you — use it and the pre-PR sync is automatic.
 - If you dislike rebase, merging `main` into your branch is acceptable; just
   do it *before* the PR, never inside it.
 
+## Before merging someone else's PR
+
+The PR author's rebase guarantees *their* branch is current — but main can
+move again while you review. Before clicking merge:
+
+```sh
+git switch main
+git pull origin main
+git fetch origin          # refresh the PR's head too
+# then merge in the GitHub UI or with `gh pr merge <n> --merge`
+```
+
+If the PR flipped to CONFLICTING while you reviewed, don't merge it — ping
+the author to rebase again. GitHub's mergeable flag is refreshed on page
+load; check it right before the click, not from memory.
+
 ## Force-push etiquette
 
 After a rebase of a pushed branch you must force-push. Always
