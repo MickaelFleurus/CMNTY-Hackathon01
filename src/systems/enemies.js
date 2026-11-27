@@ -25,7 +25,10 @@
 //         the base) — focus the clearly weaker one (hp fraction), otherwise
 //         split the horde (ENEMY_TARGETING), re-evaluated on a short timer
 //         with stickiness. A downed player (player.down, respawn.js) isn't a
-//         target and can't be hit. Enemies touching a tower call tower.hurt(n).
+//         target and can't be hit.
+//       * The tower is SOLID for enemies: they're pushed out of its world-area
+//         box (by their full drawn size, so no sprite hides behind the golem)
+//         and hit it (tower.hurt(n)) when touching its edge.
 //       * AURAS: objects tagged "aura" with { radius, enemySlow } slow every
 //         enemy inside (speed *= enemySlow; the strongest aura wins).
 //   - Each enemy also carries `type` (e.g. "zombie", "bat").
@@ -72,6 +75,9 @@ const sheetUrl = (file) =>
 const TYPES = Object.fromEntries(ENEMY_TYPES.map((t) => [t.id, t]));
 // Largest enemy hit circle: hit queries widen their grid search by this much.
 const MAX_HIT_RADIUS = Math.max(...ENEMY_TYPES.map((t) => t.hitRadius));
+// Enemy sheets are 16x16 cells; the drawn body is half a cell × scale.
+const SHEET_CELL = 16;
+const MAX_BODY_RADIUS = Math.max(...ENEMY_TYPES.map((t) => (SHEET_CELL / 2) * t.scale));
 
 // Sheet: 6 columns x 3 rows of 16x16 — row 0 Move(4), row 1 Hit(2), row 2 Death(6)
 const SHEET_COLS = 6;
@@ -215,9 +221,10 @@ function refreshTargets() {
   T.avail = !!t;
   T.obj = t ?? null;
   if (t) {
-    const c = hitCircle(t, ENEMY.defaultPlayerRadius);
-    T.x = c.x;
-    T.y = c.y;
+    const b = t.worldArea().bbox();
+    T.rect = { x0: b.pos.x, y0: b.pos.y, x1: b.pos.x + b.width, y1: b.pos.y + b.height };
+    T.x = (T.rect.x0 + T.rect.x1) / 2;
+    T.y = (T.rect.y0 + T.rect.y1) / 2;
     T.frac = hpFrac(t);
   }
 
@@ -288,6 +295,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
       type: type.id,
       speed: type.speed,
       hitRadius: type.hitRadius,
+      bodyRadius: (SHEET_CELL / 2) * type.scale, // half the drawn sprite
       drops: type.drops ?? ENEMY_DROPS,
       level,
       tier,
@@ -310,10 +318,13 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     const player = getPlayer();
     if (!player) return;
 
-    const toPlayer = player.pos.sub(enemy.pos);
-    const playerDist = toPlayer.len();
-    if (playerDist > ENEMY.despawnDistance) {
-      destroy(enemy); // silently recycle stragglers, no drop
+    // Recycle stragglers (no drop) only when far from BOTH targets, so
+    // enemies walking to the tower survive while the player is elsewhere.
+    const playerDist = player.pos.dist(enemy.pos);
+    const T = targets.tower;
+    const towerDist = T.avail ? Math.hypot(T.x - enemy.pos.x, T.y - enemy.pos.y) : Infinity;
+    if (Math.min(playerDist, towerDist) > ENEMY.despawnDistance) {
+      destroy(enemy);
       return;
     }
 
@@ -334,6 +345,9 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     // Stop on arrival instead of jittering back and forth over the point.
     if (dist > 1) enemy.move(toTarget.scale(Math.min(speed, dist / dt()) / dist));
     enemy.flipX = goal.x < 0; // art faces right (always face the target)
+
+    // The tower is solid: never let an enemy (sprite) overlap it.
+    if (targets.tower.avail) pushOutOfRect(enemy, targets.tower.rect);
   });
 
   enemy.onHurt(() => {
@@ -519,12 +533,53 @@ function resolvePlayerContact() {
   resolveContact(player, ENEMY.defaultPlayerRadius, (dmg) => damagePlayer(player, dmg));
 }
 
-function resolveTowerContact() {
-  for (const t of towers) {
-    if (typeof t.hurt !== "function" || !t.exists()) continue;
-    if (typeof t.hp === "function" && t.hp() <= 0) continue;
-    resolveContact(t, t.hitRadius ?? ENEMY.defaultPlayerRadius, (dmg) => t.hurt(dmg));
+/** Distance from (x, y) to a rect (0 inside), plus the closest point. */
+function rectDistance(x, y, r) {
+  const cx = Math.max(r.x0, Math.min(x, r.x1));
+  const cy = Math.max(r.y0, Math.min(y, r.y1));
+  return { d: Math.hypot(x - cx, y - cy), cx, cy };
+}
+
+/** Push an enemy's body (circle of bodyRadius) out of the rect. */
+function pushOutOfRect(e, r) {
+  const br = e.bodyRadius;
+  const { x, y } = e.pos;
+  // fast reject: clearly outside the rect expanded by the body
+  if (x < r.x0 - br || x > r.x1 + br || y < r.y0 - br || y > r.y1 + br) return;
+  const inside = x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1;
+  if (inside) {
+    // center inside: exit through the nearest edge, body just touching it
+    const left = x - r.x0;
+    const right = r.x1 - x;
+    const top = y - r.y0;
+    const bottom = r.y1 - y;
+    const m = Math.min(left, right, top, bottom);
+    if (m === left) e.pos.x = r.x0 - br;
+    else if (m === right) e.pos.x = r.x1 + br;
+    else if (m === top) e.pos.y = r.y0 - br;
+    else e.pos.y = r.y1 + br;
+    return;
   }
+  const { d, cx, cy } = rectDistance(x, y, r);
+  if (d >= br || d === 0) return;
+  const k = br / d; // push along the normal from the closest point
+  e.pos.x = cx + (x - cx) * k;
+  e.pos.y = cy + (y - cy) * k;
+}
+
+function resolveTowerContact() {
+  const T = targets.tower;
+  const t = T.obj;
+  if (!T.avail || !t || typeof t.hurt !== "function") return;
+  const r = T.rect;
+  const reach = Math.hypot(r.x1 - r.x0, r.y1 - r.y0) / 2 + MAX_BODY_RADIUS + ENEMY.towerContactSlack;
+  forEachEnemyNear(T.x, T.y, reach, (e) => {
+    if (e.dead || e.attackTimer > 0) return false;
+    if (rectDistance(e.pos.x, e.pos.y, r).d > e.bodyRadius + ENEMY.towerContactSlack) return false;
+    t.hurt(e.damage);
+    e.attackTimer = ENEMY.attackCooldown;
+    return false;
+  });
 }
 
 // Optional soft spacing (ENEMY.separationRadius > 0). Off by default: enemies
