@@ -53,7 +53,8 @@ export function spawnPickup(position, kind, value) {
 
   pickup.onUpdate(() => {
     const p = player();
-    if (!p) return;
+    // no magnet or collection while dead (respawn.js) or after the run is over (runstate.js)
+    if (!p || p.down || p.frozen) return;
     const dist = pickup.pos.dist(p.pos);
     if (dist < XP.collectRadius) {
       collect(p, pickup);

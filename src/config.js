@@ -427,3 +427,10 @@ export const HUD = {
   hpBarHeight: 5,
   hpBarOffset: 22, // px below the player's center
 };
+
+// ---------------------------------------------------------------------------
+// Dev-only playtest switches (src/systems/devtools.js; dev server only)
+// ---------------------------------------------------------------------------
+export const DEV = {
+  toggleAttackKey: "k", // toggle the player's attack (also ?noattack in the URL)
+};

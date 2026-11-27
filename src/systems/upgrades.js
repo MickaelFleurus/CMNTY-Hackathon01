@@ -65,8 +65,18 @@ export function initUpgrades() {
 
   on("levelup", "player", () => {
     pending += 1;
-    if (!menuOpen) openMenu();
+    if (!menuOpen && canOpenMenu()) openMenu();
   });
+  // a level up earned right before dying waits for the respawn
+  getTreeRoot().on("player-respawn", () => {
+    if (pending > 0 && !menuOpen && canOpenMenu()) openMenu();
+  });
+}
+
+// no level up screen while dead (respawn.js) or after the run is over (runstate.js)
+function canOpenMenu() {
+  const p = get("player")[0];
+  return !!p && !p.down && !p.frozen;
 }
 
 function openMenu() {

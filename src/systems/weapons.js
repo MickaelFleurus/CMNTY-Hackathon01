@@ -9,7 +9,8 @@ export function makeWeapon(player) {
   onUpdate(() => {
     cooldown -= dt();
     // no firing while dead (respawn.js) or after the run is over (runstate.js)
-    if (cooldown > 0 || player.down || player.frozen) return;
+    // attackDisabled: dev playtest switch (devtools.js, K / ?noattack)
+    if (cooldown > 0 || player.down || player.frozen || player.attackDisabled) return;
 
     const target = nearestEnemy(player.pos, CFG.weapon.range);
     if (!target) return;

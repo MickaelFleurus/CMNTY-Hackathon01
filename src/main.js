@@ -13,6 +13,7 @@ import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
 import { startRespawn } from "./systems/respawn.js";
 import { startRunState } from "./systems/runstate.js";
+import { startDevTools } from "./systems/devtools.js";
 import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
@@ -71,6 +72,7 @@ startRegen();
 startTower();
 startRespawn(player);
 startRunState(player);
+startDevTools(player);
 
 // TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
 const TEMP_PICK_KEYS = {
@@ -79,9 +81,13 @@ const TEMP_PICK_KEYS = {
   3: "active-defense",
   4: "active-offense",
 };
+// Global key handlers still fire while the level up screen pauses the game
+// (upgrades.js uses keys 1-3), so the TEMP debug keys skip while paused.
+const gamePaused = () => getTreeRoot().paused;
 const tempPickLevels = {};
 for (const [key, quadrant] of Object.entries(TEMP_PICK_KEYS)) {
   onKeyPress(key, () => {
+    if (gamePaused()) return;
     const level = (tempPickLevels[quadrant] = (tempPickLevels[quadrant] ?? 0) + 1);
     getTreeRoot().trigger("shop-pick", { id: `temp-${quadrant}`, quadrant, level, params: {} });
     console.log(`shop-pick ${quadrant} lvl ${level}`);
@@ -121,11 +127,15 @@ add([
 // TEMP debug for the base/shop PR: N fires the wave-end→portal→shop chain
 // (cycle director replaces this). P teleports home. C grants 50 coins.
 onKeyPress("n", () => {
+  if (gamePaused()) return;
   getTreeRoot().trigger("wave-end", { wave: enemyDirector.wave(), reason: "debug", kills: 0 });
   getTreeRoot().trigger("portal-enter");
 });
-onKeyPress("c", () => addCoins(50));
+onKeyPress("c", () => {
+  if (!gamePaused()) addCoins(50);
+});
 onKeyPress("p", () => {
+  if (gamePaused()) return;
   const p = get("player")[0];
   if (p) p.pos = vec2(SHOP.home.x + 80, SHOP.home.y);
 });

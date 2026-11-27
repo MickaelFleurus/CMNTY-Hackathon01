@@ -7,6 +7,8 @@
 //   - getTreeRoot().on("coins-changed", n)           coin total (base.js)
 //   - player.hp() / player.maxHP()                    player object
 //   - player.shield                                   from regen.js (shown when > 0)
+//   - player.down / respawnIn / nextRespawn           from respawn.js
+//   - get("base")[0].hp() / maxHP()                   the base is the tower (base.js)
 import { xpState } from "./xp.js";
 import { HUD } from "../config.js";
 
@@ -53,9 +55,17 @@ export function initHud() {
     const p = get("player")[0];
     xpBar.width = width() * (xpState.xp / xpState.toNext);
     waveLabel.text = hudState.wave > 0 ? `WAVE ${hudState.wave}` : "";
-    const hp = p?.hp ? `HP ${Math.max(0, Math.ceil(p.hp()))}/${p.maxHP()}` : "";
-    const shield = p?.shield > 0 ? `\nShield ${Math.ceil(p.shield)}` : "";
-    stats.text = `LV ${xpState.level}\n${hp}${shield}\nCoins ${hudState.coins}\nKills ${hudState.kills}`;
+    let hp = "";
+    if (p?.down) {
+      hp = `DEAD - respawn in ${Math.ceil(p.respawnIn ?? 0)}s`;
+    } else if (p?.hp) {
+      hp = `HP ${Math.max(0, Math.ceil(p.hp()))}/${p.maxHP()}`;
+      if (p.shield > 0) hp += `\nShield ${Math.ceil(p.shield)}`;
+      if (p.nextRespawn != null) hp += `\nNext death: ${p.nextRespawn}s`;
+    }
+    const base = get("base")[0];
+    const baseHp = base?.hp ? `\nBase ${Math.max(0, Math.ceil(base.hp()))}/${base.maxHP()}` : "";
+    stats.text = `LV ${xpState.level}\n${hp}${baseHp}\nCoins ${hudState.coins}\nKills ${hudState.kills}`;
   });
 
   // small hp bar that follows the player (world space)
@@ -63,7 +73,7 @@ export function initHud() {
   const hpFill = add([rect(HUD.hpBarWidth, HUD.hpBarHeight), anchor("left"), color(220, 50, 50), z(51)]);
   hpFill.onUpdate(() => {
     const p = get("player")[0];
-    const visible = !!p?.hp;
+    const visible = !!p?.hp && !p.down;
     hpBg.hidden = hpFill.hidden = !visible;
     if (!visible) return;
     const at = p.pos.add(-HUD.hpBarWidth / 2, HUD.hpBarOffset);
