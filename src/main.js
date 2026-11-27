@@ -1,4 +1,5 @@
 import kaplay from "kaplay";
+import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 
 kaplay({
   background: [26, 26, 38],
@@ -17,13 +18,12 @@ const player = add([
   "player",
 ]);
 
-// temporary placeholder enemy
-add([
-  rect(24, 24),
-  color(255, 75, 75),
-  pos(center().add(200, 0)),
-  "enemy",
-]);
+loadEnemySprites();
+const enemyDirector = startEnemyDirector();
+
+// TEMP debug until weapons.js lands: click an enemy to hurt it, log drops.
+onClick("enemy", (e) => e.hurt(1));
+on("drop", "enemy", (_, drop) => console.log("drop", drop.kind, drop.value));
 
 let speed = 300;
 onKeyDown("left", () => player.move(-speed, 0));
@@ -37,3 +37,8 @@ add([
   }),
   pos(24, 24),
 ]);
+
+const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
+debugLabel.onUpdate(() => {
+  debugLabel.text = `enemy lvl ${enemyDirector.level()} · alive ${get("enemy").length}`;
+});
