@@ -10,6 +10,7 @@ export function makePlayer() {
     pos(center()),
     area(),
     anchor("center"),
+    z(CFG.player.z), // always drawn above the world (e.g. walking behind the base)
     health(CFG.player.maxHp),
     "player",
   ]);
