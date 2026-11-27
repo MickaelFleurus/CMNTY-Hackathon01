@@ -222,6 +222,15 @@ real interface:
   proper **top navigation/info bar** (the redesigned HUD strip above)
   instead of text floating over the playfield.
 
+### Pause
+
+A pause toggle (**Space or Esc**) freezes the whole game behind a small
+overlay ("PAUSED — press Esc to resume"): enemies, spawns, wave timer,
+weapons, regen and the survival timer all stop, while the HUD and overlay
+keep rendering. Pausing during the shop or the level-up screen is a no-op
+(those already hold the game). It never pauses on the game-over screen —
+from there only Restart works.
+
 ### Game over screen (with run stats)
 
 Shown when the run ends (the tower is destroyed, `"run-over"` event). The
