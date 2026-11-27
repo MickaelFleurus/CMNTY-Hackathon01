@@ -1,7 +1,9 @@
 # Task Split — MVP Wave 1
 
 Three-way split of the MVP scope (see [`game-design.md`](game-design.md) for
-the full concept). One branch per task — cut it with
+the original concept; the design pivoted — see
+[`game-design-v2.md`](game-design-v2.md) — and Wave 2 tasks will be split
+separately). One branch per task — cut it with
 `scripts/feature.sh start <slug>`. Claim rows by editing this file in a tiny
 PR.
 

@@ -1,6 +1,11 @@
 # Game Design — Top-Down Vampire-Survivors-Style
 
-**Working title:** TBD · **Engine:** KAPLAY (web, JS) · **Status:** concept
+**Working title:** TBD · **Engine:** KAPLAY (web, JS) · **Status:** baseline
+
+> **Note:** the design pivoted to a survivors × tower-defense hybrid — see
+> [`game-design-v2.md`](game-design-v2.md) for the current vision. This file
+> remains the record of the original concept and the baseline systems
+> (movement, spawning, auto-attack) that v2 builds on.
 
 ## Elevator pitch
 
