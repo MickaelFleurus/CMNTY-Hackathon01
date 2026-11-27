@@ -172,6 +172,7 @@ function shoot(from, to, stats) {
     lifespan(stats.range / stats.projectileSpeed + 0.2),
     z(6),
     "projectile",
-    { damage: stats.damage, hitRadius: 8 },
+    // source "tower": these shots don't provoke a siege boss (only the player's do)
+    { damage: stats.damage, hitRadius: 8, source: "tower" },
   ]);
 }

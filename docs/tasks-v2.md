@@ -90,6 +90,26 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   - Ladder: `RESPAWN.steps`. +1 step per death; −1 per `wave-end` with
     reason `"cleared"` or per `boss-defeated` (the boss task should fire
     `getTreeRoot().trigger("boss-defeated")`).
+- **Boss waves** (`ENEMY_WAVES.boss`, the `"boss"` type in `ENEMY_TYPES`):
+  - Every **3rd wave** (3, 6, 9…) is a boss wave.
+  - One **siege boss** spawns `spawn.distance` (420 px) from the base. The
+    art rotates: Slime King → Vampire Lord → Reaper → Demon Lord → Treant.
+  - The boss's HP scales with the wave (360 / 675 / 1050…). It has an HP bar
+    with its name.
+  - **Gimmick:** it attacks the tower and ignores the player **until the
+    player damages it**. Then it chases the player for `provokeDuration`
+    (5 s). Shots with `source: "tower"` (the base's bolts) don't provoke it.
+  - Minions come at half their usual count. There is **no timer**: the wave
+    ends `"cleared"` when the boss dies, and leftover minions die with it.
+  - Reward: a big XP gem and 15 coin drops.
+  - Root events:
+    - `boss-incoming` `{ wave }` fires when the wave BEFORE a boss wave ends,
+      so the HUD can warn and the player can shop with intent.
+    - `boss-wave` `{ wave }` fires when it starts.
+    - `boss-defeated` `{ wave, type, name, pos }` fires when the boss dies
+      (the respawn ladder steps down).
+  - `wave-end` now also carries `boss: true|false`. The director exposes
+    `isBossWave()`.
 - **Enemy attack patterns** (`ENEMY_TYPES[].spawn.group` / `.behavior`):
   - **Zombies** come in groups of 3–6, spaced out.
   - **Golems** come alone, with a lot of HP.

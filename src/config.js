@@ -63,7 +63,16 @@ export const ENEMY = {
 //     startInterval / minInterval / intervalDecayPerSec
 //                 seconds between GROUP spawns within a wave; the ramp restarts
 //                 each wave, from when the type becomes active
+//   sheet       optional "boss": 32 px cells, rows Move/Attack/Hit/Death (default:
+//               16 px enemy sheet, rows Move/Hit/Death)
+//   sprites     optional list of sheets to rotate through (one per boss wave)
+//   hpBar       draw an HP bar + name above it
+//   rewardCoins extra coin drops on death (bosses)
 //   behavior    optional; default: chase a target (player or tower).
+//               { kind: "siege", provokeDuration }: attacks the tower and
+//               ignores the player, until the PLAYER damages it: then it
+//               chases the player for provokeDuration s (tower shots don't
+//               provoke it).
 //               { kind: "sweep", returnDelay, aimSpread, exitMargin }: fly
 //               straight across the screen (aimed within aimSpread px of its
 //               center), leave it by exitMargin px, wait returnDelay s, then
@@ -77,8 +86,11 @@ export const ENEMY = {
 //                 closes up near its target (ENEMY.formationHoldDistance), and
 //                 shares one target (player or tower).
 //     maxAlive    per-type cap (the global ENEMY_SPAWN.maxAlive still applies)
+//     at          optional "base": spawn `distance` px from the base instead of
+//                 at the screen edge
 //     when        spawn condition, checked every frame (omit = every wave):
 //       { fromWave: n } / { untilWave: n }      wave number
+//       { bossWave: true | false }              wave is (not) a boss wave
 //       { after: s }  /  { before: s }          seconds since the wave started
 //       { playerStat: "level", min, max }       reads player.level or player.level()
 //       { trigger: "name" }                     set by an external event, see enemies.js
@@ -167,6 +179,40 @@ export const ENEMY_TYPES = [
       when: { any: [{ fromWave: 3 }, { playerStat: "level", min: 5 }] },
     },
   },
+  {
+    // Boss (every ENEMY_WAVES.boss.every waves): a siege boss that spawns near
+    // the base, attacks it and ignores the player until provoked.
+    id: "boss",
+    sheet: "boss",
+    sprites: [
+      "Boss_Slime_King.png",
+      "Boss_Vampire_Lord.png",
+      "Boss_Reaper.png",
+      "Boss_Demon_Lord.png",
+      "Boss_Treant.png",
+    ],
+    scale: 3, // 32 px art -> 96 px
+    hitRadius: 36,
+    baseHp: 150, // 360 at wave 3, 675 at wave 6, 1050 at wave 9
+    baseDamage: 8, // 14 per hit at wave 3
+    speed: 45,
+    tierMinHp: [0, Infinity, Infinity, Infinity, Infinity], // keep the boss art
+    hpBar: true,
+    behavior: { kind: "siege", provokeDuration: 5 },
+    drops: [{ kind: "xp-purple", base: 1, perLevel: 0, max: 1, value: 25 }],
+    rewardCoins: 15, // extra coin drops on death
+    spawn: {
+      count: { base: 1, perWave: 0 },
+      startInterval: 0, // right at the start of the wave
+      minInterval: 999,
+      intervalDecayPerSec: 0,
+      group: { min: 1, max: 1, radius: 0, spacing: 0 },
+      maxAlive: 1,
+      at: "base",
+      distance: 420, // px from the base
+      when: { bossWave: true },
+    },
+  },
 ];
 
 // Waves: each wave spawns every active type's budget (ENEMY_TYPES[].spawn.count)
@@ -176,6 +222,12 @@ export const ENEMY_WAVES = {
   durationPerWave: 10, // s added per wave
   maxDuration: 150, // s
   minClearTime: 3, // s, a wave can't count as cleared before this
+
+  // Every `every`-th wave is a boss wave: ENEMY_TYPES with when { bossWave }
+  // spawn, the other types bring minionBudgetMult of their usual count, and
+  // there's no timer: the wave ends when the boss is defeated (leftover
+  // minions die with it).
+  boss: { every: 3, minionBudgetMult: 0.5 },
   // When a wave ends, remaining enemies die immediately (death anim, no drops,
   // not counted as kills). false = they keep chasing until "enemy-clear".
   killOnEnd: true,
