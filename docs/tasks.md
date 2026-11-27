@@ -50,6 +50,9 @@ PR.
   (chippe listens, Mickael owns death drop position).
 - All tuning numbers live in `src/config.js`; expect small conflicts there,
   rebase before PR.
+- **Contract changes:** when you change anything in this section, add a
+  matching check to `scripts/check-contracts.mjs` (run by
+  `scripts/feature.sh finish`) and comment on every open PR it affects.
 
 ## Sequencing
 
