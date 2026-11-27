@@ -5,8 +5,11 @@ rules as wave 1 (see [`tasks.md`](tasks.md)): one branch per task via
 `scripts/feature.sh start <slug>`, tag contract still applies, tuning
 numbers go in `src/config.js`, PRs don't merge themselves.
 
-Wave 1 leftovers first: **chippe's XP/level-up/HUD system is still not
-built** and everything below depends on it — that's chippe's task 1.
+Wave 1 leftovers first: chippe's XP/level-up/HUD system (task 1) is
+**built** (`xp.js`, `upgrades.js`, `hud.js`). The level up screen pauses the
+game and only opens during field waves: never while the player is down or
+frozen, or while the shop is open (it waits for `shop-close`). The HUD shows
+wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
 
 | # | Owner | Branch | Task | Deliverables | Out of scope |
 |---|-------|--------|------|--------------|--------------|
