@@ -27,6 +27,8 @@ const enemyDirector = startEnemyDirector();
 
 // TEMP debug until weapons.js lands: click an enemy to hurt it, log drops.
 onClick("enemy", (e) => e.hurt(1));
+// TEMP debug: B fires the external "bat-swarm" spawn trigger.
+onKeyPress("b", () => getTreeRoot().trigger("enemy-trigger", "bat-swarm"));
 on("drop", "enemy", (_, drop) => console.log("drop", drop.kind, drop.value));
 
 let speed = 300;
@@ -44,5 +46,6 @@ add([
 
 const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
 debugLabel.onUpdate(() => {
-  debugLabel.text = `enemy lvl ${enemyDirector.level()} · alive ${enemyDirector.alive()}`;
+  const types = enemyDirector.activeTypes().map((t) => `${t} ${enemyDirector.alive(t)}`);
+  debugLabel.text = `enemy lvl ${enemyDirector.level()} · alive ${enemyDirector.alive()} · ${types.join(" · ")}`;
 });
