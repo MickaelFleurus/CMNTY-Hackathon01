@@ -28,6 +28,33 @@ built** and everything below depends on it — that's chippe's task 1.
   portal/shop/base systems only become interactive in their phase.
 - **Tower is an enemy-family target** (Mickael): the tower gets `hp()` and is
   hit by the existing enemy grid-hit path tagged `"tower"`.
+- **Base effects are built** (`auras.js`, `regen.js`, `tower.js`) and react to
+  `"shop-pick"`. What each quadrant does, and the `params` keys a pick may
+  override (plain number, or `{ base, perLevel, min?, max? }`). Defaults and
+  per-level scaling are in `AURA` / `REGEN` / `TOWER` in `src/config.js`:
+  - `passive-defense`: aura around the base. Keys `radius`, `damageTaken`
+    (player damage ×), `enemySlow` (enemy speed ×).
+  - `passive-offense`: aura around the base. Keys `radius`, `damageMult`,
+    `attackSpeedMult` (player weapon ×).
+  - `active-defense`: heals the player near the base. Keys `range`,
+    `interval`, `heal`, plus a shield from `shieldFromLevel` (`shield`,
+    `shieldDuration`).
+  - `active-offense`: a tower next to the base shoots enemies. Keys `hp`,
+    `range`, `fireInterval`, `damage`, `aggroRange`. Enemies near it attack
+    it. When it's destroyed: `getTreeRoot().trigger("run-over", { reason:
+    "tower-destroyed" })`. A new pick levels it up and repairs it.
+  - `level` = how many times that quadrant has been picked (1, 2, 3…).
+    The shop sends it.
+- **Player buffs** (written by `auras.js` every frame, `1` outside auras):
+  `player.buffs = { damageTaken, damageMult, attackSpeedMult }`. Any player
+  weapon must use `damageMult` for its damage and divide its cooldown by
+  `attackSpeedMult` (see `weapons.js`). `player.shield` (regen) is absorbed
+  before damage by `enemies.js`.
+- **Run over**: `getTreeRoot().on("run-over", ({ reason }) => …)`. A game-over
+  screen should listen to it (`main.js` shows a TEMP text until then).
+- **Base**: effects center on the first object tagged `"base"`. `main.js`
+  adds a TEMP stand-in at the start position if none exists, and TEMP keys
+  1–4 fire shop picks, until `base.js` / `shop.js` land.
 - **Tags added in wave 2**: `"base"`, `"portal"`, `"tower"`, `"aura"`.
   Existing wave-1 tags (`"player"`, `"enemy"`, `"projectile"`, `"xp-gem"`)
   unchanged.

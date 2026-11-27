@@ -144,6 +144,9 @@ export const ENEMY_WAVES = {
   durationPerWave: 10, // s added per wave
   maxDuration: 150, // s
   minClearTime: 3, // s, a wave can't count as cleared before this
+  // When a wave ends, remaining enemies die immediately (death anim, no drops,
+  // not counted as kills). false = they keep chasing until "enemy-clear".
+  killOnEnd: true,
 };
 
 // Enemy level comes from the wave number. An enemy keeps its spawn level.
@@ -235,6 +238,54 @@ export const CAMERA = {
   // How fast the lookahead swings to a new direction (1/s). Low = the small,
   // smooth drift when the player changes direction.
   lookaheadRate: 3,
+};
+
+// ---------------------------------------------------------------------------
+// Base effects from shop picks (owner: Mickael — src/systems/{auras,regen,tower}.js)
+// Stats: plain number, or { base, perLevel, min?, max? } scaled by pick level.
+// A shop pick's `params` can override any key (see docs/tasks-v2.md).
+// ---------------------------------------------------------------------------
+
+// Passive auras around the base. Radius grows each level ("passives scale
+// reach"): eventually the player doesn't need to camp home.
+export const AURA = {
+  "passive-defense": {
+    radius: { base: 150, perLevel: 60 }, // px
+    damageTaken: { base: 0.8, perLevel: -0.05, min: 0.5 }, // player dmg taken x
+    enemySlow: { base: 0.7, perLevel: -0.05, min: 0.4 }, // enemy speed x inside
+    color: [90, 170, 255],
+  },
+  "passive-offense": {
+    radius: { base: 150, perLevel: 60 },
+    damageMult: { base: 1.3, perLevel: 0.15 }, // player weapon damage x
+    attackSpeedMult: { base: 1.2, perLevel: 0.1 }, // player fire rate x
+    color: [255, 130, 60],
+  },
+};
+
+// Active defense: the base heals the player while in range, every `interval`
+// seconds. From shieldFromLevel, each heal also grants a damage shield.
+export const REGEN = {
+  range: { base: 170, perLevel: 20 }, // px from the base
+  interval: { base: 2, perLevel: -0.2, min: 0.8 }, // s between heals
+  heal: { base: 5, perLevel: 3 }, // hp per tick
+  shieldFromLevel: 2,
+  shield: { base: 0, perLevel: 6 }, // hp absorbed (lvl 2: 6, lvl 3: 12…)
+  shieldDuration: 3, // s
+};
+
+// Active offense: a tower next to the base that shoots enemies. Enemies near it
+// attack it; if it's destroyed the run is over ("run-over" root event).
+export const TOWER = {
+  hp: { base: 150, perLevel: 75 },
+  range: { base: 320, perLevel: 30 }, // px, shooting range
+  fireInterval: { base: 0.8, perLevel: -0.08, min: 0.3 }, // s
+  damage: { base: 12, perLevel: 6 },
+  projectileSpeed: 420, // px/s
+  aggroRange: 260, // px: enemies this close (and closer than the player) target it
+  offset: [0, -70], // px from the base
+  size: 36, // px, placeholder body
+  hitRadius: 18, // px, for enemy contact
 };
 
 // ---------------------------------------------------------------------------

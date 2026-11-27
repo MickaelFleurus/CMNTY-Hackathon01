@@ -5,6 +5,7 @@
 //   - getTreeRoot().on("wave-start", n)              wave number (enemies.js)
 //   - on("killed", "enemy", ...)                      kill count (enemies.js)
 //   - player.hp() / player.maxHP() / player.coins     player object
+//   - player.shield                                   from regen.js (shown when > 0)
 import { xpState } from "./xp.js";
 import { HUD } from "../config.js";
 
@@ -47,7 +48,8 @@ export function initHud() {
     xpBar.width = width() * (xpState.xp / xpState.toNext);
     waveLabel.text = hudState.wave > 0 ? `WAVE ${hudState.wave}` : "";
     const hp = p?.hp ? `HP ${Math.max(0, Math.ceil(p.hp()))}/${p.maxHP()}` : "";
-    stats.text = `LV ${xpState.level}\n${hp}\nCoins ${p?.coins ?? 0}\nKills ${hudState.kills}`;
+    const shield = p?.shield > 0 ? `\nShield ${Math.ceil(p.shield)}` : "";
+    stats.text = `LV ${xpState.level}\n${hp}${shield}\nCoins ${p?.coins ?? 0}\nKills ${hudState.kills}`;
   });
 
   // small hp bar that follows the player (world space)

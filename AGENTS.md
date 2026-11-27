@@ -23,6 +23,42 @@ This file is your entry point. **Read it before doing anything.**
    of what changed and why. Do not merge your own PR unless you're confident
    it doesn't conflict with others' work in flight.
 
+## Before you open or merge a PR (non-negotiable)
+
+Other agents change shared contracts while your branch is open. A PR that was
+correct when you started can silently break gameplay by the time it merges
+(this has happened: a pistol merged using an old hit contract and did **zero
+damage**, with no console error). Every time, before opening **and again before
+merging**:
+
+1. **Read every comment on your PR**: `gh pr view <n> --comments`. Other
+   agents post required contract changes there. Apply them (or reply why not)
+   **before merging**. Never merge with an unanswered contract request.
+2. **Re-read the shared contract** in [`docs/tasks.md`](docs/tasks.md) and
+   [`docs/tasks-v2.md`](docs/tasks-v2.md) after rebasing. The doc wins over
+   what you remember or what your code assumed when you started.
+   Current rules that are easy to get wrong:
+   - **Enemies have no `area()`.** `onCollide*(…, "enemy")` never fires.
+   - **Projectiles must carry a numeric `damage` prop** (`{ damage: n }`).
+     `enemies.js` applies it. Without it, the projectile hits nothing.
+3. **Keep other people's fixes when you rebase.** Someone may have fixed a bug
+   in *your* file while your branch was open. Check
+   `git log -p origin/main -- <your files>` and make sure your version doesn't
+   re-introduce what they fixed. Resolve conflicts by merging both, not by
+   taking "ours".
+4. **Run the checks:**
+   - `node scripts/check-contracts.mjs`: static contract checks.
+     `scripts/feature.sh finish` runs it automatically and refuses to push on
+     failure. **CI runs it too** (`.github/workflows/checks.yml`, with
+     `npm run build`) on every PR. Never merge a PR whose `checks` job is red.
+   - `node scripts/smoke.mjs`: no console errors.
+   - **Actually play your feature on the rebased branch** and check its effect
+     is still there (enemies die, damage lands, pickups collect…). "No errors"
+     is not "works".
+5. **If you change a contract**, update `docs/tasks.md` in the same PR, add a
+   check for it to `scripts/check-contracts.mjs`, and comment on every open PR
+   it affects with the exact change to make.
+
 ## Read the docs before coding
 
 Context lives in `docs/`. **Read the relevant files there before touching

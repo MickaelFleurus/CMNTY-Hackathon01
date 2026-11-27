@@ -8,6 +8,9 @@ import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 import { loadXpAssets, initXp } from "./systems/xp.js";
 import { loadUpgradeAssets, initUpgrades } from "./systems/upgrades.js";
 import { initHud } from "./systems/hud.js";
+import { startAuras } from "./systems/auras.js";
+import { startRegen } from "./systems/regen.js";
+import { loadTowerSprites, startTower } from "./systems/tower.js";
 
 kaplay({
   background: [26, 26, 38],
@@ -44,6 +47,7 @@ loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_
 loadEnemySprites();
 loadXpAssets();
 loadUpgradeAssets();
+loadTowerSprites();
 
 buildGround();
 const player = makePlayer();
@@ -53,6 +57,46 @@ initXp();
 initUpgrades();
 initHud();
 const enemyDirector = startEnemyDirector();
+startAuras();
+startRegen();
+startTower();
+
+// TEMP until Akram's base.js lands: a stand-in base where the player starts,
+// so the base effects have something to center on. base.js replaces it.
+if (!get("base").length) {
+  add([
+    rect(56, 56, { radius: 8 }),
+    pos(player.pos),
+    anchor("center"),
+    color(200, 180, 120),
+    outline(3, rgb(34, 24, 48)),
+    z(-4),
+    "base",
+    "temp-base",
+  ]);
+}
+
+// TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
+const TEMP_PICK_KEYS = {
+  1: "passive-defense",
+  2: "passive-offense",
+  3: "active-defense",
+  4: "active-offense",
+};
+const tempPickLevels = {};
+for (const [key, quadrant] of Object.entries(TEMP_PICK_KEYS)) {
+  onKeyPress(key, () => {
+    const level = (tempPickLevels[quadrant] = (tempPickLevels[quadrant] ?? 0) + 1);
+    getTreeRoot().trigger("shop-pick", { id: `temp-${quadrant}`, quadrant, level, params: {} });
+    console.log(`shop-pick ${quadrant} lvl ${level}`);
+  });
+}
+
+// TEMP until a game-over screen exists.
+getTreeRoot().on("run-over", ({ reason }) => {
+  console.log("RUN OVER:", reason);
+  add([text(`RUN OVER — ${reason}`, { size: 36 }), pos(center()), anchor("center"), fixed(), z(1000)]);
+});
 
 // TEMP until the cycle director (portal → shop → next wave) exists:
 // start wave 1, and start the next wave a few seconds after each one ends.

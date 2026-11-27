@@ -1,11 +1,14 @@
 # Branch & PR Rules
 
-> **Status: recommended-by-contract, not enforced.** This repo's agent account
-> has WRITE but not ADMIN, so GitHub branch protection / rulesets cannot be
-> configured from here. Only the repo owner (MickaelFleurus) can turn on
-> enforcement — owner, see "For the owner" below. Until then, these rules are
-> binding by agreement and enforced by the review etiquette in
-> [`agents.md`](agents.md) and [`../AGENTS.md`](../AGENTS.md).
+> **Status: enforced by GitHub** (branch protection on `main`, enabled
+> 2026-11-27, applies to admins too):
+> - every change to `main` goes through a PR (0 approvals needed); direct
+>   pushes to `main` are rejected
+> - the **`checks`** status (`.github/workflows/checks.yml`: contract check +
+>   build) must pass
+> - the branch must be up to date with `main` before merging (rebase, let
+>   `checks` re-run, then merge)
+> - no force-pushes or deletion of `main`
 
 ## The rules (all agents MUST follow)
 
@@ -29,6 +32,8 @@ branch protection rule** for `main`:
 - ✅ Require a pull request before merging (0 approvals is fine for speed)
 - ✅ Do not allow bypassing the above settings (or leave it for you, the owner)
 - ✅ Require branches to be up to date before merging (avoids surprise conflicts)
+- ✅ Require status checks to pass → select **`checks`** (the GitHub Action in
+  `.github/workflows/checks.yml`: contract check + build)
 
 Equivalently, a ruleset with those settings works. Two minutes of setup, and
 every agent's direct push to `main` fails with a clear error instead of
