@@ -28,6 +28,20 @@ PR.
     Targeting can keep looping `get("enemy")` (`pos` is the enemy center).
   - **Player:** enemies touching the `"player"` call `player.hurt(n)` (needs
     `health()`; the player keeps its own `area()`).
+- **Waves** (for the cycle director: field wave → portal → shop → next wave).
+  Nothing spawns until a wave starts. Root events, no import needed:
+  - `getTreeRoot().trigger("enemy-start-wave", n)` starts wave `n` (omit
+    `n` for the next one). Enemy level = `1 + 2*(n-1)`. Each enemy type
+    spawns a per-wave budget and unlocks by wave (`ENEMY_TYPES` in
+    `src/config.js`).
+  - `getTreeRoot().trigger("enemy-clear")` despawns every enemy (no drops),
+    e.g. when the player ports home.
+  - `getTreeRoot().on("wave-start", (n) => …)` and
+    `getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)`, where
+    `reason` is `"cleared"` or `"timeout"`. After a timeout, leftovers keep
+    chasing until `"enemy-clear"`.
+  - `src/main.js` currently chains waves itself (TEMP, 3 s gap) until the
+    cycle director takes over.
 - Kills/drops: `on("killed", "enemy", (e, { pos, level, tier, type }) => …)`
   and `on("drop", "enemy", (e, { kind, pos, level, tier, type, value }) => …)`
   (chippe listens, Mickael owns death drop position).

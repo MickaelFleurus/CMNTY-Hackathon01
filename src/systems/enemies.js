@@ -1,5 +1,6 @@
 // Enemies: factory, chase behaviour, contact attack, death + drops, and the
-// spawn director that ramps difficulty over time.
+// wave director (each wave spawns a budget of enemies, then ends when cleared
+// or when its timer runs out — see docs/game-design-v2.md).
 //
 // Contract for other systems (no imports needed — use KAPLAY tags/events):
 //   - Live enemies carry the "enemy" tag, a pos and a health() comp. Dying
@@ -23,6 +24,13 @@
 //       only when the drop roll succeeds (xp.js spawns the gem/item)
 //   - Enemies damage the player on contact by calling `player.hurt(n)` if
 //     the "player" object has a health() comp.
+//   - WAVES (root events, no import needed — e.g. for the cycle director):
+//       getTreeRoot().trigger("enemy-start-wave", n)   start wave n (omit n = next)
+//       getTreeRoot().trigger("enemy-clear")           despawn every enemy, no drops
+//       getTreeRoot().on("wave-start", (n) => …)
+//       getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)
+//         reason: "cleared" (whole budget spawned + killed) or "timeout".
+//         After a timeout, leftover enemies keep chasing until "enemy-clear".
 //   - External spawn triggers (for `{ trigger: "name" }` spawn conditions):
 //       getTreeRoot().trigger("enemy-trigger", "bat-swarm")   // no import needed
 //     or import { fireEnemyTrigger } from this file. Triggers stay on until
@@ -33,6 +41,7 @@ import {
   ENEMY_TYPES,
   ENEMY_LEVEL,
   ENEMY_SPAWN,
+  ENEMY_WAVES,
   ENEMY_DROPS,
   ENEMY_TIERS,
 } from "../config.js";
@@ -93,10 +102,22 @@ export function loadEnemySprites() {
   }
 }
 
-/** Enemy level for a given survival time (seconds). */
-export function enemyLevelAt(seconds) {
-  const lvl = 1 + Math.floor(seconds / ENEMY_LEVEL.secondsPerLevel);
+/** Enemy level for a wave number (1-based). */
+export function enemyLevelForWave(wave) {
+  const lvl = 1 + ENEMY_LEVEL.levelsPerWave * (wave - 1);
   return Math.min(lvl, ENEMY_LEVEL.maxLevel);
+}
+
+/** Total enemies of a type a wave will spawn (its budget). */
+export function waveBudget(type, wave) {
+  const c = type.spawn.count;
+  return c.base + Math.floor(c.perWave * (wave - 1));
+}
+
+/** Wave timer in seconds. */
+export function waveDuration(wave) {
+  const w = ENEMY_WAVES;
+  return Math.min(w.maxDuration, w.baseDuration + w.durationPerWave * (wave - 1));
 }
 
 export function enemyStatsForLevel(type, level) {
@@ -130,6 +151,7 @@ export function enemyTierForHp(hp, minHps = ENEMY_TIERS.map((t) => t.minHp)) {
 // Live (not dying) enemies. Kept here so hot paths never scan the whole
 // object tree with get("enemy").
 const live = new Set();
+let waveKills = 0;
 const liveByType = new Map(ENEMY_TYPES.map((t) => [t.id, 0]));
 
 /** Number of live (not dying) enemies, optionally of one type. */
@@ -231,6 +253,7 @@ function killEnemy(enemy) {
     type: enemy.type,
   };
   enemy.trigger("killed", info);
+  waveKills += 1;
 
   const drop = rollDrop(enemy.level, enemy.drops);
   if (drop) {
@@ -243,6 +266,7 @@ function killEnemy(enemy) {
 
   // Out of play: no more targeting / hits while the death anim runs.
   enemy.untag("enemy");
+  enemy.tag("enemy-dying");
   enemy.play("death");
 }
 
@@ -395,14 +419,19 @@ function readPlayerStat(name) {
   return typeof v === "function" ? v.call(player) : v;
 }
 
-/** Evaluate a spawn condition from ENEMY_TYPES[].spawn.when. */
-export function checkSpawnCondition(cond, elapsed) {
+/**
+ * Evaluate a spawn condition from ENEMY_TYPES[].spawn.when.
+ * ctx = { wave, waveTime } (waveTime = seconds since the wave started).
+ */
+export function checkSpawnCondition(cond, ctx) {
   if (!cond) return true;
-  if (cond.all) return cond.all.every((c) => checkSpawnCondition(c, elapsed));
-  if (cond.any) return cond.any.some((c) => checkSpawnCondition(c, elapsed));
-  if (cond.not) return !checkSpawnCondition(cond.not, elapsed);
-  if (cond.after !== undefined) return elapsed >= cond.after;
-  if (cond.before !== undefined) return elapsed < cond.before;
+  if (cond.all) return cond.all.every((c) => checkSpawnCondition(c, ctx));
+  if (cond.any) return cond.any.some((c) => checkSpawnCondition(c, ctx));
+  if (cond.not) return !checkSpawnCondition(cond.not, ctx);
+  if (cond.fromWave !== undefined) return ctx.wave >= cond.fromWave;
+  if (cond.untilWave !== undefined) return ctx.wave <= cond.untilWave;
+  if (cond.after !== undefined) return ctx.waveTime >= cond.after;
+  if (cond.before !== undefined) return ctx.waveTime < cond.before;
   if (cond.trigger) return activeTriggers.has(cond.trigger);
   if (cond.playerStat) {
     const v = readPlayerStat(cond.playerStat);
@@ -416,12 +445,13 @@ export function checkSpawnCondition(cond, elapsed) {
 // Director
 // ---------------------------------------------------------------------------
 
+/** Spawns up to `count` enemies (fewer if a cap is hit); returns how many. */
 function spawnBatch(type, level, count) {
   const room = Math.min(
     ENEMY_SPAWN.maxAlive - live.size,
     (type.spawn.maxAlive ?? Infinity) - liveEnemyCount(type.id),
   );
-  const n = Math.min(count, room);
+  const n = Math.max(0, Math.min(count, room));
   const cluster = type.spawn.cluster;
   const center = edgeSpawnPoint();
   for (let i = 0; i < n; i++) {
@@ -430,45 +460,85 @@ function spawnBatch(type, level, count) {
       : edgeSpawnPoint();
     spawnEnemy(p, level, type.id);
   }
+  return n;
+}
+
+/** Remove every enemy (live or dying) without kills or drops. */
+export function clearEnemies() {
+  for (const e of [...live]) destroy(e);
+  for (const e of get("enemy-dying")) destroy(e);
 }
 
 /**
- * Start the spawn director. Call once per game scene.
- * Each enemy type runs its own schedule while its spawn condition holds.
- * Returns { level(), elapsed(), alive(type?), activeTypes() } for HUD/debug.
+ * Start the enemy system for a game scene. Nothing spawns until a wave is
+ * started (startWave(n) or the "enemy-start-wave" root event).
+ *
+ * Returns a controller for HUD/debug/cycle director:
+ *   startWave(n?), clear(), wave(), inWave(), timeLeft(), level(),
+ *   remaining()  enemies left this wave (unspawned budget + alive),
+ *   alive(type?), activeTypes()
  */
 export function startEnemyDirector() {
-  let elapsed = 0;
   live.clear();
   for (const t of ENEMY_TYPES) liveByType.set(t.id, 0);
   activeTriggers.clear();
   cachedPlayer = null;
 
+  let wave = 0; // last started wave number
+  let inWave = false;
+  let waveTime = 0;
+  let duration = 0;
+
+  // Per-type schedule, reset every wave. activeFor = seconds this type has
+  // been spawning this wave, so its interval ramp starts when it appears.
+  const schedules = ENEMY_TYPES.map((type) => ({
+    type, active: false, activeFor: 0, untilNext: 0, budget: 0, spawned: 0,
+  }));
+
   const root = getTreeRoot();
+
+  function startWave(n = wave + 1) {
+    wave = n;
+    inWave = true;
+    waveTime = 0;
+    waveKills = 0;
+    duration = waveDuration(n);
+    for (const s of schedules) {
+      Object.assign(s, { active: false, activeFor: 0, untilNext: 0, spawned: 0 });
+      s.budget = waveBudget(s.type, n);
+    }
+    root.trigger("wave-start", n);
+  }
+
+  function endWave(reason) {
+    inWave = false;
+    for (const s of schedules) s.active = false;
+    root.trigger("wave-end", { wave, reason, kills: waveKills });
+  }
+
+  const unspawned = () =>
+    schedules.reduce((sum, s) => sum + (s.active ? s.budget - s.spawned : 0), 0);
+
   root.on("enemy-trigger", fireEnemyTrigger);
   root.on("enemy-trigger-clear", clearEnemyTrigger);
-
-  // Per-type schedule. activeFor = seconds this type has been spawning, so
-  // its interval ramp starts when it first appears, not at t=0.
-  const schedules = ENEMY_TYPES.map((type) => ({
-    type,
-    active: false,
-    activeFor: 0,
-    untilNext: 0,
-  }));
+  root.on("enemy-start-wave", (n) => startWave(n ?? wave + 1));
+  root.on("enemy-clear", clearEnemies);
 
   onUpdate(() => {
     buildGrid();
     separateEnemies();
     resolveProjectileHits();
     resolvePlayerContact();
-    elapsed += dt();
-    const level = enemyLevelAt(elapsed);
+    if (!inWave) return;
+
+    waveTime += dt();
+    const level = enemyLevelForWave(wave);
+    const ctx = { wave, waveTime };
 
     for (const s of schedules) {
       const sp = s.type.spawn;
-      s.active = checkSpawnCondition(sp.when, elapsed);
-      if (!s.active) continue;
+      s.active = checkSpawnCondition(sp.when, ctx);
+      if (!s.active || s.spawned >= s.budget) continue;
 
       s.activeFor += dt();
       s.untilNext -= dt();
@@ -478,14 +548,27 @@ export function startEnemyDirector() {
         sp.minInterval,
         sp.startInterval - sp.intervalDecayPerSec * s.activeFor,
       );
-      const count = sp.batch + Math.floor(sp.batchPerLevel * (level - 1));
-      spawnBatch(s.type, level, count);
+      const want = sp.batch + Math.floor(sp.batchPerLevel * (level - 1));
+      s.spawned += spawnBatch(s.type, level, Math.min(want, s.budget - s.spawned));
+    }
+
+    // Cleared = every active type spent its budget and nothing is alive.
+    // (A type whose condition isn't met this wave doesn't block clearing.)
+    if (live.size === 0 && unspawned() === 0 && waveTime > ENEMY_WAVES.minClearTime) {
+      endWave("cleared");
+    } else if (waveTime >= duration) {
+      endWave("timeout");
     }
   });
 
   return {
-    level: () => enemyLevelAt(elapsed),
-    elapsed: () => elapsed,
+    startWave,
+    clear: clearEnemies,
+    wave: () => wave,
+    inWave: () => inWave,
+    timeLeft: () => (inWave ? Math.max(0, duration - waveTime) : 0),
+    level: () => enemyLevelForWave(Math.max(1, wave)),
+    remaining: () => unspawned() + live.size,
     alive: liveEnemyCount,
     activeTypes: () => schedules.filter((s) => s.active).map((s) => s.type.id),
   };
