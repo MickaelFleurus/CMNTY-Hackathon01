@@ -412,4 +412,5 @@ export const CYCLE = {
   shopRadius: 70, // px from the golem's body: closer than this during the break → shop opens
   arrivalGap: 50, // px below the golem where the portal drops the player
   nextWaveDelay: 2, // s between closing the shop and the next wave
+  pauseInShop: true, // freeze the game (time scale 0) while the shop is open
 };
