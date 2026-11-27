@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "checkJs": true,
+    "noEmit": true,
+    "types": ["./node_modules/kaplay/dist/declaration/global.d.ts"]
+  },
+  "include": ["src/**/*.js", "node_modules/kaplay/dist/declaration/global.d.ts"]
+}

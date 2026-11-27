@@ -6,7 +6,7 @@ const url = process.argv[2] || "http://localhost:5173/";
 const out = spawnSync(
   "chromium",
   [
-    "--headless", "--disable-gpu", "--no-sandbox",
+    "--headless", "--disable-gpu", "--no-sandbox", "--enable-unsafe-swiftshader",
     "--virtual-time-budget=10000",
     "--enable-logging=stderr", "--v=0",
     "--dump-dom", url,
