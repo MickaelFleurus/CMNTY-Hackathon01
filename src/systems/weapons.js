@@ -13,8 +13,10 @@ export function makeWeapon(player) {
     const target = nearestEnemy(player.pos, CFG.weapon.range);
     if (!target) return;
 
-    cooldown = CFG.weapon.fireInterval;
-    fire(player.pos, target.pos);
+    // offense aura (auras.js) sets player.buffs; 1 when outside every aura
+    const buffs = player.buffs ?? {};
+    cooldown = CFG.weapon.fireInterval / (buffs.attackSpeedMult ?? 1);
+    fire(player.pos, target.pos, CFG.weapon.damage * (buffs.damageMult ?? 1));
   });
 }
 
@@ -31,7 +33,7 @@ function nearestEnemy(from, range) {
   return best;
 }
 
-function fire(from, targetPos) {
+function fire(from, targetPos, damage) {
   const dir = targetPos.sub(from).unit();
 
   add([
@@ -49,6 +51,6 @@ function fire(from, targetPos) {
     // Damage on contact is applied by enemies.js (enemies aren't in KAPLAY's
     // collision system — see the shared contract in docs/tasks.md): it hurts
     // each overlapped enemy once and destroys the knife after `pierce` hits.
-    { damage: CFG.weapon.damage },
+    { damage },
   ]);
 }

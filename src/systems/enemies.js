@@ -17,7 +17,14 @@
 //         enemy.hurt(damage), destroys the projectile when pierce runs out,
 //         and fires on("hit", "projectile", (proj, enemy) => …) for effects.
 //         Use anchor("center") on projectiles so pos is the visual center.
-//       * PLAYER CONTACT: enemies overlapping the "player" call player.hurt(n).
+//       * PLAYER CONTACT: enemies overlapping the "player" hurt it. Damage is
+//         scaled by player.buffs.damageTaken (defense aura) and absorbed first
+//         by player.shield (regen shield) — see damagePlayer().
+//       * TOWERS: objects tagged "tower" (with health(), hitRadius, aggroRange)
+//         pull enemies within aggroRange that are closer to the tower than to
+//         the player; enemies touching a tower call tower.hurt(n).
+//       * AURAS: objects tagged "aura" with { radius, enemySlow } slow every
+//         enemy inside (speed *= enemySlow; the strongest aura wins).
 //   - Each enemy also carries `type` (e.g. "zombie", "bat").
 //   - on("killed", "enemy", (enemy, { pos, level, tier, type }) => ...)   every kill (HUD)
 //   - on("drop",   "enemy", (enemy, { kind, pos, level, tier, type, value }) => ...)
@@ -164,6 +171,10 @@ function markGone(enemy) {
   if (live.delete(enemy)) liveByType.set(enemy.type, liveByType.get(enemy.type) - 1);
 }
 
+// Towers and auras, refreshed once per frame by the director (few objects).
+let towers = [];
+let auras = [];
+
 // get("player") walks every object in the scene; doing that once per enemy
 // per frame was O(n²). Cache it and only re-query when it's gone.
 let cachedPlayer = null;
@@ -213,15 +224,30 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     if (!player) return;
 
     const toPlayer = player.pos.sub(enemy.pos);
-    if (toPlayer.len() > ENEMY.despawnDistance) {
+    const playerDist = toPlayer.len();
+    if (playerDist > ENEMY.despawnDistance) {
       destroy(enemy); // silently recycle stragglers, no drop
       return;
     }
-    const toTarget = toPlayer.add(enemy.chaseOffset);
+
+    // Target: the player, unless a tower is in aggro range and closer.
+    let goal = toPlayer;
+    let goalDist = playerDist;
+    for (const t of towers) {
+      const toTower = t.pos.sub(enemy.pos);
+      const d = toTower.len();
+      if (d < (t.aggroRange ?? 0) && d < goalDist) {
+        goal = toTower;
+        goalDist = d;
+      }
+    }
+
+    const speed = enemy.speed * auraSlowAt(enemy.pos.x, enemy.pos.y);
+    const toTarget = goal.add(enemy.chaseOffset);
     const dist = toTarget.len();
     // Stop on arrival instead of jittering back and forth over the point.
-    if (dist > 1) enemy.move(toTarget.scale(Math.min(enemy.speed, dist / dt()) / dist));
-    enemy.flipX = toPlayer.x < 0; // art faces right (always face the player)
+    if (dist > 1) enemy.move(toTarget.scale(Math.min(speed, dist / dt()) / dist));
+    enemy.flipX = goal.x < 0; // art faces right (always face the target)
   });
 
   enemy.onHurt(() => {
@@ -363,16 +389,55 @@ function resolveProjectileHits() {
   }
 }
 
-function resolvePlayerContact() {
-  const player = getPlayer();
-  if (!player || typeof player.hurt !== "function") return;
-  const { x, y, r } = hitCircle(player, ENEMY.defaultPlayerRadius);
+/** Speed multiplier from the strongest "aura" covering (x, y). */
+function auraSlowAt(x, y) {
+  let mult = 1;
+  for (const a of auras) {
+    if (a.enemySlow === undefined || a.enemySlow >= mult) continue;
+    const p = a.worldPos();
+    const dx = p.x - x;
+    const dy = p.y - y;
+    if (dx * dx + dy * dy <= a.radius * a.radius) mult = a.enemySlow;
+  }
+  return mult;
+}
+
+/**
+ * Enemy hit on the player: scaled by the defense aura (player.buffs.damageTaken)
+ * and absorbed first by the regen shield (player.shield).
+ */
+function damagePlayer(player, amount) {
+  let dmg = amount * (player.buffs?.damageTaken ?? 1);
+  if (player.shield > 0) {
+    const absorbed = Math.min(player.shield, dmg);
+    player.shield -= absorbed;
+    dmg -= absorbed;
+  }
+  if (dmg > 0) player.hurt(Math.max(1, Math.round(dmg)));
+}
+
+/** Enemies touching `target` hit it (per-enemy attack cooldown). */
+function resolveContact(target, fallbackRadius, onHit) {
+  const { x, y, r } = hitCircle(target, fallbackRadius);
   forEachEnemyNear(x, y, r + MAX_HIT_RADIUS, (e) => {
     if (e.dead || e.attackTimer > 0 || !overlaps(e, x, y, r)) return false;
-    player.hurt(e.damage);
+    onHit(e.damage);
     e.attackTimer = ENEMY.attackCooldown;
     return false;
   });
+}
+
+function resolvePlayerContact() {
+  const player = getPlayer();
+  if (!player || typeof player.hurt !== "function") return;
+  resolveContact(player, ENEMY.defaultPlayerRadius, (dmg) => damagePlayer(player, dmg));
+}
+
+function resolveTowerContact() {
+  for (const t of towers) {
+    if (typeof t.hurt !== "function" || !t.exists()) continue;
+    resolveContact(t, t.hitRadius ?? ENEMY.defaultPlayerRadius, (dmg) => t.hurt(dmg));
+  }
 }
 
 // Optional soft spacing (ENEMY.separationRadius > 0). Off by default: enemies
@@ -544,10 +609,13 @@ export function startEnemyDirector() {
   root.on("enemy-clear", clearEnemies);
 
   onUpdate(() => {
+    towers = get("tower");
+    auras = get("aura");
     buildGrid();
     separateEnemies();
     resolveProjectileHits();
     resolvePlayerContact();
+    resolveTowerContact();
     if (!inWave) return;
 
     waveTime += dt();
