@@ -124,7 +124,7 @@ How each one targets is its identity, and no two play the same:
 | **Plank** (starter) | **Hits in front of the player**: short poke in the facing direction | placeholder (no sprite in the pack yet) · `Icon_Axe` | +damage → +reach → hits behind too → +damage |
 | **Whip** | **Hits in front of the player**: wide horizontal slash in the facing direction | `Proj_Whip` · `Icon_Whip` | +area → also slashes behind → +damage → +area |
 | **Magic Bolt** | **Hits the nearest enemy**: homing bolt | `Proj_Magic_Bolt` · `Icon_Magic_Bolt` | +1 bolt → +damage → **rebound** 1 → +1 bolt |
-| **Knife** | **Throws several**: a fan of knives in the movement direction | `Proj_Knife` · `Icon_Knife` | +1 knife → **pierce** +1 → +1 knife → pierce +2 |
+| **Knife** | **Throws several**: a fan of knives in the facing direction | `Proj_Knife` · `Icon_Knife` | every level: +1 knife per volley **and** **pierce** +1 (PR #41) |
 | **Axe** | **Goes through enemies**: thrown up in an arc, falls through the horde, high pierce | `Proj_Axe` · `Icon_Axe` | +damage → pierce +3 → +1 axe → +area |
 | **Boomerang** | **Goes through enemies** twice: flies out to the nearest enemy and comes back | `Proj_Boomerang` · `Icon_Boomerang` | pierce +2 → +1 boomerang → +speed → **rebound** off the screen edge |
 | **Fireball** | **Explodes**: flies to the nearest enemy, blows up on impact (area damage) | `Proj_Fireball` + `FX_Explosion` · `Icon_Fireball` | +blast area → +damage → +1 fireball → leaves a short burn |
@@ -161,11 +161,12 @@ How each one targets is its identity, and no two play the same:
 | **Growth** | +10% XP gained | `Icon_Growth` | 5 |
 | **Luck** | better drops (hearts, coins) and more rare cards | `Icon_Luck` | 5 |
 
-Status in code (`src/systems/upgrades.js`, PR #25): the level-up screen
-offers Max HP, Move Speed, Might, Cooldown, Magnet and Knife, but **only
-Magnet is applied**. Nothing listens to `player.trigger("upgrade", …)` yet.
-The current auto-attack "pistol" (`weapons.js`) behaves like Magic Bolt
-(nearest enemy) using the knife sprite.
+Status in code: the level-up screen (`src/systems/upgrades.js`, PR #25)
+offers Max HP, Move Speed, Might, Cooldown, Magnet and Knife. On `main` only
+Magnet is applied. **PR #41** (chippe, in review) applies the other cards and
+adds the Knife (`src/systems/knife.js`). The current auto-attack "pistol"
+(`weapons.js`) behaves like Magic Bolt (nearest enemy) using the knife
+sprite.
 
 ## UI we need
 
@@ -255,7 +256,7 @@ being hit and how much HP it has left:
 9. **Game over screen + stats + restart** — listens to `"run-over"`.
    **Weapons & upgrades** (see "Weapons & upgrades catalog") can be built in
    parallel with 6–9: first wire the existing stat cards, then add weapons
-   one per PR (one file each under `src/systems/weapons/`).
+   one per PR (one file each under `src/systems/`, like `knife.js`).
 10. **Boss wave + gimmick** — last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
