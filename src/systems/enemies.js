@@ -5,8 +5,8 @@
 //   - Live enemies carry the "enemy" tag and a health() comp: weapons call
 //     `enemy.hurt(dmg)`. Dying enemies lose "enemy" (and their area), so they
 //     can't be targeted or hit while the death animation plays.
-//   - on("killed", "enemy", (enemy, { pos, level }) => ...)   every kill (HUD)
-//   - on("drop",   "enemy", (enemy, { kind, pos, level, value }) => ...)
+//   - on("killed", "enemy", (enemy, { pos, level, tier }) => ...)   every kill (HUD)
+//   - on("drop",   "enemy", (enemy, { kind, pos, level, tier, value }) => ...)
 //       only when the drop roll succeeds (xp.js spawns the gem/item)
 //   - Enemies damage the player on contact by calling `player.hurt(n)` if
 //     the "player" object has a health() comp.
@@ -17,13 +17,38 @@ import {
   ENEMY_LEVEL,
   ENEMY_SPAWN,
   ENEMY_DROPS,
+  ENEMY_TIERS,
 } from "../config.js";
 
 // Sheet: 6 columns x 3 rows of 16x16 — row 0 Move(4), row 1 Hit(2), row 2 Death(6)
 const SHEET_COLS = 6;
 const SHEET_ROWS = 3;
 
+const TINT_SHADER = "enemy-tint";
+
+// Recolor that keeps each pixel's brightness (so the dark outline and shading
+// survive) but swaps its hue toward u_tint. Plain color() multiplies, which
+// turns the green art muddy (yellow → olive, red → brown).
+const TINT_FRAG = `
+uniform vec3 u_tint; // KAPLAY sends Color uniforms as 0..255
+uniform float u_amount;
+vec4 frag(vec2 pos, vec2 uv, vec4 color, sampler2D tex) {
+  vec4 c = def_frag();
+  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+  vec3 hot = clamp(u_tint / 255.0 * (0.25 + 1.3 * l), 0.0, 1.0);
+  return vec4(mix(c.rgb, hot, u_amount), c.a);
+}
+`;
+
+// One shared uniform object per tier so KAPLAY can batch same-tier enemies.
+// Built in loadEnemySprites() because rgb() only exists after kaplay() runs.
+let tierUniforms = [];
+
 export function loadEnemySprites() {
+  loadShader(TINT_SHADER, null, TINT_FRAG);
+  tierUniforms = ENEMY_TIERS.map((t) =>
+    t.tint ? { u_tint: rgb(...t.tint), u_amount: t.amount } : null,
+  );
   loadSprite(ENEMY.sprite, zombieUrl, {
     sliceX: SHEET_COLS,
     sliceY: SHEET_ROWS,
@@ -60,12 +85,24 @@ export function rollDrop(level) {
   return null;
 }
 
+/** Color-swap tier for a given max HP (highest tier whose minHp <= hp). */
+export function enemyTierForHp(hp) {
+  let tier = 0;
+  ENEMY_TIERS.forEach((t, i) => {
+    if (hp >= t.minHp) tier = i;
+  });
+  return tier;
+}
+
 function getPlayer() {
   return get("player")[0];
 }
 
 export function spawnEnemy(p, level = 1) {
   const stats = enemyStatsForLevel(level);
+  const tier = enemyTierForHp(stats.hp);
+  const { xpMult } = ENEMY_TIERS[tier];
+  const uniforms = tierUniforms[tier];
 
   const enemy = add([
     sprite(ENEMY.sprite, { anim: "move" }),
@@ -74,9 +111,12 @@ export function spawnEnemy(p, level = 1) {
     scale(ENEMY.scale),
     area({ scale: 0.75 }),
     health(stats.hp),
+    ...(uniforms ? [shader(TINT_SHADER, uniforms)] : []),
     "enemy",
     {
       level,
+      tier,
+      xpMult,
       damage: stats.damage,
       attackTimer: 0,
       dead: false,
@@ -133,12 +173,16 @@ function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true;
 
-  const info = { pos: enemy.pos.clone(), level: enemy.level };
+  const info = { pos: enemy.pos.clone(), level: enemy.level, tier: enemy.tier };
   enemy.trigger("killed", info);
 
   const drop = rollDrop(enemy.level);
   if (drop) {
-    enemy.trigger("drop", { ...info, kind: drop.kind, value: drop.value * enemy.level });
+    enemy.trigger("drop", {
+      ...info,
+      kind: drop.kind,
+      value: Math.round(drop.value * enemy.level * enemy.xpMult),
+    });
   }
 
   // Out of play: no more targeting / collisions while the death anim runs.
