@@ -86,6 +86,7 @@ function floatText(at, msg, rgbValues) {
     opacity(1),
     z(60),
     lifespan(0.8, { fade: 0.5 }),
+    "fx", // short-lived effect (cleared when the run is over)
   ]);
   t.onUpdate(() => t.move(0, -30));
 }

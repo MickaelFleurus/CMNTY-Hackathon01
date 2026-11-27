@@ -12,8 +12,13 @@ export function followCamera(target) {
   let lastPos = target.pos.clone();
   setCamPos(cam);
 
+  // Run over: the view stops dead, otherwise the follow/lookahead easing keeps
+  // sliding the screen for a moment and frozen enemies look like they move.
+  let frozen = false;
+  getTreeRoot().on("run-over", () => (frozen = true));
+
   onUpdate(() => {
-    if (!target.exists()) return;
+    if (frozen || !target.exists()) return;
 
     // Movement direction from actual displacement, so it works for keyboard,
     // joystick, knockback… without knowing how the player moves.
