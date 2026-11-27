@@ -101,6 +101,7 @@ export const ENEMY_TYPES = [
     drops: [
       { kind: "xp-blue", base: 0.25, perLevel: 0, max: 0.25, value: 1 },
       { kind: "xp-green", base: 0.03, perLevel: 0.005, max: 0.1, value: 3 },
+      { kind: "coin", base: 0.2, perLevel: 0, max: 0.2, value: 0 },
     ],
     spawn: {
       count: { base: 15, perWave: 8 },
@@ -137,6 +138,7 @@ export const ENEMY_TYPES = [
       { kind: "xp-green", base: 0.5, perLevel: 0, max: 0.5, value: 3 },
       { kind: "xp-red", base: 0.15, perLevel: 0.005, max: 0.3, value: 10 },
       { kind: "heart", base: 0.05, perLevel: 0, max: 0.05, value: 0 },
+      { kind: "coin", base: 0.25, perLevel: 0, max: 0.25, value: 0 },
     ],
     spawn: {
       count: { base: 2, perWave: 1 },
@@ -195,7 +197,10 @@ export const ENEMY_SPAWN = {
   edgeMargin: 48, // px beyond the screen edge to spawn at
 };
 
-// Default drop table (types can override with `drops`), rolled once per kill. Entries are checked in order with a
+// Default drop table (types can override with `drops`), rolled once per kill.
+// A kill gives AT MOST ONE thing: XP, a heart, coins, or nothing. "coin"
+// drops are spawned by base.js, which sets the amount (SHOP.coins); their
+// `value` here is unused. Entries are checked in order with a
 // single random roll, so at most ONE drop per enemy; whatever probability is
 // left over means "no drop". chance(level) = min(max, base + perLevel*(level-1)).
 // Listeners get { kind, pos, level, tier, type, value } via on("drop", "enemy", ...).
@@ -204,6 +209,7 @@ export const ENEMY_DROPS = [
   { kind: "xp-green", base: 0.08, perLevel: 0.01, max: 0.25, value: 3 },
   { kind: "xp-red", base: 0.0, perLevel: 0.005, max: 0.1, value: 10 },
   { kind: "heart", base: 0.01, perLevel: 0.0, max: 0.01, value: 0 },
+  { kind: "coin", base: 0.35, perLevel: 0, max: 0.35, value: 0 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -378,6 +384,7 @@ export const TOWER = {
   // x 1-30, y 3-31 of the 32 px cell), in art px; scaled with the sprite.
   // Enemies and the player can't overlap it; the HP bar sits just above it.
   body: { cell: 32, left: 1, top: 3, right: 1, bottom: 0 },
+  idleAnimSpeed: 0.4, // x the golem's authored 8 fps idle (a slow, heavy breathe)
   playerRadius: 12, // px, the player's body when pushed out of the base
   hp: { base: 200, perLevel: 75 },
   range: { base: 320, perLevel: 30 }, // px, shooting range
