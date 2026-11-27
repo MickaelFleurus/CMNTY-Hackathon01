@@ -1,0 +1,13 @@
+SURVIVORS STARTER KIT - LICENSE
+
+You MAY:
+  * use these assets in any number of personal and commercial projects (games, prototypes, game jams, videos,
+    trailers, marketing of your game);
+  * modify, recolour, cut, scale and combine them with other art.
+
+You MAY NOT:
+  * resell, redistribute or share the assets (original or modified) as assets - on their own, in another asset
+    pack, template or tileset, for free or for money;
+  * claim the original artwork as your own.
+
+Credit is appreciated but not required: "Survivors Starter Kit by Sneznyj 3D".

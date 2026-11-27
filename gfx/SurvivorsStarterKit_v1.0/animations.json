@@ -1,0 +1,1474 @@
+{
+ "_note": "Each character sheet: one animation per row (top to bottom, in the order listed), frames left to right. Cell size in pixels. Characters face RIGHT - flip horizontally for left.",
+ "Enemies": {
+  "Bat": {
+   "file": "Enemies/Enemy_Bat.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Skull": {
+   "file": "Enemies/Enemy_Skull.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Slime": {
+   "file": "Enemies/Enemy_Slime.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Ghost": {
+   "file": "Enemies/Enemy_Ghost.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Rat": {
+   "file": "Enemies/Enemy_Rat.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Zombie": {
+   "file": "Enemies/Enemy_Zombie.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Skeleton": {
+   "file": "Enemies/Enemy_Skeleton.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Shroom": {
+   "file": "Enemies/Enemy_Shroom.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Goblin": {
+   "file": "Enemies/Enemy_Goblin.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Mummy": {
+   "file": "Enemies/Enemy_Mummy.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Cultist": {
+   "file": "Enemies/Enemy_Cultist.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Snowman": {
+   "file": "Enemies/Enemy_Snowman.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Cactus": {
+   "file": "Enemies/Enemy_Cactus.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Crystal_Golem": {
+   "file": "Enemies/Enemy_Crystal_Golem.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Spider": {
+   "file": "Enemies/Enemy_Spider.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Beetle": {
+   "file": "Enemies/Enemy_Beetle.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Crab": {
+   "file": "Enemies/Enemy_Crab.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Imp": {
+   "file": "Enemies/Enemy_Imp.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Crow": {
+   "file": "Enemies/Enemy_Crow.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Bee": {
+   "file": "Enemies/Enemy_Bee.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Grimoire": {
+   "file": "Enemies/Enemy_Grimoire.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Pumpkin": {
+   "file": "Enemies/Enemy_Pumpkin.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Toad": {
+   "file": "Enemies/Enemy_Toad.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Mimic": {
+   "file": "Enemies/Enemy_Mimic.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Eyeball": {
+   "file": "Enemies/Enemy_Eyeball.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Flame_Skull": {
+   "file": "Enemies/Enemy_Flame_Skull.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Candle": {
+   "file": "Enemies/Enemy_Candle.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Jelly_Cube": {
+   "file": "Enemies/Enemy_Jelly_Cube.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Jellyfish": {
+   "file": "Enemies/Enemy_Jellyfish.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Worm": {
+   "file": "Enemies/Enemy_Worm.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Snake": {
+   "file": "Enemies/Enemy_Snake.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Biter_Plant": {
+   "file": "Enemies/Enemy_Biter_Plant.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Wisp": {
+   "file": "Enemies/Enemy_Wisp.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Magma_Slime": {
+   "file": "Enemies/Enemy_Magma_Slime.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  }
+ },
+ "Bosses": {
+  "Slime_King": {
+   "file": "Bosses/Boss_Slime_King.png",
+   "cell": [
+    32,
+    32
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Attack",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 8,
+     "fps": 12
+    }
+   ]
+  },
+  "Stone_Golem": {
+   "file": "Bosses/Boss_Stone_Golem.png",
+   "cell": [
+    32,
+    32
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Attack",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 8,
+     "fps": 12
+    }
+   ]
+  },
+  "Vampire_Lord": {
+   "file": "Bosses/Boss_Vampire_Lord.png",
+   "cell": [
+    32,
+    32
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Attack",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 8,
+     "fps": 12
+    }
+   ]
+  },
+  "Reaper": {
+   "file": "Bosses/Boss_Reaper.png",
+   "cell": [
+    32,
+    32
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Attack",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 8,
+     "fps": 12
+    }
+   ]
+  },
+  "Demon_Lord": {
+   "file": "Bosses/Boss_Demon_Lord.png",
+   "cell": [
+    32,
+    32
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Attack",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 8,
+     "fps": 12
+    }
+   ]
+  },
+  "Treant": {
+   "file": "Bosses/Boss_Treant.png",
+   "cell": [
+    32,
+    32
+   ],
+   "rows": [
+    {
+     "anim": "Move",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Attack",
+     "frames": 4,
+     "fps": 8
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 8,
+     "fps": 12
+    }
+   ]
+  }
+ },
+ "Heroes": {
+  "Knight": {
+   "file": "Heroes/Hero_Knight.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Idle",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Walk",
+     "frames": 4,
+     "fps": 10
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Wizard": {
+   "file": "Heroes/Hero_Wizard.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Idle",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Walk",
+     "frames": 4,
+     "fps": 10
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Ranger": {
+   "file": "Heroes/Hero_Ranger.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Idle",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Walk",
+     "frames": 4,
+     "fps": 10
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  },
+  "Cleric": {
+   "file": "Heroes/Hero_Cleric.png",
+   "cell": [
+    16,
+    16
+   ],
+   "rows": [
+    {
+     "anim": "Idle",
+     "frames": 4,
+     "fps": 6
+    },
+    {
+     "anim": "Walk",
+     "frames": 4,
+     "fps": 10
+    },
+    {
+     "anim": "Hit",
+     "frames": 2,
+     "fps": 12
+    },
+    {
+     "anim": "Death",
+     "frames": 6,
+     "fps": 12
+    }
+   ]
+  }
+ },
+ "Projectiles": {
+  "Knife": {
+   "file": "Weapons/Projectiles/Proj_Knife.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Axe": {
+   "file": "Weapons/Projectiles/Proj_Axe.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Boomerang": {
+   "file": "Weapons/Projectiles/Proj_Boomerang.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Holy_Water_Flask": {
+   "file": "Weapons/Projectiles/Proj_Holy_Water_Flask.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Holy_Water_Flames": {
+   "file": "Weapons/Projectiles/Proj_Holy_Water_Flames.png",
+   "cell": [
+    32,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Lightning": {
+   "file": "Weapons/Projectiles/Proj_Lightning.png",
+   "cell": [
+    16,
+    32
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Whip": {
+   "file": "Weapons/Projectiles/Proj_Whip.png",
+   "cell": [
+    32,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Orbit_Orb": {
+   "file": "Weapons/Projectiles/Proj_Orbit_Orb.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Magic_Bolt": {
+   "file": "Weapons/Projectiles/Proj_Magic_Bolt.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Aura": {
+   "file": "Weapons/Projectiles/Proj_Aura.png",
+   "cell": [
+    32,
+    32
+   ],
+   "frames": 4,
+   "fps": 10
+  },
+  "Fireball": {
+   "file": "Weapons/Projectiles/Proj_Fireball.png",
+   "cell": [
+    14,
+    12
+   ],
+   "frames": 4,
+   "fps": 10
+  }
+ },
+ "Pickups": {
+  "XP_Blue": {
+   "file": "Pickups/Pickup_XP_Blue.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "XP_Green": {
+   "file": "Pickups/Pickup_XP_Green.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "XP_Red": {
+   "file": "Pickups/Pickup_XP_Red.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "XP_Purple_Big": {
+   "file": "Pickups/Pickup_XP_Purple_Big.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Coin": {
+   "file": "Pickups/Pickup_Coin.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Coin_Bag": {
+   "file": "Pickups/Pickup_Coin_Bag.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Heart": {
+   "file": "Pickups/Pickup_Heart.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Meat": {
+   "file": "Pickups/Pickup_Meat.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Chest": {
+   "file": "Pickups/Pickup_Chest.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Magnet": {
+   "file": "Pickups/Pickup_Magnet.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Bomb": {
+   "file": "Pickups/Pickup_Bomb.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  },
+  "Clock": {
+   "file": "Pickups/Pickup_Clock.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 6
+  }
+ },
+ "Effects": {
+  "Hit_Spark": {
+   "file": "Effects/FX_Hit_Spark.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 12
+  },
+  "Poof": {
+   "file": "Effects/FX_Poof.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 5,
+   "fps": 12
+  },
+  "Explosion": {
+   "file": "Effects/FX_Explosion.png",
+   "cell": [
+    32,
+    32
+   ],
+   "frames": 6,
+   "fps": 12
+  },
+  "Level_Up": {
+   "file": "Effects/FX_Level_Up.png",
+   "cell": [
+    32,
+    32
+   ],
+   "frames": 6,
+   "fps": 12
+  },
+  "Heal": {
+   "file": "Effects/FX_Heal.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 12
+  },
+  "Sparkle": {
+   "file": "Effects/FX_Sparkle.png",
+   "cell": [
+    16,
+    16
+   ],
+   "frames": 4,
+   "fps": 12
+  }
+ },
+ "Icons": {
+  "file": "Weapons/Icons_All_16px.png",
+  "cell": [
+   16,
+   16
+  ],
+  "columns": 10,
+  "order": [
+   "Knife",
+   "Axe",
+   "Lightning",
+   "Whip",
+   "Holy_Water",
+   "Boomerang",
+   "Orbit_Orb",
+   "Magic_Bolt",
+   "Aura",
+   "Fireball",
+   "Might",
+   "Armor",
+   "Max_HP",
+   "Regen",
+   "Move_Speed",
+   "Magnet",
+   "Cooldown",
+   "Area",
+   "Luck",
+   "Growth"
+  ]
+ },
+ "Tiles": {
+  "Grass": {
+   "file": "Tiles/Tiles_Grass_16px.png",
+   "cell": [
+    16,
+    16
+   ],
+   "columns": 4,
+   "row_0": "4 seamless ground variants (mix randomly)",
+   "row_1": [
+    "flowers",
+    "rock",
+    "mushroom",
+    "bush"
+   ]
+  },
+  "Dungeon": {
+   "file": "Tiles/Tiles_Dungeon_16px.png",
+   "cell": [
+    16,
+    16
+   ],
+   "columns": 4,
+   "row_0": "4 seamless ground variants (mix randomly)",
+   "row_1": [
+    "bones",
+    "skull",
+    "crack",
+    "moss"
+   ]
+  },
+  "Snow": {
+   "file": "Tiles/Tiles_Snow_16px.png",
+   "cell": [
+    16,
+    16
+   ],
+   "columns": 4,
+   "row_0": "4 seamless ground variants (mix randomly)",
+   "row_1": [
+    "crystal",
+    "rock",
+    "tuft",
+    "bush"
+   ]
+  },
+  "Sand": {
+   "file": "Tiles/Tiles_Sand_16px.png",
+   "cell": [
+    16,
+    16
+   ],
+   "columns": 4,
+   "row_0": "4 seamless ground variants (mix randomly)",
+   "row_1": [
+    "cactus",
+    "bone",
+    "shell",
+    "rock"
+   ]
+  }
+ }
+}
