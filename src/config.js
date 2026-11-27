@@ -201,6 +201,10 @@ export const CFG = {
     speed: 220, // px/s
     maxHp: 100,
     scale: 2, // sprite scale (16px art -> 32px on screen)
+    // Draw layer: above every world object (ground -10, auras -5, enemies 0,
+    // coins 4, base 5, portal/projectiles 6) so the player is never hidden,
+    // below overlays (HP bars / shield 50, floating text 60, UI 100).
+    z: 40,
   },
 
   weapon: {
