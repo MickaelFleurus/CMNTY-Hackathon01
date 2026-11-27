@@ -68,14 +68,19 @@ export function startTower() {
     if (!base.has("color")) base.use(color(255, 255, 255)); // for the hurt flash
     base.tag("tower");
 
+    let flash = null; // pending colour restore of the hurt flash
     base.onHurt(() => {
+      if (over) return;
+      flash?.cancel();
       base.color = rgb(255, 140, 140);
-      wait(0.08, () => base.exists() && (base.color = rgb(255, 255, 255)));
+      flash = wait(0.08, () => base.exists() && !over && (base.color = rgb(255, 255, 255)));
     });
 
     base.onDeath(() => {
       if (over) return;
       over = true;
+      flash?.cancel();
+      base.color = rgb(120, 70, 70); // destroyed look (stays: the game is frozen)
       base.untag("tower"); // enemies stop targeting it
       getTreeRoot().trigger("run-over", { reason: "tower-destroyed" });
     });
