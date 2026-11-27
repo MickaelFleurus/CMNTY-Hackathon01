@@ -97,9 +97,9 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     and shares ONE target (player or tower) for the whole group.
   - **Bats** (`behavior: "sweep"`) target nobody. A tight swarm of 9–14
     flies straight across the screen, leaves it, waits `returnDelay` s,
-    then sweeps back. They fly over the golem (no collision, no tower
-    attack) but still hurt the player on contact. Their `target` is
-    always `null`.
+    then sweeps back. They fly over the golem (no collision) but hurt
+    whatever they touch on the way: the player, and the tower when they
+    pass over it. Their `target` is always `null`.
   - Walkers steer around the solid golem (shortest path via its corners)
     unless the golem is their target.
 - **Smart enemy targeting** (`enemies.js`, tuning in `ENEMY_TARGETING`):
