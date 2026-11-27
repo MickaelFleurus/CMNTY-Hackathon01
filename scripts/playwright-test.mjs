@@ -24,7 +24,7 @@ await page.waitForTimeout(1500);
 await page.keyboard.up("s");
 
 const canvas = page.locator("canvas");
-if ((await canvas.count()) === 0) errors.push("no <canvas> found — game did not start");
+if ((await canvas.count()) === 0) errors.push("no <canvas> found - game did not start");
 
 // the game runs its loop on canvas; a dead loop shows as zero CPU or an error above.
 await page.waitForTimeout(1000);

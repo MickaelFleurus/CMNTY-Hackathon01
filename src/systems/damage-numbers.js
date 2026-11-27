@@ -11,7 +11,7 @@
 //     * enemies.js fires "damage-dealt" for projectile hits
 //     * enemies.js fires "damage-taken" { kind: "player"|"tower", pos,
 //       amount } for contact damage on the player / tower
-//   - root events only — no system imports another.
+//   - root events only - no system imports another.
 import { DAMAGE_NUMBERS } from "../config.js";
 
 const COLORS = {

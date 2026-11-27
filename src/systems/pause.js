@@ -1,7 +1,7 @@
 // Pause toggle: Space or Esc freezes the whole game behind an overlay
 // (docs/game-design-v2.md → "Pause"). KAPLAY's debug.paused stops update
 // and animation everywhere but keeps rendering, so this is one flag and
-// nothing else — no per-system checks needed.
+// nothing else - no per-system checks needed.
 //
 // Contract:
 //   - getTreeRoot().paused is the single source of truth (main.js's debug
@@ -43,7 +43,7 @@ export function startPause() {
     }
   };
 
-  // The game-over screen restarts on Space — pause must never eat that key
+  // The game-over screen restarts on Space - pause must never eat that key
   // after the run ends. Its overlay also sits at z(990)/z(1000).
   getTreeRoot().on("run-over", () => {
     getTreeRoot().paused = false;

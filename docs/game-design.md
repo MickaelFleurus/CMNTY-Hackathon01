@@ -1,8 +1,8 @@
-# Game Design — Top-Down Vampire-Survivors-Style
+# Game Design - Top-Down Vampire-Survivors-Style
 
 **Working title:** TBD · **Engine:** KAPLAY (web, JS) · **Status:** baseline
 
-> **Note:** the design pivoted to a survivors × tower-defense hybrid — see
+> **Note:** the design pivoted to a survivors × tower-defense hybrid - see
 > [`game-design-v2.md`](game-design-v2.md) for the current vision. This file
 > remains the record of the original concept and the baseline systems
 > (movement, spawning, auto-attack) that v2 builds on.
@@ -11,7 +11,7 @@
 
 Arena survival: you alone in a dark space, endless hordes close in from every
 side, and your weapons fire automatically. Survive as long as possible, level
-up, pick upgrades, and try to last longer each run. No aiming — movement IS
+up, pick upgrades, and try to last longer each run. No aiming - movement IS
 the gameplay.
 
 ## Core loop

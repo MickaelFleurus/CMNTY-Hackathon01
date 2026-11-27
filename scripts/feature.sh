@@ -1,12 +1,12 @@
 #!/usr/bin/env sh
-# feature.sh — the one command agents use per feature, start to finish.
+# feature.sh - the one command agents use per feature, start to finish.
 #
 #   scripts/feature.sh start <task-slug>   -> fresh branch off latest main
 #   scripts/feature.sh finish              -> rebase, push, open PR (or update it)
 #   scripts/feature.sh clean <branch>      -> delete a merged local branch
 #
 # Branch naming: $AGENT_ID/<task-slug> (AGENT_ID env var; falls back to git user.name).
-# Rules are in docs/branching.md. Never push to main directly — this script won't.
+# Rules are in docs/branching.md. Never push to main directly - this script won't.
 set -eu
 
 REPO=origin

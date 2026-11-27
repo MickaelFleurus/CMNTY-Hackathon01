@@ -1,7 +1,7 @@
-# Assets — Survivors Starter Kit v1.0
+# Assets - Survivors Starter Kit v1.0
 
 `gfx/SurvivorsStarterKit_v1.0/` contains a complete 16x16 pixel-art pack made
-by Sneznyj 3D (itch.io; commercial use OK — see `LICENSE.txt` in that folder).
+by Sneznyj 3D (itch.io; commercial use OK - see `LICENSE.txt` in that folder).
 Use these instead of placeholder rects once a system works. Full details in
 that folder's `README.txt`; this doc is the quick index for agents.
 
@@ -9,31 +9,31 @@ that folder's `README.txt`; this doc is the quick index for agents.
 
 | Folder | Contents |
 |---|---|
-| `Heroes/` | 4 heroes (Knight, Wizard, Ranger, Cleric), 16x16 — rows: Idle(4), Walk(4), Hit(2), Death(6) |
-| `Enemies/` | 34 enemies, 16x16 — rows: Move(4), Hit(2), Death(6) |
-| `Bosses/` | 6 bosses, 32x32 — rows: Move(4), Attack(4), Hit(2), Death(8) |
-| `Weapons/Projectiles/` | 11 animated projectiles (Knife, Whip, Lightning, Magic Bolt, Orbit Orb, Fireball, ...) — horizontal strips |
+| `Heroes/` | 4 heroes (Knight, Wizard, Ranger, Cleric), 16x16 - rows: Idle(4), Walk(4), Hit(2), Death(6) |
+| `Enemies/` | 34 enemies, 16x16 - rows: Move(4), Hit(2), Death(6) |
+| `Bosses/` | 6 bosses, 32x32 - rows: Move(4), Attack(4), Hit(2), Death(8) |
+| `Weapons/Projectiles/` | 11 animated projectiles (Knife, Whip, Lightning, Magic Bolt, Orbit Orb, Fireball, ...) - horizontal strips |
 | `Weapons/Icons/` | 20 upgrade icons (perfect for the level-up UI) |
-| `Pickups/` | XP gems (4 tiers), coins, heart, meat, chest, magnet, bomb, clock — 4-frame strips |
+| `Pickups/` | XP gems (4 tiers), coins, heart, meat, chest, magnet, bomb, clock - 4-frame strips |
 | `Effects/` | hit spark, poof, explosion, level-up, heal, sparkle |
 | `Tiles/` | 4 seamless 16px ground sets: Grass, Dungeon, Snow, Sand |
 | `Atlas/` + `animations.json` | everything in one PNG + frame data (TexturePacker JSON-Hash) |
 
 ## Usage rules for agents
 
-1. **Sheet layout** — character sheets are one animation per row, frames
+1. **Sheet layout** - character sheets are one animation per row, frames
    left-to-right. Projectiles/pickups/effects are horizontal strips.
-2. **KAPLAY loading** — use `loadSpriteAtlas()` with `animations.json`, or
+2. **KAPLAY loading** - use `loadSpriteAtlas()` with `animations.json`, or
    `loadSprite(name, path)` + `slice`/`sprite(x,y)` for strips. Nearest-
-   neighbour filtering + integer scaling (x2/x3/x4) to keep pixels crisp —
+   neighbour filtering + integer scaling (x2/x3/x4) to keep pixels crisp -
    in KAPLAY: `kaplay({ crisp: true, scale: 2 })` or `loadSprite(..., {
    sliceX, anims })`.
-3. **Direction** — heroes face right, projectiles point right; flip with
+3. **Direction** - heroes face right, projectiles point right; flip with
    `flipX` when moving left.
-4. **Frame counts & FPS** — read `animations.json` (Move 8fps, Walk 10, Idle
+4. **Frame counts & FPS** - read `animations.json` (Move 8fps, Walk 10, Idle
    6, Hit/Death 12, pickups 6, effects 12). Death animations end on an empty
-   frame — despawn the object when the anim finishes.
-5. **Recommended first picks** — `Hero_Knight` for the player, `Enemy_Bat`
+   frame - despawn the object when the anim finishes.
+5. **Recommended first picks** - `Hero_Knight` for the player, `Enemy_Bat`
    (simple) + `Enemy_Zombie` (basic horde) for Mickael's wave, `Pickup_XP_Blue`
    for chippe's gems, `Proj_Knife` or `Proj_Magic_Bolt` for the pistol
    stand-in, `Tiles_Grass` for the placeholder map.
@@ -43,7 +43,7 @@ that folder's `README.txt`; this doc is the quick index for agents.
    they bob. `node scripts/fix-pickup-sprites.mjs` writes repaired copies
    next to them as `*_fixed.png` (originals untouched). **Use the
    `_fixed` files** (already done in `PICKUP_SPRITES`).
-7. **Don't modify or rename files inside the pack** — it's vendored third-
+7. **Don't modify or rename files inside the pack** - it's vendored third-
    party art; if you need a variant, add your own file next to it.
 
 Owners per `docs/tasks.md`: Akram wires the hero + projectile + tile map,

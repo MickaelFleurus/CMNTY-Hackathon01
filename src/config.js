@@ -1,8 +1,8 @@
-// Central tuning constants. Each system owns its own namespaced section —
+// Central tuning constants. Each system owns its own namespaced section -
 // append yours below, don't edit other sections without a note in your PR.
 
 // ---------------------------------------------------------------------------
-// Enemies (owner: Mickael — src/systems/enemies.js)
+// Enemies (owner: Mickael - src/systems/enemies.js)
 // ---------------------------------------------------------------------------
 // Shared by every enemy type.
 export const ENEMY = {
@@ -280,7 +280,7 @@ export const ENEMY_DROPS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Player + weapon + map (owner: Akram — src/systems/{player,weapons,map}.js)
+// Player + weapon + map (owner: Akram - src/systems/{player,weapons,map}.js)
 // ---------------------------------------------------------------------------
 export const CFG = {
   viewport: { width: 1280, height: 720 },
@@ -299,7 +299,7 @@ export const CFG = {
     fireInterval: 1.0, // seconds between pistol shots
     projectileSpeed: 480, // px/s
     damage: 10,
-    range: 360, // px — acquire nearest enemy within this distance
+    range: 360, // px - acquire nearest enemy within this distance
   },
 
   map: {
@@ -318,10 +318,10 @@ export const CFG = {
 };
 
 // ---------------------------------------------------------------------------
-// Camera (owner: Mickael — src/systems/camera.js)
+// Camera (owner: Mickael - src/systems/camera.js)
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-// Base + shop + portal (owner: Akram — src/systems/{base,shop,portal}.js)
+// Base + shop + portal (owner: Akram - src/systems/{base,shop,portal}.js)
 // ---------------------------------------------------------------------------
 export const SHOP = {
   // Where the base sits (world px). makePlayer() spawns at the same spot.
@@ -337,10 +337,10 @@ export const SHOP = {
     lifetime: 30, // s before an uncollected coin vanishes
   },
 
-  // The four shop options (2x2 grid, one pick per cycle — see
+  // The four shop options (2x2 grid, one pick per cycle - see
   // docs/game-design-v2.md). The shop only SELLS: on purchase it fires
   // "shop-pick" with { id, quadrant, level, params } and the effect systems
-  // (auras/regen/tower — tasks-v2 #3) apply them. params are opaque data.
+  // (auras/regen/tower - tasks-v2 #3) apply them. params are opaque data.
   // Skip the shop without buying (the next wave starts as after a pick).
   skipKeys: ["e", "escape"],
 
@@ -393,7 +393,7 @@ export const SHOP = {
 
   portal: {
     offset: 90, // px to the player's right where the portal appears
-    enterRadius: 28, // px — walk this close to enter
+    enterRadius: 28, // px - walk this close to enter
     scale: 2.5,
   },
 };
@@ -411,7 +411,7 @@ export const CAMERA = {
 };
 
 // ---------------------------------------------------------------------------
-// Base effects from shop picks (owner: Mickael — src/systems/{auras,regen,tower}.js)
+// Base effects from shop picks (owner: Mickael - src/systems/{auras,regen,tower}.js)
 // Stats: plain number, or { base, perLevel, min?, max? } scaled by pick level.
 // A shop pick's `params` can override any key (see docs/tasks-v2.md).
 // ---------------------------------------------------------------------------
@@ -485,7 +485,7 @@ export const RESPAWN = {
 };
 
 // ---------------------------------------------------------------------------
-// XP, pickups, level up, HUD (owner: chippe — src/systems/{xp,upgrades,hud}.js)
+// XP, pickups, level up, HUD (owner: chippe - src/systems/{xp,upgrades,hud}.js)
 // ---------------------------------------------------------------------------
 export const XP = {
   firstLevel: 5, // xp needed to reach level 2
@@ -545,7 +545,7 @@ export const DEV = {
 };
 
 // ---------------------------------------------------------------------------
-// Cycle director (owner: Mickael — src/systems/cycle.js)
+// Cycle director (owner: Mickael - src/systems/cycle.js)
 // wave → break (portal if far / walk home) → shop at the golem → next wave
 // ---------------------------------------------------------------------------
 export const CYCLE = {
@@ -557,7 +557,7 @@ export const CYCLE = {
 };
 
 // ---------------------------------------------------------------------------
-// Damage numbers (owner: Akram — src/systems/damage-numbers.js)
+// Damage numbers (owner: Akram - src/systems/damage-numbers.js)
 // floating hit numbers over enemies (dealt) / player & tower (taken)
 // ---------------------------------------------------------------------------
 export const DAMAGE_NUMBERS = {

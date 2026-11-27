@@ -3,13 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hackathon Game — Vampire Survivors</title>
+  <title>Hackathon Game - Golem Necromancer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <style>
-    body { margin: 0; background: #111; }
-    canvas { display: block; margin: 0 auto; outline: none; }
+    :root { --nav-h: 42px; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0b0b10; }
+    /* the nav bar sits above the canvas; the game fills the rest */
+    nav {
+      display: flex; align-items: center; gap: 20px;
+      height: var(--nav-h); padding: 0 16px;
+      background: #14141c; border-bottom: 1px solid #26262f;
+      font-family: system-ui, sans-serif; font-size: 14px;
+    }
+    nav .brand { color: #e8e8f0; font-weight: 700; margin-right: auto; }
+    nav a { color: #9a9aa8; text-decoration: none; }
+    nav a:hover { color: #ffffff; }
+    #game-root { width: 100%; height: calc(100% - var(--nav-h)); }
+    canvas { display: block; outline: none; }
   </style>
 </head>
 <body>
+  <nav>
+    <span class="brand">Golem Necromancer</span>
+    <a href="/about.html">About</a>
+    <a href="https://github.com/MickaelFleurus/CMNTY-Hackathon01" target="_blank" rel="noopener">GitHub</a>
+    <a href="/guide.html">Guide</a>
+  </nav>
+  <div id="game-root"></div>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

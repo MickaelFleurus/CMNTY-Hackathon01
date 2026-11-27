@@ -1,0 +1,19 @@
+/* Shared styles for about.html and guide.html (game page styles its own nav
+   inline in index.html to keep it self-contained). */
+:root { --nav-h: 42px; }
+html, body { margin: 0; padding: 0; background: #0b0b10; color: #d5d5de; font-family: system-ui, sans-serif; }
+nav {
+  display: flex; align-items: center; gap: 20px;
+  height: var(--nav-h); padding: 0 16px;
+  background: #14141c; border-bottom: 1px solid #26262f; font-size: 14px;
+}
+nav .brand { color: #e8e8f0; font-weight: 700; margin-right: auto; }
+nav a { color: #9a9aa8; text-decoration: none; }
+nav a:hover, nav a.active { color: #fff; }
+main { max-width: 720px; margin: 0 auto; padding: 32px 20px; line-height: 1.6; }
+h1, h2 { color: #fff; }
+code { background: #1c1c26; padding: 1px 6px; border-radius: 4px; }
+a { color: #7ab0ff; }
+table { border-collapse: collapse; width: 100%; }
+td { padding: 6px 10px; border-bottom: 1px solid #22222c; }
+kbd { background: #1c1c26; border: 1px solid #33333e; border-radius: 4px; padding: 1px 6px; font-size: 13px; }

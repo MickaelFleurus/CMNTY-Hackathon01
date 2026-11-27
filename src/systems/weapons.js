@@ -1,4 +1,4 @@
-// Auto-attack weapons: the "laser pistol" MVP — fires every CFG.weapon.fireInterval
+// Auto-attack weapons: the "laser pistol" MVP - fires every CFG.weapon.fireInterval
 // seconds at the nearest enemy within range. Enemies just need the "enemy" tag
 // and a pos (Mickael's system); no import coupling.
 import { CFG } from "../config.js";
@@ -53,7 +53,7 @@ function fire(from, targetPos, damage) {
     lifespan(1.2, { fade: 0.2 }),
     "projectile",
     // Damage on contact is applied by enemies.js (enemies aren't in KAPLAY's
-    // collision system — see the shared contract in docs/tasks.md): it hurts
+    // collision system - see the shared contract in docs/tasks.md): it hurts
     // each overlapped enemy once and destroys the knife after `pierce` hits.
     { damage },
   ]);
