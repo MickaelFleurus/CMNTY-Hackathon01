@@ -8,7 +8,9 @@ export const ENEMY = {
   sprite: "zombie",
   scale: 2, // 16px art drawn at 32px
   speed: 70, // px/s chase speed (constant for now; level scales HP + damage)
-  separationForce: 60, // px/s push away from overlapping enemies
+  separationRadius: 22, // px — enemies closer than this get pushed apart
+  separationStiffness: 0.8, // 0..1 share of the overlap resolved per pass
+  separationPasses: 2, // relaxation passes per frame (more = firmer crowd, more CPU)
 
   // Base stats at enemy level 1
   baseHp: 3,

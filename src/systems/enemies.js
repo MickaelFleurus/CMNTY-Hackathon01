@@ -94,8 +94,21 @@ export function enemyTierForHp(hp) {
   return tier;
 }
 
+// Live (not dying) enemies. Kept here so hot paths never scan the whole
+// object tree with get("enemy").
+const live = new Set();
+
+/** Number of live (not dying) enemies. */
+export function liveEnemyCount() {
+  return live.size;
+}
+
+// get("player") walks every object in the scene; doing that once per enemy
+// per frame was O(n²). Cache it and only re-query when it's gone.
+let cachedPlayer = null;
 function getPlayer() {
-  return get("player")[0];
+  if (!cachedPlayer || !cachedPlayer.exists()) cachedPlayer = get("player")[0] ?? null;
+  return cachedPlayer;
 }
 
 export function spawnEnemy(p, level = 1) {
@@ -109,7 +122,10 @@ export function spawnEnemy(p, level = 1) {
     pos(p),
     anchor("center"),
     scale(ENEMY.scale),
-    area({ scale: 0.75 }),
+    // Enemies ignore each other in KAPLAY's collision pass: checking every
+    // enemy pair in a dense horde was the main frame-time cost. Spacing is
+    // handled by separateEnemies() instead.
+    area({ scale: 0.75, collisionIgnore: ["enemy"] }),
     health(stats.hp),
     ...(uniforms ? [shader(TINT_SHADER, uniforms)] : []),
     "enemy",
@@ -146,14 +162,6 @@ export function spawnEnemy(p, level = 1) {
     enemy.attackTimer = ENEMY.attackCooldown;
   });
 
-  // Soft separation so the horde spreads out instead of stacking on one point.
-  enemy.onCollideUpdate("enemy", (other) => {
-    if (enemy.dead) return;
-    let away = enemy.pos.sub(other.pos);
-    if (away.len() < 1) away = Vec2.fromAngle(rand(360));
-    enemy.move(away.unit().scale(ENEMY.separationForce));
-  });
-
   enemy.onHurt(() => {
     if (enemy.dead || enemy.hp() <= 0) return;
     enemy.play("hit");
@@ -165,6 +173,8 @@ export function spawnEnemy(p, level = 1) {
   });
 
   enemy.onDeath(() => killEnemy(enemy));
+  enemy.onDestroy(() => live.delete(enemy));
+  live.add(enemy);
 
   return enemy;
 }
@@ -172,6 +182,7 @@ export function spawnEnemy(p, level = 1) {
 function killEnemy(enemy) {
   if (enemy.dead) return;
   enemy.dead = true;
+  live.delete(enemy);
 
   const info = { pos: enemy.pos.clone(), level: enemy.level, tier: enemy.tier };
   enemy.trigger("killed", info);
@@ -189,6 +200,52 @@ function killEnemy(enemy) {
   enemy.untag("enemy");
   enemy.unuse("area");
   enemy.play("death");
+}
+
+// Soft separation so the horde spreads out instead of stacking on one point.
+// Bucket enemies into a grid of cells one separation-radius wide, then only
+// compare each enemy with its own + neighbouring cells. Plain number math,
+// no Vec2 allocations — this runs on up to maxAlive enemies every frame.
+const grid = new Map();
+function separateEnemies() {
+  const r = ENEMY.separationRadius;
+  const r2 = r * r;
+  const stiffness = ENEMY.separationStiffness;
+  grid.clear();
+  for (const e of live) {
+    const key = Math.floor(e.pos.x / r) * 65536 + Math.floor(e.pos.y / r);
+    let cell = grid.get(key);
+    if (!cell) grid.set(key, (cell = []));
+    cell.push(e);
+  }
+  // A few relaxation passes let pressure spread outward through the crowd.
+  for (let pass = 0; pass < ENEMY.separationPasses; pass++) {
+    for (const e of live) {
+      const cx = Math.floor(e.pos.x / r);
+      const cy = Math.floor(e.pos.y / r);
+      for (let gx = cx - 1; gx <= cx + 1; gx++) {
+        for (let gy = cy - 1; gy <= cy + 1; gy++) {
+          const cell = grid.get(gx * 65536 + gy);
+          if (!cell) continue;
+          for (const o of cell) {
+            if (o.id <= e.id) continue; // each pair once
+            let dx = e.pos.x - o.pos.x;
+            let dy = e.pos.y - o.pos.y;
+            let d2 = dx * dx + dy * dy;
+            if (d2 >= r2) continue;
+            if (d2 < 0.01) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = dx * dx + dy * dy; }
+            const d = Math.sqrt(d2);
+            // Position correction: resolve a fraction of the overlap each frame,
+            // split between both enemies. Holds spacing even when the whole
+            // horde is pressing in on the player.
+            const k = (0.5 * stiffness * (r - d)) / d;
+            e.pos.x += dx * k; e.pos.y += dy * k;
+            o.pos.x -= dx * k; o.pos.y -= dy * k;
+          }
+        }
+      }
+    }
+  }
 }
 
 /** Random point just outside the current camera view. */
@@ -211,8 +268,12 @@ function edgeSpawnPoint() {
 export function startEnemyDirector() {
   let elapsed = 0;
   let untilNext = 0;
+  live.clear();
+  cachedPlayer = null;
 
   onUpdate(() => {
+    separateEnemies();
+
     elapsed += dt();
     untilNext -= dt();
     if (untilNext > 0) return;
@@ -225,7 +286,7 @@ export function startEnemyDirector() {
     const level = enemyLevelAt(elapsed);
     const batch = 1 + Math.floor(ENEMY_SPAWN.batchPerLevel * (level - 1));
     for (let i = 0; i < batch; i++) {
-      if (get("enemy").length >= ENEMY_SPAWN.maxAlive) break;
+      if (live.size >= ENEMY_SPAWN.maxAlive) break;
       spawnEnemy(edgeSpawnPoint(), level);
     }
   });
@@ -233,5 +294,6 @@ export function startEnemyDirector() {
   return {
     level: () => enemyLevelAt(elapsed),
     elapsed: () => elapsed,
+    alive: liveEnemyCount,
   };
 }
