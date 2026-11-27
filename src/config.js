@@ -349,18 +349,38 @@ export const REGEN = {
   shieldDuration: 3, // s
 };
 
-// Active offense: a tower next to the base that shoots enemies. Enemies near it
-// attack it; if it's destroyed the run is over ("run-over" root event).
+// The base IS the tower (docs/game-design-v2.md): it always has HP, enemies
+// attack it, and when it's destroyed the run is over ("run-over"). The
+// active-offense pick makes it shoot; each further pick levels it up.
+// HP uses the tower level = picks + 1 (unpicked base: 200 hp, 1 pick: 275…);
+// shooting stats use the pick level (no shooting before the first pick).
 export const TOWER = {
-  hp: { base: 150, perLevel: 75 },
+  hp: { base: 200, perLevel: 75 },
   range: { base: 320, perLevel: 30 }, // px, shooting range
   fireInterval: { base: 0.8, perLevel: -0.08, min: 0.3 }, // s
   damage: { base: 12, perLevel: 6 },
   projectileSpeed: 420, // px/s
-  aggroRange: 260, // px: enemies this close (and closer than the player) target it
-  offset: [0, -70], // px from the base
-  size: 36, // px, placeholder body
-  hitRadius: 18, // px, for enemy contact
+};
+
+// Smart enemy targeting (docs/game-design-v2.md → "Enemy targeting").
+// Enemies pick between the player and the base/tower:
+//   1. focus the clearly weaker one (lower hp / maxHp by at least focusMargin)
+//   2. otherwise split: keep about towerShare of the horde on the tower
+//   3. only one available (player respawning) → everyone goes for it
+//   4. re-evaluate every retargetInterval (+ random jitter), with stickiness
+export const ENEMY_TARGETING = {
+  retargetInterval: 0.75, // s between re-evaluations per enemy
+  retargetJitter: 0.5, // s random extra, so enemies don't all switch at once
+  focusMargin: 0.25, // hp-fraction gap that counts as "clearly weaker"
+  towerShare: 0.5, // fraction of attackers that should be on the tower
+  switchTolerance: 0.15, // stickiness: only switch when a side is this far over its share
+};
+
+// Player death → respawn at the base after a timer (the tower is the only
+// lose condition). The timer is a ladder: each death moves one step up,
+// each wave cleared / boss defeated moves one step down (never below 0).
+export const RESPAWN = {
+  steps: [3, 5, 8, 12, 18], // s
 };
 
 // ---------------------------------------------------------------------------

@@ -20,9 +20,12 @@
 //       * PLAYER CONTACT: enemies overlapping the "player" hurt it. Damage is
 //         scaled by player.buffs.damageTaken (defense aura) and absorbed first
 //         by player.shield (regen shield) — see damagePlayer().
-//       * TOWERS: objects tagged "tower" (with health(), hitRadius, aggroRange)
-//         pull enemies within aggroRange that are closer to the tower than to
-//         the player; enemies touching a tower call tower.hurt(n).
+//       * TARGETING (docs/game-design-v2.md → "Enemy targeting"): each enemy
+//         picks the player or the tower (object tagged "tower" with health();
+//         the base) — focus the clearly weaker one (hp fraction), otherwise
+//         split the horde (ENEMY_TARGETING), re-evaluated on a short timer
+//         with stickiness. A downed player (player.down, respawn.js) isn't a
+//         target and can't be hit. Enemies touching a tower call tower.hurt(n).
 //       * AURAS: objects tagged "aura" with { radius, enemySlow } slow every
 //         enemy inside (speed *= enemySlow; the strongest aura wins).
 //   - Each enemy also carries `type` (e.g. "zombie", "bat").
@@ -50,6 +53,8 @@ import {
   ENEMY_LEVEL,
   ENEMY_SPAWN,
   ENEMY_WAVES,
+  ENEMY_TARGETING,
+  CFG,
   ENEMY_DROPS,
   ENEMY_TIERS,
 } from "../config.js";
@@ -168,12 +173,90 @@ export function liveEnemyCount(typeId) {
 }
 
 function markGone(enemy) {
+  setTarget(enemy, null);
   if (live.delete(enemy)) liveByType.set(enemy.type, liveByType.get(enemy.type) - 1);
 }
 
 // Towers and auras, refreshed once per frame by the director (few objects).
 let towers = [];
 let auras = [];
+
+// ---------------------------------------------------------------------------
+// Smart targeting: player vs tower
+// ---------------------------------------------------------------------------
+
+// Refreshed once per frame by refreshTargets(): where each target is, whether
+// it can be attacked, and its hp fraction. counts = enemies assigned to each.
+const targets = {
+  player: { avail: false, x: 0, y: 0, frac: 1 },
+  tower: { avail: false, x: 0, y: 0, frac: 1, obj: null },
+};
+const counts = { player: 0, tower: 0 };
+
+function hpFrac(obj, fallbackMax) {
+  const max = obj.maxHP?.() || fallbackMax || obj.hp();
+  return max > 0 ? obj.hp() / max : 1;
+}
+
+function refreshTargets() {
+  const p = getPlayer();
+  const P = targets.player;
+  P.avail = !!p && !p.down && typeof p.hp === "function" && p.hp() > 0;
+  if (p) {
+    P.x = p.pos.x;
+    P.y = p.pos.y;
+    if (P.avail) P.frac = hpFrac(p, CFG.player.maxHp);
+  }
+
+  const t = towers.find((o) => o.exists() && typeof o.hp === "function" && o.hp() > 0);
+  const T = targets.tower;
+  T.avail = !!t;
+  T.obj = t ?? null;
+  if (t) {
+    const c = hitCircle(t, ENEMY.defaultPlayerRadius);
+    T.x = c.x;
+    T.y = c.y;
+    T.frac = hpFrac(t);
+  }
+
+  counts.player = 0;
+  counts.tower = 0;
+  for (const e of live) if (e.target) counts[e.target] += 1;
+}
+
+/** Decide "player" | "tower" | null for one enemy (rules 1-4 of the design). */
+function chooseTarget(e) {
+  const P = targets.player;
+  const T = targets.tower;
+  if (!P.avail && !T.avail) return null;
+  if (!T.avail) return "player"; // rule 3: only one left
+  if (!P.avail) return "tower";
+
+  // rule 1: focus the clearly weaker target
+  const cfg = ENEMY_TARGETING;
+  if (Math.abs(P.frac - T.frac) >= cfg.focusMargin) {
+    return P.frac < T.frac ? "player" : "tower";
+  }
+
+  // rule 2: spread the pressure, with stickiness (rule 4)
+  const total = counts.player + counts.tower;
+  const share = total ? counts.tower / total : 0;
+  if (e.target === "tower" && share <= cfg.towerShare + cfg.switchTolerance) return "tower";
+  if (e.target === "player" && share >= cfg.towerShare - cfg.switchTolerance) return "player";
+  return share < cfg.towerShare ? "tower" : "player";
+}
+
+function setTarget(e, t) {
+  if (e.target === t) return;
+  if (e.target) counts[e.target] -= 1;
+  if (t) counts[t] += 1;
+  e.target = t;
+}
+
+/** How many live enemies are going for each target (HUD/debug). */
+export function targetCounts() {
+  return { ...counts };
+}
 
 // get("player") walks every object in the scene; doing that once per enemy
 // per frame was O(n²). Cache it and only re-query when it's gone.
@@ -209,6 +292,8 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
       xpMult,
       damage: stats.damage,
       attackTimer: 0,
+      target: null, // "player" | "tower" | null (smart targeting)
+      retargetIn: rand(0, ENEMY_TARGETING.retargetJitter),
       dead: false,
       // Each enemy aims at its own point near the player, so an overlapping
       // horde fans out a little instead of stacking on one pixel.
@@ -230,17 +315,16 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
       return;
     }
 
-    // Target: the player, unless a tower is in aggro range and closer.
-    let goal = toPlayer;
-    let goalDist = playerDist;
-    for (const t of towers) {
-      const toTower = t.pos.sub(enemy.pos);
-      const d = toTower.len();
-      if (d < (t.aggroRange ?? 0) && d < goalDist) {
-        goal = toTower;
-        goalDist = d;
-      }
+    // Re-evaluate the target on a short timer, or right away if it's gone.
+    enemy.retargetIn -= dt();
+    if (enemy.retargetIn <= 0 || !(enemy.target && targets[enemy.target].avail)) {
+      setTarget(enemy, chooseTarget(enemy));
+      enemy.retargetIn =
+        ENEMY_TARGETING.retargetInterval + rand(0, ENEMY_TARGETING.retargetJitter);
     }
+    const tgt = enemy.target && targets[enemy.target];
+    if (!tgt) return; // nothing to attack (player respawning, no tower)
+    const goal = vec2(tgt.x - enemy.pos.x, tgt.y - enemy.pos.y);
 
     const speed = enemy.speed * auraSlowAt(enemy.pos.x, enemy.pos.y);
     const toTarget = goal.add(enemy.chaseOffset);
@@ -429,13 +513,14 @@ function resolveContact(target, fallbackRadius, onHit) {
 
 function resolvePlayerContact() {
   const player = getPlayer();
-  if (!player || typeof player.hurt !== "function") return;
+  if (!player || typeof player.hurt !== "function" || player.down) return;
   resolveContact(player, ENEMY.defaultPlayerRadius, (dmg) => damagePlayer(player, dmg));
 }
 
 function resolveTowerContact() {
   for (const t of towers) {
     if (typeof t.hurt !== "function" || !t.exists()) continue;
+    if (typeof t.hp === "function" && t.hp() <= 0) continue;
     resolveContact(t, t.hitRadius ?? ENEMY.defaultPlayerRadius, (dmg) => t.hurt(dmg));
   }
 }
@@ -611,6 +696,7 @@ export function startEnemyDirector() {
   onUpdate(() => {
     towers = get("tower");
     auras = get("aura");
+    refreshTargets();
     buildGrid();
     separateEnemies();
     resolveProjectileHits();
