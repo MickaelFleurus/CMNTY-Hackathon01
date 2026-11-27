@@ -170,6 +170,58 @@ sprite.
 
 ## UI we need
 
+### Damage numbers
+
+Every hit shows a small floating number at the point of impact so the player
+can read the fight at a glance:
+
+- **Damage dealt** — pops over the enemy when a projectile or melee hit
+  lands. Bigger font for crit-scale hits (later). Rise + fade, then gone.
+- **Damage taken** — pops over the player (and over the tower when the
+  tower is hit) in a different color (red for damage to us, white for
+  damage to enemies), so incoming pressure is visible without watching
+  the HP bars.
+- Numbers should reflect the **full damage calculation**, not the raw hit:
+  a combination of base damage, player level, level-up stat bonuses,
+  weapon level and weapon type, plus the aura buffs. To keep one source
+  of truth, every weapon computes its projectile `damage` through one
+  shared helper that takes those factors in — damage numbers then just
+  display what that helper produced.
+- Implementation notes: spawn as short-lived text objects on the existing
+  hit events (`on("hit", "projectile", …)` for dealt, the player/tower
+  hurt paths for taken); pool or cap the count so 100 enemies hitting at
+  once don't spawn 100 texts. Tuning (lifetime, rise speed, cap, font
+  sizes) goes in `src/config.js` (`DAMAGE_NUMBERS`).
+
+### HUD redesign (the top-of-screen strip)
+
+The current HUD is a row of plain text on the top edge. It should become a
+real interface:
+
+- **HP orb (Diablo-style)** — a round vial on the left of the HUD bar:
+  the filled "liquid" height shows current HP vs the orb's full height as
+  max HP, red liquid on a dark glass background, with the numeric value
+  (e.g. `72/100`) overlaid. The orb replaces the flat HP bar for the
+  player.
+- **HP bars are green-to-empty, not red.** The current bar reads as "full
+  health" when red and drops to black — invert that: full = green, low =
+  amber/red, empty segment dark gray (never pure black). Applies to the
+  player bar if kept alongside the orb, the tower bar, and enemy HP bars.
+- **Weapon / level / XP get proper UI slots**, not free text: a weapon
+  icon + level pips for the current weapon, the level number in a badge,
+  and the XP bar attached to it (XP fills the slot's underline). Coin
+  count gets an icon too. Goal: the top strip reads left→right as
+  `HP orb · weapon+XP slot · wave/level center · coins/kills right`, all
+  in icon+number form.
+
+### Screen layout / camera
+
+- The **player should be centered on screen**, not parked top-center.
+  Either center the camera on the player (small look-ahead offset in the
+  move direction is fine) or make the play view fill the screen with a
+  proper **top navigation/info bar** (the redesigned HUD strip above)
+  instead of text floating over the playfield.
+
 ### Game over screen (with run stats)
 
 Shown when the run ends (the tower is destroyed, `"run-over"` event). The
@@ -184,6 +236,11 @@ game stops behind it (dimmed), and the screen shows:
   - player level reached;
   - coins earned, plus the shop picks taken (e.g. "Active offense ×3,
     Passive defense ×1"), so the player sees which build they played.
+- **Minimap or compass** (Akram): a small corner minimap (base = gold
+  diamond, player = white dot, enemy dots) or, if the minimap reads
+  poorly, a compass arrow near the player that always points at the base.
+  Complements the base-under-attack arrow, which only speaks up when the
+  tower is being hit.
 - **Best run** for comparison (waves survived), stored in the browser.
   "New best!" if this run beat it.
 - **Restart** button (also Space / Enter, and tap on mobile): starts a fresh
@@ -210,6 +267,11 @@ being hit and how much HP it has left:
   alone for a few seconds, so it doesn't spam.
 - **Danger state** when the tower drops below ~25% HP: a red pulse around
   the screen edges and a stronger arrow, so the player knows to go home now.
+- **Art direction for path visuals** (Akram, ComfyUI asset generation):
+  upgrade paths grow visually distinct per tier — offense paths drift
+  toward red with tier, defense paths toward white/gray; actives get an
+  aggressive silhouette (spikes/horns), passives stay soft-cornered.
+  First asset passes by Akram.
 - **While the player is dead**, the respawn countdown is shown next to the
   tower HP bar, so they can watch whether the tower will hold until they're
   back.
