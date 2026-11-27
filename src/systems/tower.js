@@ -74,6 +74,7 @@ export function startTower() {
   function arm(base) {
     const hp = maxHpFor(picks);
     base.use(health(hp, hp));
+    base.animSpeed = TOWER.idleAnimSpeed; // slow, heavy idle
     base.solidRect = () => solidRect(base);
     if (!base.has("color")) base.use(color(255, 255, 255)); // for the hurt flash
     base.tag("tower");

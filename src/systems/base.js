@@ -6,8 +6,9 @@
 //
 // Contract (no imports needed — use KAPLAY tags/events):
 //   - The base carries the "base" tag at SHOP.home.
-//   - Kills pay out coins: listens on("killed","enemy") and spawns a coin
-//     pickup at the enemy's death position; coins fly to the player inside
+//   - Kills MAY pay out coins: listens on("drop","enemy") for kind "coin"
+//     (enemies.js rolls ONE drop per kill: XP, heart, coin or nothing) and
+//     spawns a coin pickup at the enemy's death position; coins fly to the player inside
 //     SHOP.coins.magnetRadius and are collected on contact. Coin count lives
 //     on root event state — read it via the exported getCoins()/addCoins()
 //     helpers or listen for the "coins-changed" root event.
@@ -61,9 +62,10 @@ export function spawnCoins(n, pos) {
 // base + coin pickups
 // ---------------------------------------------------------------------------
 export function makeBase() {
-  // coins listen for kills and roll out from the death spot
-  on("killed", "enemy", (/** @type {any} */ _, /** @type {any} */ info) => {
-    const drop = info ?? {};
+  // coin drops (one roll per kill in enemies.js) roll out from the death spot;
+  // the amount follows this economy, not the drop's value
+  on("drop", "enemy", (/** @type {any} */ _, /** @type {any} */ drop) => {
+    if (drop?.kind !== "coin") return;
     const extra = Math.floor((drop.level ?? 1) * SHOP.coins.perLevelBonus);
     spawnCoin(drop.pos ?? _.pos, SHOP.coins.perKill + extra);
   });
