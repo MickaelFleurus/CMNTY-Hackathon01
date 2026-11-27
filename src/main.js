@@ -15,6 +15,7 @@ import { startRespawn } from "./systems/respawn.js";
 import { startRunState } from "./systems/runstate.js";
 import { startDevTools } from "./systems/devtools.js";
 import { startCycle } from "./systems/cycle.js";
+import { startGameOver } from "./systems/gameover.js";
 import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
@@ -72,6 +73,9 @@ startAuras();
 startRegen();
 startTower();
 startRespawn(player);
+// game-over listens for run-over BEFORE startRunState: runstate fires
+// "run-frozen" synchronously, so the stats snapshot must exist by then.
+startGameOver();
 startRunState(player);
 startDevTools(player);
 
@@ -94,12 +98,6 @@ for (const [key, quadrant] of Object.entries(TEMP_PICK_KEYS)) {
     console.log(`shop-pick ${quadrant} lvl ${level}`);
   });
 }
-
-// TEMP until a game-over screen exists.
-getTreeRoot().on("run-over", ({ reason }) => {
-  console.log("RUN OVER:", reason);
-  add([text(`RUN OVER — ${reason}`, { size: 36 }), pos(center()), anchor("center"), fixed(), z(1000)]);
-});
 
 makeBase();
 makePortal();
@@ -144,9 +142,11 @@ debugLabel.onUpdate(() => {
     ? `wave ${d.wave() + 1} incoming…`
     : `wave ${d.wave()} over — go back to the golem for the shop`;
   const tc = targetCounts();
-  const respawn = player.down
-    ? `DEAD — respawn in ${player.respawnIn.toFixed(1)}s`
-    : `next death: ${player.nextRespawn}s respawn`;
+  // down/respawnIn/nextRespawn are assigned dynamically by respawn.js
+  const /** @type {any} */ respawnState = player;
+  const respawn = respawnState.down
+    ? `DEAD — respawn in ${respawnState.respawnIn.toFixed(1)}s`
+    : `next death: ${respawnState.nextRespawn}s respawn`;
   debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}` +
     `\ntargeting: player ${tc.player} · tower ${tc.tower} · ${respawn}`;
 });

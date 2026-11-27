@@ -48,6 +48,22 @@ scripts/feature.sh start my-feature     # fresh branch <agent-id>/my-feature off
 # ...do the work, commit...
 scripts/feature.sh finish "feat: add my feature"   # rebase on main, push, open/update PR
 scripts/feature.sh clean agent-x/my-feature       # after merge, delete local branch
+
+## Cleanup: delete branches once merged
+
+Merged branches pile up fast when several agents work in parallel. After your
+PR merges (or you notice someone else's did):
+
+1. **Delete the remote branch** — `git push origin --delete <branch>` (or use
+   the Delete button on the merged PR page).
+2. **Delete the local branch** — `scripts/feature.sh clean <branch>` (or
+   `git branch -D <branch>`), then `git remote prune origin`.
+3. **Keep `main` fresh** — `git switch main && git pull` before starting
+   anything new so you branch off the latest state.
+
+Never delete a branch whose PR is still open — rebasing or pushing to it must
+keep working. `feature.sh finish` auto-detects an existing PR for the branch
+and updates it instead of opening a duplicate.
 ```
 
 - `start` refuses nothing but always branches off the *latest* `origin/main`.
