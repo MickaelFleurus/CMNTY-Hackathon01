@@ -40,6 +40,8 @@
 //       getTreeRoot().on("wave-start", (n) => …)
 //       getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)
 //         reason: "cleared" (whole budget spawned + killed) or "timeout".
+//       On getTreeRoot().on("run-over"): the director freezes (timer stops,
+//         no spawns/hits/new waves, enemies paused in place).
 //         Leftover enemies (timeout) die on the spot when the wave ends —
 //         death anim, no drops, not counted as kills (ENEMY_WAVES.killOnEnd).
 //   - External spawn triggers (for `{ trigger: "name" }` spawn conditions):
@@ -666,6 +668,7 @@ export function startEnemyDirector() {
   const root = getTreeRoot();
 
   function startWave(n = wave + 1) {
+    if (over) return; // the run is over: no more waves
     wave = n;
     inWave = true;
     waveTime = 0;
@@ -693,7 +696,18 @@ export function startEnemyDirector() {
   root.on("enemy-start-wave", (n) => startWave(n ?? wave + 1));
   root.on("enemy-clear", clearEnemies);
 
+  // Run over (tower destroyed): everything enemy-side stops where it is.
+  // The wave timer freezes at its current value, nothing spawns, enemies
+  // (and their animations) freeze in place, no more hits or contact damage,
+  // and no further wave can start. wave-end is NOT fired.
+  let over = false;
+  root.on("run-over", () => {
+    over = true;
+    for (const e of [...live, ...get("enemy-dying")]) e.paused = true;
+  });
+
   onUpdate(() => {
+    if (over) return;
     towers = get("tower");
     auras = get("aura");
     refreshTargets();
@@ -739,6 +753,7 @@ export function startEnemyDirector() {
     clear: clearEnemies,
     wave: () => wave,
     inWave: () => inWave,
+    isOver: () => over,
     timeLeft: () => (inWave ? Math.max(0, duration - waveTime) : 0),
     level: () => enemyLevelForWave(Math.max(1, wave)),
     remaining: () => unspawned() + live.size,

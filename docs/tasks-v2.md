@@ -55,6 +55,14 @@ built** and everything below depends on it — that's chippe's task 1.
   before damage by `enemies.js`.
 - **Run over**: `getTreeRoot().on("run-over", ({ reason }) => …)`. A game-over
   screen should listen to it (`main.js` shows a TEMP text until then).
+- **Run over freezes the game** (`runstate.js`, `enemies.js`). On `"run-over"`:
+  the wave timer stops at its value, nothing spawns, no further wave can
+  start (`wave-end` is not fired), and enemies, projectiles, coins and the
+  portal are paused in place. `player.frozen = true` stops movement,
+  weapons and regen, so **any new player-driven system must check
+  `player.frozen` as well as `player.down`**. Input is NOT blocked (the
+  scene isn't paused), so the game-over screen's Restart works. It can open
+  on `"run-over"` or `"run-frozen"`. The director exposes `isOver()`.
 - **Player death → respawn** (`respawn.js`). Player death is not game over:
   - `player.down` is true while dead. Movement, weapons, regen and enemies
     all skip a downed player, so **any new player-driven system must check

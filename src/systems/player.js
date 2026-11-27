@@ -41,7 +41,8 @@ export function makePlayer() {
   };
 
   onUpdate(() => {
-    if (player.down) return; // dead, waiting to respawn (respawn.js)
+    // dead, waiting to respawn (respawn.js) / run over (runstate.js)
+    if (player.down || player.frozen) return;
     let dir = vec2(axis(LEFT, RIGHT, lastX), axis(UP, DOWN, lastY));
     dir = dir.add(joystickVec).unit();
     player.move(dir.scale(speed));
