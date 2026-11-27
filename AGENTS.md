@@ -29,7 +29,8 @@ Context lives in `docs/`. **Read the relevant files there before touching
 code** — they explain the game design, architecture, and conventions. Start
 with:
 
-- [`docs/game-design.md`](docs/game-design.md) — what we're building (game concept)
+- [`docs/game-design-v2.md`](docs/game-design-v2.md) — what we're building (survivors × tower-defense hybrid)
+- [`docs/game-design.md`](docs/game-design.md) — original concept (superseded, kept as baseline record)
 - [`docs/architecture.md`](docs/architecture.md) — how the code is organized
 - [`docs/conventions.md`](docs/conventions.md) — coding style, commit, and PR rules
 - [`docs/agents.md`](docs/agents.md) — multi-agent etiquette (avoiding conflicts)
