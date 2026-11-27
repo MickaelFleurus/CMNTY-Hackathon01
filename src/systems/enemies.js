@@ -654,7 +654,8 @@ function resolveTowerContact() {
   const r = T.rect;
   const reach = Math.hypot(r.x1 - r.x0, r.y1 - r.y0) / 2 + MAX_BODY_RADIUS + ENEMY.towerContactSlack;
   forEachEnemyNear(T.x, T.y, reach, (e) => {
-    if (e.dead || e.attackTimer > 0 || e.behavior === "sweep") return false; // flyers pass over
+    // sweepers (bats) don't target the tower but do hit it when flying over it
+    if (e.dead || e.attackTimer > 0) return false;
     if (rectDistance(e.pos.x, e.pos.y, r).d > e.bodyRadius + ENEMY.towerContactSlack) return false;
     t.hurt(e.damage);
     e.attackTimer = ENEMY.attackCooldown;

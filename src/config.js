@@ -67,9 +67,9 @@ export const ENEMY = {
 //               { kind: "sweep", returnDelay, aimSpread, exitMargin }: fly
 //               straight across the screen (aimed within aimSpread px of its
 //               center), leave it by exitMargin px, wait returnDelay s, then
-//               sweep back. Ignores player/tower as targets, flies over the
-//               golem (no collision, no tower attack), still hurts the player
-//               on contact.
+//               sweep back. Ignores player/tower as targets and flies over the
+//               golem (no collision), but hurts the player and the tower it
+//               touches on the way.
 //     group       attack pattern: each spawn tick sends ONE group of
 //                 min..max enemies (random) from one edge point, laid out in a
 //                 formation of `radius` px with at least `spacing` px between
