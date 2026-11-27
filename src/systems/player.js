@@ -45,7 +45,8 @@ export function makePlayer() {
     if (player.down || player.frozen) return;
     let dir = vec2(axis(LEFT, RIGHT, lastX), axis(UP, DOWN, lastY));
     dir = dir.add(joystickVec).unit();
-    player.move(dir.scale(speed));
+    // stats.speedMult comes from the Move Speed level up card (upgrade-effects.js)
+    player.move(dir.scale(speed * (player.stats?.speedMult ?? 1)));
 
     // walk/idle animation + facing
     const moving = dir.len() > 0.01;

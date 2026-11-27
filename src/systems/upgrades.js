@@ -57,6 +57,7 @@ function applyUpgrade(upgrade) {
 
 let pending = 0;
 let menuOpen = false;
+let shopOpen = false;
 
 export function initUpgrades() {
   for (const key of Object.keys(ownedUpgrades)) delete ownedUpgrades[key];
@@ -67,16 +68,29 @@ export function initUpgrades() {
     pending += 1;
     if (!menuOpen && canOpenMenu()) openMenu();
   });
-  // a level up earned right before dying waits for the respawn
-  getTreeRoot().on("player-respawn", () => {
-    if (pending > 0 && !menuOpen && canOpenMenu()) openMenu();
+  // level ups are for field waves: one earned while the shop is open
+  // (cycle.js / shop.js) waits until the shop closes
+  shopOpen = false;
+  getTreeRoot().on("shop-open", () => {
+    shopOpen = true;
   });
+  getTreeRoot().on("shop-close", () => {
+    shopOpen = false;
+    openPending();
+  });
+  // a level up earned right before dying waits for the respawn
+  getTreeRoot().on("player-respawn", openPending);
 }
 
-// no level up screen while dead (respawn.js) or after the run is over (runstate.js)
+function openPending() {
+  if (pending > 0 && !menuOpen && canOpenMenu()) openMenu();
+}
+
+// no level up screen while dead (respawn.js), after the run is over
+// (runstate.js) or while the shop is open
 function canOpenMenu() {
   const p = get("player")[0];
-  return !!p && !p.down && !p.frozen;
+  return !!p && !p.down && !p.frozen && !shopOpen;
 }
 
 function openMenu() {

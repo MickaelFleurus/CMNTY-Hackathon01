@@ -5,8 +5,11 @@ rules as wave 1 (see [`tasks.md`](tasks.md)): one branch per task via
 `scripts/feature.sh start <slug>`, tag contract still applies, tuning
 numbers go in `src/config.js`, PRs don't merge themselves.
 
-Wave 1 leftovers first: **chippe's XP/level-up/HUD system is still not
-built** and everything below depends on it — that's chippe's task 1.
+Wave 1 leftovers first: chippe's XP/level-up/HUD system (task 1) is
+**built** (`xp.js`, `upgrades.js`, `hud.js`). The level up screen pauses the
+game and only opens during field waves: never while the player is down or
+frozen, or while the shop is open (it waits for `shop-close`). The HUD shows
+wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
 
 | # | Owner | Branch | Task | Deliverables | Out of scope |
 |---|-------|--------|------|--------------|--------------|
@@ -94,6 +97,14 @@ built** and everything below depends on it — that's chippe's task 1.
   When only one target is available, everyone goes for it.
 - **Base**: effects center on the first object tagged `"base"` (`base.js`).
   TEMP keys 1–4 in `main.js` still fire shop picks for testing.
+- **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
+  `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
+  It is separate from `player.buffs` (auras, rewritten every frame), so both
+  stack: `damage × buffs.damageMult × stats.damageMult`, `cooldown ÷
+  buffs.attackSpeedMult ÷ stats.attackSpeedMult`, `speed × stats.speedMult`.
+  Any new weapon should apply both, and skip firing while `player.down`,
+  `player.frozen` or `player.attackDisabled`.
+  Cards are announced as `player.trigger("upgrade", { id, level })`.
 - **Tags added in wave 2**: `"base"`, `"portal"`, `"tower"`, `"aura"`.
   Existing wave-1 tags (`"player"`, `"enemy"`, `"projectile"`, `"xp-gem"`)
   unchanged.
