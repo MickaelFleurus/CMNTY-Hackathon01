@@ -64,7 +64,7 @@ import {
   ENEMY_DROPS,
   ENEMY_TIERS,
 } from "../config.js";
-import { rectDistance, pushOutOfRect } from "../util/solid.js";
+import { rectDistance, pushOutOfRect, detourAround } from "../util/solid.js";
 
 // Every enemy sheet in the pack, so a new type only needs a config entry.
 const ENEMY_SHEETS = import.meta.glob(
@@ -278,7 +278,12 @@ function getPlayer() {
   return cachedPlayer;
 }
 
-export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
+/**
+ * Spawn one enemy. opts.group: shared { target, nextRetarget } object for a
+ * group spawned together (they pick their target as one); opts.formation:
+ * this member's offset in the group's formation (kept while travelling).
+ */
+export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) {
   const type = TYPES[typeId];
   if (!type) throw new Error(`unknown enemy type "${typeId}"`);
   const stats = enemyStatsForLevel(type, level);
@@ -291,6 +296,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     pos(p),
     anchor("center"),
     scale(type.scale),
+    z(type.behavior?.kind === "sweep" ? 7 : 0), // flyers draw over the golem (z 5)
     health(stats.hp),
     ...(uniforms ? [shader(TINT_SHADER, uniforms)] : []),
     "enemy",
@@ -307,6 +313,9 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
       attackTimer: 0,
       target: null, // "player" | "tower" | null (smart targeting)
       retargetIn: rand(0, ENEMY_TARGETING.retargetJitter),
+      group: opts.group ?? null, // shared target decision for a spawned group
+      formation: opts.formation ?? vec2(0), // offset in the group's formation
+      behavior: type.behavior?.kind ?? "chase",
       dead: false,
       // Each enemy aims at its own point near the player, so an overlapping
       // horde fans out a little instead of stacking on one pixel.
@@ -331,19 +340,44 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
       return;
     }
 
+    // Sweepers (bats) ignore targets: they fly across the screen and back.
+    if (enemy.behavior === "sweep") {
+      sweep(enemy);
+      return;
+    }
+
     // Re-evaluate the target on a short timer, or right away if it's gone.
-    enemy.retargetIn -= dt();
-    if (enemy.retargetIn <= 0 || !(enemy.target && targets[enemy.target].avail)) {
-      setTarget(enemy, chooseTarget(enemy));
-      enemy.retargetIn =
-        ENEMY_TARGETING.retargetInterval + rand(0, ENEMY_TARGETING.retargetJitter);
+    // A group decides once for all its members (they attack together).
+    if (enemy.group) {
+      const g = enemy.group;
+      if (time() >= g.nextRetarget || !(g.target && targets[g.target].avail)) {
+        g.target = chooseTarget(g);
+        g.nextRetarget =
+          time() + ENEMY_TARGETING.retargetInterval + rand(0, ENEMY_TARGETING.retargetJitter);
+      }
+      setTarget(enemy, g.target);
+    } else {
+      enemy.retargetIn -= dt();
+      if (enemy.retargetIn <= 0 || !(enemy.target && targets[enemy.target].avail)) {
+        setTarget(enemy, chooseTarget(enemy));
+        enemy.retargetIn =
+          ENEMY_TARGETING.retargetInterval + rand(0, ENEMY_TARGETING.retargetJitter);
+      }
     }
     const tgt = enemy.target && targets[enemy.target];
     if (!tgt) return; // nothing to attack (player respawning, no tower)
     const goal = vec2(tgt.x - enemy.pos.x, tgt.y - enemy.pos.y);
 
     const speed = enemy.speed * auraSlowAt(enemy.pos.x, enemy.pos.y);
-    const toTarget = goal.add(enemy.chaseOffset);
+    // Keep the group formation while far; close up near the target.
+    const hold = Math.min(1, goal.len() / ENEMY.formationHoldDistance);
+    let toTarget = goal.add(enemy.chaseOffset).add(enemy.formation.scale(hold));
+    // Go around the solid golem instead of pushing into it (unless the golem
+    // IS the target: then walking up to it is the point).
+    if (enemy.target !== "tower" && targets.tower.avail) {
+      const corner = detourAround(enemy.pos, enemy.pos.add(toTarget), targets.tower.rect, enemy.bodyRadius);
+      if (corner) toTarget = vec2(corner.x - enemy.pos.x, corner.y - enemy.pos.y);
+    }
     const dist = toTarget.len();
     // Stop on arrival instead of jittering back and forth over the point.
     const stepSpeed = dist > 1 && dt() > 0 ? Math.min(speed, dist / dt()) : 0;
@@ -401,6 +435,67 @@ function killEnemy(enemy) {
 }
 
 /** Take an enemy out of play and play its death anim (destroyed at the end). */
+// ---------------------------------------------------------------------------
+// Sweep behavior (bats): fly straight across the screen, leave it, wait, come
+// back. The group shares one sweep state (a virtual center moving in a straight
+// line); each member flies to center + its formation offset.
+// ---------------------------------------------------------------------------
+
+function aimSweep(s, cfg) {
+  const c = getCamPos();
+  const aim = c.add(rand(-cfg.aimSpread, cfg.aimSpread), rand(-cfg.aimSpread, cfg.aimSpread));
+  s.dir = aim.sub(s.center).unit();
+  s.phase = "pass";
+}
+
+/** Past the screen edge (by margin) and still moving away from it? */
+function leftScreen(s, margin) {
+  const c = getCamPos();
+  const dx = s.center.x - c.x;
+  const dy = s.center.y - c.y;
+  const out = Math.abs(dx) > width() / 2 + margin || Math.abs(dy) > height() / 2 + margin;
+  return out && dx * s.dir.x + dy * s.dir.y > 0;
+}
+
+function sweep(enemy) {
+  const type = TYPES[enemy.type];
+  const cfg = type.behavior;
+  const holder = enemy.group ?? enemy;
+  setTarget(enemy, null); // not attacking the player or the tower
+
+  // shared state, advanced once per frame per group (time() is frozen while
+  // paused, so the sweep pauses too)
+  if (!holder.sweep) {
+    holder.sweep = { center: enemy.pos.sub(enemy.formation), dir: null, phase: "pass", wait: 0, t: -1 };
+    aimSweep(holder.sweep, cfg);
+  }
+  const s = holder.sweep;
+  if (s.t !== time()) {
+    s.t = time();
+    if (s.phase === "pass") {
+      s.center = s.center.add(s.dir.scale(enemy.speed * dt()));
+      const margin = cfg.exitMargin + (type.spawn.group?.radius ?? 0);
+      if (leftScreen(s, margin)) {
+        s.phase = "wait";
+        s.wait = cfg.returnDelay;
+      }
+    } else {
+      s.wait -= dt();
+      if (s.wait <= 0) aimSweep(s, cfg); // come back across the screen
+    }
+  }
+
+  // fly to my slot in the formation (a little faster than the center, so
+  // members slowed by an aura catch up)
+  const to = s.center.add(enemy.formation).sub(enemy.pos);
+  const d = to.len();
+  const speed = enemy.speed * 1.5 * auraSlowAt(enemy.pos.x, enemy.pos.y);
+  const step = d > 1 && dt() > 0 ? Math.min(speed, d / dt()) : 0;
+  if (step > 0) enemy.move(to.scale(step / d));
+  enemy.flipX = s.dir.x < 0;
+  updateMoveAnimSpeed(enemy, s.phase === "pass" ? enemy.speed : step);
+}
+
 /** Move-anim speed follows the actual movement speed (ENEMY.anim). */
 function updateMoveAnimSpeed(enemy, moveSpeed) {
   if (dt() === 0) return;
@@ -559,7 +654,7 @@ function resolveTowerContact() {
   const r = T.rect;
   const reach = Math.hypot(r.x1 - r.x0, r.y1 - r.y0) / 2 + MAX_BODY_RADIUS + ENEMY.towerContactSlack;
   forEachEnemyNear(T.x, T.y, reach, (e) => {
-    if (e.dead || e.attackTimer > 0) return false;
+    if (e.dead || e.attackTimer > 0 || e.behavior === "sweep") return false; // flyers pass over
     if (rectDistance(e.pos.x, e.pos.y, r).d > e.bodyRadius + ENEMY.towerContactSlack) return false;
     t.hurt(e.damage);
     e.attackTimer = ENEMY.attackCooldown;
@@ -594,10 +689,10 @@ function separateEnemies() {
 }
 
 /** Random point just outside the current camera view. */
-function edgeSpawnPoint() {
+function edgeSpawnPoint(extra = 0) {
   const c = getCamPos();
-  const hw = width() / 2 + ENEMY_SPAWN.edgeMargin;
-  const hh = height() / 2 + ENEMY_SPAWN.edgeMargin;
+  const hw = width() / 2 + ENEMY_SPAWN.edgeMargin + extra;
+  const hh = height() / 2 + ENEMY_SPAWN.edgeMargin + extra;
   switch (randi(4)) {
     case 0: return vec2(c.x + rand(-hw, hw), c.y - hh); // top
     case 1: return vec2(c.x + rand(-hw, hw), c.y + hh); // bottom
@@ -656,19 +751,47 @@ export function checkSpawnCondition(cond, ctx) {
 // ---------------------------------------------------------------------------
 
 /** Spawns up to `count` enemies (fewer if a cap is hit); returns how many. */
-function spawnBatch(type, level, count) {
+/**
+ * Formation offsets for n members inside a disc of `radius`, at least
+ * `spacing` apart (best effort: relaxes spacing if the disc is too crowded).
+ */
+function formationOffsets(n, radius, spacing) {
+  if (radius <= 0 || n <= 1) return Array.from({ length: n }, () => vec2(0));
+  const pts = [];
+  let minD = spacing;
+  for (let i = 0; i < n; i++) {
+    let placed = null;
+    for (let tries = 0; tries < 40 && !placed; tries++) {
+      const cand = Vec2.fromAngle(rand(360)).scale(radius * Math.sqrt(Math.random()));
+      if (pts.every((q) => q.dist(cand) >= minD)) placed = cand;
+    }
+    if (!placed) {
+      minD *= 0.8; // too crowded: loosen and retry this member
+      i--;
+      continue;
+    }
+    pts.push(placed);
+  }
+  return pts;
+}
+
+/**
+ * Send one group of this type (its attack pattern, ENEMY_TYPES[].spawn.group)
+ * from a single edge point. Returns how many enemies were spawned.
+ */
+function spawnGroup(type, level, budgetLeft) {
+  const g = type.spawn.group ?? { min: 1, max: 1, radius: 0, spacing: 0 };
   const room = Math.min(
     ENEMY_SPAWN.maxAlive - live.size,
     (type.spawn.maxAlive ?? Infinity) - liveEnemyCount(type.id),
+    budgetLeft,
   );
-  const n = Math.max(0, Math.min(count, room));
-  const cluster = type.spawn.cluster;
-  const center = edgeSpawnPoint();
-  for (let i = 0; i < n; i++) {
-    const p = cluster
-      ? center.add(rand(-cluster, cluster), rand(-cluster, cluster))
-      : edgeSpawnPoint();
-    spawnEnemy(p, level, type.id);
+  const n = Math.max(0, Math.min(randi(g.min, g.max + 1), room));
+  if (n === 0) return 0;
+  const center = edgeSpawnPoint(g.radius); // whole group starts off-screen
+  const shared = { target: null, nextRetarget: 0 };
+  for (const off of formationOffsets(n, g.radius, g.spacing)) {
+    spawnEnemy(center.add(off), level, type.id, { group: n > 1 ? shared : null, formation: off });
   }
   return n;
 }
@@ -775,8 +898,7 @@ export function startEnemyDirector() {
         sp.minInterval,
         sp.startInterval - sp.intervalDecayPerSec * s.activeFor,
       );
-      const want = sp.batch + Math.floor(sp.batchPerLevel * (level - 1));
-      s.spawned += spawnBatch(s.type, level, Math.min(want, s.budget - s.spawned));
+      s.spawned += spawnGroup(s.type, level, s.budget - s.spawned);
     }
 
     // Cleared = every active type spent its budget and nothing is alive.
