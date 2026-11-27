@@ -6,8 +6,11 @@
 // ---------------------------------------------------------------------------
 // Shared by every enemy type.
 export const ENEMY = {
-  separationRadius: 22, // px — enemies closer than this get pushed apart
-  separationStiffness: 0.8, // 0..1 share of the overlap resolved per pass
+  // Soft spacing, not real collisions: enemies may overlap, they're just
+  // nudged apart. PERF: keep radius >= ~16. Below that the horde packs into
+  // a few collision cells and KAPLAY's broadphase collapses (3-6 fps at 300).
+  separationRadius: 18, // px — enemies closer than this get nudged apart
+  separationStiffness: 0.6, // 0..1 share of the overlap resolved per pass
   separationPasses: 2, // relaxation passes per frame (more = firmer crowd, more CPU)
 
   // Contact attack: damage applied to the player while touching, at most
