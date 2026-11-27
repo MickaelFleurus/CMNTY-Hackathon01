@@ -1,6 +1,7 @@
 import kaplay from "kaplay";
 import { CFG } from "./config.js";
-import { buildGround } from "./systems/map.js";
+import { buildGridBackground } from "./systems/background.js";
+import { followCamera } from "./systems/camera.js";
 import { makePlayer } from "./systems/player.js";
 import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
@@ -39,8 +40,11 @@ loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_
 });
 loadEnemySprites();
 
-buildGround();
+// Light grid instead of the grass band (systems/map.js is kept for when real
+// map art comes back).
+buildGridBackground();
 const player = makePlayer();
+followCamera(player);
 makeWeapon(player);
 const enemyDirector = startEnemyDirector();
 
@@ -60,11 +64,12 @@ add([
   text("Wave 1 — WASD/arrows to move\n(pistol auto-fires at zombies)", {
     size: 20,
   }),
+  color(40, 44, 56), // dark text on the light grid
   pos(16, 16),
   fixed(),
 ]);
 
-const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
+const debugLabel = add([text("", { size: 18 }), color(40, 44, 56), pos(24, 90), fixed()]);
 debugLabel.onUpdate(() => {
   const types = enemyDirector.activeTypes().map((t) => `${t} ${enemyDirector.alive(t)}`);
   const d = enemyDirector;

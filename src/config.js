@@ -221,3 +221,27 @@ export const CFG = {
     maxDrag: 56, // px from base center at which knob reads full input
   },
 };
+
+// ---------------------------------------------------------------------------
+// Camera + grid background (owner: Mickael — src/systems/{camera,background}.js)
+// ---------------------------------------------------------------------------
+export const CAMERA = {
+  // How fast the camera catches up with its target (1/s, frame-rate
+  // independent exponential smoothing). Higher = tighter follow.
+  followRate: 10,
+  // Look ahead of the player in the direction they're moving, so there's
+  // more room to see what you're walking into.
+  lookahead: 70, // px
+  // How fast the lookahead swings to a new direction (1/s). Low = the small,
+  // smooth drift when the player changes direction.
+  lookaheadRate: 3,
+};
+
+export const GRID_BG = {
+  color: [222, 226, 233], // light page
+  cell: 32, // px between minor lines
+  minorColor: [205, 210, 219],
+  majorEvery: 5, // every Nth line is a major line (160px blocks)
+  majorColor: [184, 191, 203],
+  lineWidth: 1, // px (major lines are drawn 2px)
+};
