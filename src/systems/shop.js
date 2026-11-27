@@ -18,7 +18,6 @@
 //     around after a timeout wave); player input is NOT disabled.
 import { CFG, SHOP } from "../config.js";
 import { getCoins, addCoins } from "./base.js";
-import { teleportPlayer } from "./player.js";
 
 let spritesLoaded = false;
 
@@ -46,7 +45,7 @@ export function makeShop() {
 
   function open() {
     if (ui) return;
-    teleportPlayer(get("player")[0], SHOP.home);
+    // opened by the cycle director when the player is at the golem (no teleport)
     ui = add([pos(0, 0), z(50), fixed(), "shop-ui"]);
     ui.add([
       rect(CFG.viewport.width, CFG.viewport.height),
@@ -97,7 +96,6 @@ export function makeShop() {
   }
 
   getTreeRoot().on("shop-open", open);
-  getTreeRoot().on("portal-enter", open);
 
   // E closes the shop without buying (skip pick for now — cycle director
   // decides what happens; for MVP the next wave starts on pick OR skip)

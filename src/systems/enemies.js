@@ -26,8 +26,9 @@
 //         split the horde (ENEMY_TARGETING), re-evaluated on a short timer
 //         with stickiness. A downed player (player.down, respawn.js) isn't a
 //         target and can't be hit.
-//       * The tower is SOLID for enemies: they're pushed out of its world-area
-//         box (by their full drawn size, so no sprite hides behind the golem)
+//       * The tower is SOLID for enemies: they're pushed out of its body box
+//         (tower.solidRect(), else its world-area box) by their full drawn
+//         size, so no sprite hides behind the golem,
 //         and hit it (tower.hurt(n)) when touching its edge.
 //       * AURAS: objects tagged "aura" with { radius, enemySlow } slow every
 //         enemy inside (speed *= enemySlow; the strongest aura wins).
@@ -63,6 +64,7 @@ import {
   ENEMY_DROPS,
   ENEMY_TIERS,
 } from "../config.js";
+import { rectDistance, pushOutOfRect } from "../util/solid.js";
 
 // Every enemy sheet in the pack, so a new type only needs a config entry.
 const ENEMY_SHEETS = import.meta.glob(
@@ -221,8 +223,9 @@ function refreshTargets() {
   T.avail = !!t;
   T.obj = t ?? null;
   if (t) {
+    // the tower's visible body if it defines one (tower.js), else its area box
     const b = t.worldArea().bbox();
-    T.rect = { x0: b.pos.x, y0: b.pos.y, x1: b.pos.x + b.width, y1: b.pos.y + b.height };
+    T.rect = t.solidRect?.() ?? { x0: b.pos.x, y0: b.pos.y, x1: b.pos.x + b.width, y1: b.pos.y + b.height };
     T.x = (T.rect.x0 + T.rect.x1) / 2;
     T.y = (T.rect.y0 + T.rect.y1) / 2;
     T.frac = hpFrac(t);
@@ -347,7 +350,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id) {
     enemy.flipX = goal.x < 0; // art faces right (always face the target)
 
     // The tower is solid: never let an enemy (sprite) overlap it.
-    if (targets.tower.avail) pushOutOfRect(enemy, targets.tower.rect);
+    if (targets.tower.avail) pushOutOfRect(enemy, targets.tower.rect, enemy.bodyRadius);
   });
 
   enemy.onHurt(() => {
@@ -531,40 +534,6 @@ function resolvePlayerContact() {
   const player = getPlayer();
   if (!player || typeof player.hurt !== "function" || player.down) return;
   resolveContact(player, ENEMY.defaultPlayerRadius, (dmg) => damagePlayer(player, dmg));
-}
-
-/** Distance from (x, y) to a rect (0 inside), plus the closest point. */
-function rectDistance(x, y, r) {
-  const cx = Math.max(r.x0, Math.min(x, r.x1));
-  const cy = Math.max(r.y0, Math.min(y, r.y1));
-  return { d: Math.hypot(x - cx, y - cy), cx, cy };
-}
-
-/** Push an enemy's body (circle of bodyRadius) out of the rect. */
-function pushOutOfRect(e, r) {
-  const br = e.bodyRadius;
-  const { x, y } = e.pos;
-  // fast reject: clearly outside the rect expanded by the body
-  if (x < r.x0 - br || x > r.x1 + br || y < r.y0 - br || y > r.y1 + br) return;
-  const inside = x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1;
-  if (inside) {
-    // center inside: exit through the nearest edge, body just touching it
-    const left = x - r.x0;
-    const right = r.x1 - x;
-    const top = y - r.y0;
-    const bottom = r.y1 - y;
-    const m = Math.min(left, right, top, bottom);
-    if (m === left) e.pos.x = r.x0 - br;
-    else if (m === right) e.pos.x = r.x1 + br;
-    else if (m === top) e.pos.y = r.y0 - br;
-    else e.pos.y = r.y1 + br;
-    return;
-  }
-  const { d, cx, cy } = rectDistance(x, y, r);
-  if (d >= br || d === 0) return;
-  const k = br / d; // push along the normal from the closest point
-  e.pos.x = cx + (x - cx) * k;
-  e.pos.y = cy + (y - cy) * k;
 }
 
 function resolveTowerContact() {

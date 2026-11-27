@@ -21,11 +21,24 @@ built** and everything below depends on it — that's chippe's task 1.
   `{ id, quadrant: "passive-defense" | "passive-offense" | "active-defense" | "active-offense", level, params: {...} }`,
   triggered as `getTreeRoot().trigger("shop-pick", pick)`. No system imports
   another.
-- **Portal event** (Akram → Mickael): `getTreeRoot().trigger("portal-enter")`
-  when the player steps in; cycle director listens and opens the shop state.
-- **Wave-end → portal handoff** (Mickael → Akram): cycle director fires
-  `getTreeRoot().trigger("cycle-phase", { phase: "portal" | "shop" | "wave", wave })`;
-  portal/shop/base systems only become interactive in their phase.
+- **Cycle director** (`cycle.js`, built). The loop is wave → break → shop
+  at the golem → next wave:
+  - It fires `getTreeRoot().trigger("cycle-phase", { phase, wave, portal })`
+    with `phase` one of `"wave"`, `"break"`, `"shop"` or `"starting"`.
+    `"break"` follows the end of wave `wave`. `portal` is true when the
+    player was far from the golem (> `CYCLE.portalMinDistance`) at the end
+    of the wave.
+  - **Portal** (`portal.js`): spawns next to the player on `"break"` with
+    `portal: true` and despawns on any other phase. Walking in fires
+    `portal-enter`, and the cycle director drops the player just below the
+    golem.
+  - **Shop** (`shop.js`): the cycle director fires `shop-open` when the
+    player is within `CYCLE.shopRadius` of the golem during the break
+    (alive, not frozen). The shop doesn't teleport anyone. Closing it (pick
+    or **E** to skip) fires `shop-close`, and the cycle director starts the
+    next wave after `CYCLE.nextWaveDelay`.
+  - The player and enemies can't overlap the golem: `base.solidRect()` is
+    its visible body (`TOWER.body`).
 - **Tower is an enemy-family target** (Mickael): the tower gets `hp()` and is
   hit by the existing enemy grid-hit path tagged `"tower"`.
 - **Base effects are built** (`auras.js`, `regen.js`, `tower.js`) and react to

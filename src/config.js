@@ -363,6 +363,11 @@ export const REGEN = {
 // HP uses the tower level = picks + 1 (unpicked base: 200 hp, 1 pick: 275…);
 // shooting stats use the pick level (no shooting before the first pick).
 export const TOWER = {
+  // Solid body = the golem's VISIBLE pixels (measured on its idle frames:
+  // x 1-30, y 3-31 of the 32 px cell), in art px; scaled with the sprite.
+  // Enemies and the player can't overlap it; the HP bar sits just above it.
+  body: { cell: 32, left: 1, top: 3, right: 1, bottom: 0 },
+  playerRadius: 12, // px, the player's body when pushed out of the base
   hp: { base: 200, perLevel: 75 },
   range: { base: 320, perLevel: 30 }, // px, shooting range
   fireInterval: { base: 0.8, perLevel: -0.08, min: 0.3 }, // s
@@ -396,4 +401,15 @@ export const RESPAWN = {
 // ---------------------------------------------------------------------------
 export const DEV = {
   toggleAttackKey: "k", // toggle the player's attack (also ?noattack in the URL)
+};
+
+// ---------------------------------------------------------------------------
+// Cycle director (owner: Mickael — src/systems/cycle.js)
+// wave → break (portal if far / walk home) → shop at the golem → next wave
+// ---------------------------------------------------------------------------
+export const CYCLE = {
+  portalMinDistance: 500, // px from the golem: farther than this at wave end → a portal appears
+  shopRadius: 70, // px from the golem's body: closer than this during the break → shop opens
+  arrivalGap: 50, // px below the golem where the portal drops the player
+  nextWaveDelay: 2, // s between closing the shop and the next wave
 };

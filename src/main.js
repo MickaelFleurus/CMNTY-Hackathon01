@@ -11,6 +11,7 @@ import { loadTowerSprites, startTower } from "./systems/tower.js";
 import { startRespawn } from "./systems/respawn.js";
 import { startRunState } from "./systems/runstate.js";
 import { startDevTools } from "./systems/devtools.js";
+import { startCycle } from "./systems/cycle.js";
 import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
@@ -92,16 +93,11 @@ makeBase();
 makePortal();
 makeShop();
 
-// TEMP until the cycle director (portal → shop → next wave) exists:
-// start wave 1, and start the next wave a few seconds after each one ends.
-const TEMP_WAVE_GAP = 3; // s
-enemyDirector.startWave(1);
+// Cycle director: wave → break (portal if far / walk home) → shop → next wave.
+const cycle = startCycle();
+cycle.start();
 getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
   console.log(`wave ${wave} ended (${reason}), ${kills} kills`);
-  wait(TEMP_WAVE_GAP, () => {
-    enemyDirector.clear();
-    enemyDirector.startWave(wave + 1);
-  });
 });
 
 add([
@@ -112,12 +108,7 @@ add([
   fixed(),
 ]);
 
-// TEMP debug for the base/shop PR: N fires the wave-end→portal→shop chain
-// (cycle director replaces this). P teleports home. C grants 50 coins.
-onKeyPress("n", () => {
-  getTreeRoot().trigger("wave-end", { wave: enemyDirector.wave(), reason: "debug", kills: 0 });
-  getTreeRoot().trigger("portal-enter");
-});
+// TEMP debug: P teleports home. C grants 50 coins.
 onKeyPress("c", () => addCoins(50));
 onKeyPress("p", () => {
   const p = get("player")[0];
@@ -132,7 +123,11 @@ debugLabel.onUpdate(() => {
     ? `RUN OVER on wave ${d.wave()} · timer stopped at ${Math.ceil(d.timeLeft())}s`
     : d.inWave()
     ? `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.remaining()} remaining`
-    : `wave ${d.wave()} over — next wave soon`;
+    : cycle.phase() === "shop"
+    ? `wave ${d.wave()} cleared — shop open`
+    : cycle.phase() === "starting"
+    ? `wave ${d.wave() + 1} incoming…`
+    : `wave ${d.wave()} over — go back to the golem for the shop`;
   const tc = targetCounts();
   const respawn = player.down
     ? `DEAD — respawn in ${player.respawnIn.toFixed(1)}s`

@@ -5,10 +5,13 @@
 // only fires "portal-enter" when the player walks into it.
 //
 // Contract (no imports needed — use KAPLAY tags/events):
-//   - Portal spawns near the player on "wave-end", despawns on "wave-start"
-//     and on "portal-enter".
+//   - Portal spawns near the player when the cycle director starts a break
+//     with a portal (cycle-phase { phase: "break", portal: true }, i.e. the
+//     player is far from the golem); despawns on any other phase and on
+//     "portal-enter".
 //   - getTreeRoot().trigger("portal-enter")   fired when the player walks in;
-//     the shop system listens, teleports the player to SHOP.home, opens.
+//     the cycle director drops the player next to the golem (shop opens by
+//     proximity).
 import { SHOP } from "../config.js";
 
 let spritesLoaded = false;
@@ -51,8 +54,10 @@ export function makePortal() {
     portal = null;
   }
 
-  getTreeRoot().on("wave-end", spawn);
-  getTreeRoot().on("wave-start", despawn);
+  getTreeRoot().on("cycle-phase", ({ phase, portal }) => {
+    if (phase === "break" && portal) spawn();
+    else despawn();
+  });
   getTreeRoot().on("portal-enter", despawn);
 
   portalCheck();
