@@ -223,7 +223,7 @@ export const CFG = {
 };
 
 // ---------------------------------------------------------------------------
-// Camera + grid background (owner: Mickael — src/systems/{camera,background}.js)
+// Camera (owner: Mickael — src/systems/camera.js)
 // ---------------------------------------------------------------------------
 export const CAMERA = {
   // How fast the camera catches up with its target (1/s, frame-rate
@@ -235,13 +235,4 @@ export const CAMERA = {
   // How fast the lookahead swings to a new direction (1/s). Low = the small,
   // smooth drift when the player changes direction.
   lookaheadRate: 3,
-};
-
-export const GRID_BG = {
-  color: [222, 226, 233], // light page
-  cell: 32, // px between minor lines
-  minorColor: [205, 210, 219],
-  majorEvery: 5, // every Nth line is a major line (160px blocks)
-  majorColor: [184, 191, 203],
-  lineWidth: 1, // px (major lines are drawn 2px)
 };
