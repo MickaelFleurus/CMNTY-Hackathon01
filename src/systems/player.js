@@ -109,3 +109,8 @@ export function makePlayer() {
 
   return player;
 }
+
+/** Teleport the player (used by the portal → shop flow). */
+export function teleportPlayer(p, to) {
+  p.pos = vec2(to.x, to.y);
+}
