@@ -29,11 +29,15 @@ export function buildGround() {
   }
 
   ground.onUpdate(() => {
-    // snap the tile band to the camera so it always covers the viewport
+    // snap the tile band to the camera so it always covers the viewport;
+    // aligned to the tile grid so tiling never shifts under the player
     const cam = camPos();
-    const halfW = (gridW * size) / 2;
-    const halfH = (gridH * size) / 2;
-    ground.pos = cam.sub(halfW, halfH).max(0); // anchor at 0 so tiling stays grid-aligned
+    const startX = cam.x - (gridW * size) / 2;
+    const startY = cam.y - (gridH * size) / 2;
+    ground.pos = vec2(
+      Math.floor(startX / size) * size,
+      Math.floor(startY / size) * size,
+    );
   });
 
   return ground;
