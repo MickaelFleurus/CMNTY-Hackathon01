@@ -110,6 +110,13 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
       (the respawn ladder steps down).
   - `wave-end` now also carries `boss: true|false`. The director exposes
     `isBossWave()`.
+  - **Planned, NOT designed yet: bosses will get a distance (ranged)
+    attack.** Don't implement it until it's designed. For now, bosses only
+    hit on contact. Hooks to reuse: the boss's `target`/`provokedUntil`
+    (who it would shoot at), its `attack` animation, and `"projectile"`
+    objects for anything it fires at the player or tower. Those will need a
+    separate hit path, because enemies.js only resolves projectiles
+    hitting **enemies**.
 - **Enemy attack patterns** (`ENEMY_TYPES[].spawn.group` / `.behavior`):
   - **Zombies** come in groups of 3–6, spaced out.
   - **Golems** come alone, with a lot of HP.
