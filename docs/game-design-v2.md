@@ -97,6 +97,52 @@ Tuning values (how much weaker a target must be before enemies focus it,
 how many attackers count as "enough", re-evaluation interval) go in
 `src/config.js`.
 
+## UI we need
+
+### Game over screen (with run stats)
+
+Shown when the run ends (the tower is destroyed, `"run-over"` event). The
+game stops behind it (dimmed), and the screen shows:
+
+- **Why the run ended**, e.g. "Your tower fell on wave 7".
+- **Run stats:**
+  - waves survived, bosses defeated;
+  - time survived;
+  - enemies killed;
+  - player deaths (and the highest respawn step reached);
+  - player level reached;
+  - coins earned, plus the shop picks taken (e.g. "Active offense ×3,
+    Passive defense ×1"), so the player sees which build they played.
+- **Best run** for comparison (waves survived), stored in the browser.
+  "New best!" if this run beat it.
+- **Restart** button (also Space / Enter, and tap on mobile): starts a fresh
+  run from wave 1 with a plank, no reload needed.
+
+Stats are counted during the run by the systems that already know them
+(enemy deaths, the cycle director, respawn, shop). The game over screen only
+reads them.
+
+### Base under attack
+
+The player is often away from the base, so they must always know when it is
+being hit and how much HP it has left:
+
+- **Tower HP bar in the HUD**, always visible, next to the player's HP. It
+  flashes when the tower takes damage.
+- **Hit flash on the tower** itself (brief red tint) and a small HP bar
+  above it.
+- **Off-screen arrow**: when the base is off-screen, an arrow at the screen
+  edge points toward it. Normally it's quiet; while the base is being
+  attacked it turns red and pulses.
+- **"Base under attack!" banner** at the top of the screen when the tower
+  starts taking damage. It shows again only after the tower has been left
+  alone for a few seconds, so it doesn't spam.
+- **Danger state** when the tower drops below ~25% HP: a red pulse around
+  the screen edges and a stronger arrow, so the player knows to go home now.
+- **While the player is dead**, the respawn countdown is shown next to the
+  tower HP bar, so they can watch whether the tower will hold until they're
+  back.
+
 ## Boss + gimmick sketch (needs iteration)
 
 - Boss waves are announced a wave ahead (HUD warning) so the player can shop
@@ -134,7 +180,10 @@ how many attackers count as "enough", re-evaluation interval) go in
    step up per death, step down per wave cleared / boss defeated.
 7. **Smart enemy targeting** — focus the weaker target, else split between
    player and tower (see "Enemy targeting").
-8. **Boss wave + gimmick** — last; keep one boss, one gimmick for MVP.
+8. **Base-under-attack UI** — tower HP bar, hit flash, off-screen arrow,
+   banner, danger state (see "UI we need").
+9. **Game over screen + stats + restart** — listens to `"run-over"`.
+10. **Boss wave + gimmick** — last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
 
