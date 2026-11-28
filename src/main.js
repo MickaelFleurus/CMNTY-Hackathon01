@@ -135,26 +135,10 @@ startBonusDrops(player);
 startBaseAlert();
 startDevTools(player);
 
-// TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
-const TEMP_PICK_KEYS = {
-  1: "passive-defense",
-  2: "passive-offense",
-  3: "active-defense",
-  4: "active-offense",
-};
 // Global key handlers still fire while the level up screen pauses the game
-// (upgrades.js uses keys 1-3), so the TEMP debug keys skip while paused.
-// ...and while the golem upgrade tree (shop.js) is open, where 1-4 buy nodes.
+// (upgrades.js uses keys 1-3) and while the golem upgrade tree (shop.js) is
+// open, where 1-4 buy nodes.
 const gamePaused = () => getTreeRoot().paused || get("shop-ui").length > 0;
-const tempPickLevels = {};
-for (const [key, quadrant] of Object.entries(TEMP_PICK_KEYS)) {
-  onKeyPress(key, () => {
-    if (gamePaused()) return;
-    const level = (tempPickLevels[quadrant] = (tempPickLevels[quadrant] ?? 0) + 1);
-    getTreeRoot().trigger("shop-pick", { id: `temp-${quadrant}`, quadrant, level, params: {} });
-    console.log(`shop-pick ${quadrant} lvl ${level}`);
-  });
-}
 
 makeBase();
 makePortal();
