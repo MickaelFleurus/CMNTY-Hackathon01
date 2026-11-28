@@ -85,6 +85,15 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   `"shop-close"` after waking (pick or skip). Then the shader is removed, the idle
   animation starts, `base.powered = true` and `"golem-powered"` fires once.
   When the golem style pick lands, it should drive this instead.
+- **Golem shock wave** (`golem-shockwave.js`, `GOLEM_SHOCKWAVE`): once
+  `base.awake`, every `interval` s (only when an enemy is within `radius`)
+  the golem fires `enemy-knockback` plus `golem-shockwave { x, y, radius }`
+  and draws an expanding ring. It works whatever the shop picks.
+- **Knockback** (`enemies.js`): `getTreeRoot().trigger("enemy-knockback",
+  { x, y, radius, force, damage? })` pushes every visible live enemy in range
+  straight away at `force` px/s × (1 − type `knockbackResist`), decaying by
+  `ENEMY.knockbackDecay`. Pushed enemies don't chase until it fades. Any
+  system can use it (e.g. an aura weapon).
 - **Run over**: `getTreeRoot().on("run-over", ({ reason }) => …)`. `reason`
   is `"tower-destroyed"` (tower.js) or `"player-died"` (respawn.js, wave 1
   only). The game-over screen (`gameover.js`) shows a line per reason.
