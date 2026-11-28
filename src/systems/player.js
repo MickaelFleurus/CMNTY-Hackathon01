@@ -75,6 +75,7 @@ export function makePlayer() {
   // Base stays where you touch; knob follows the finger; vector feeds movement.
   const joy = add([
     pos(0, 0),
+    fixed(), // touch positions are screen coords: draw it where the finger is
     z(100),
     opacity(0),
     "joystick-ui",
@@ -105,22 +106,26 @@ export function makePlayer() {
     touchId = null;
   }
 
-  // KAPLAY touch events (also fire for mouse on most builds)
-  onTouchStart((p, id) => {
+  // KAPLAY touch events (also fire for mouse on most builds). The 2nd argument
+  // is the browser's Touch object - a NEW object on every event - so the
+  // finger is matched by its `identifier`, not by the object (comparing the
+  // objects never matched, and the joystick never moved the player).
+  const fingerOf = (t) => t?.identifier ?? t;
+  onTouchStart((p, t) => {
     if (touchId !== null) return;
-    touchId = id;
+    touchId = fingerOf(t);
     showJoy(p);
   });
-  onTouchMove((p, id) => {
-    if (id !== touchId) return;
+  onTouchMove((p, t) => {
+    if (fingerOf(t) !== touchId) return;
     const delta = p.sub(joy.pos);
     const max = CFG.joystick.maxDrag;
     const clamped = delta.len() > max ? delta.unit().scale(max) : delta;
     knob.pos = clamped;
     joystickVec = clamped.unit().scale(clamped.len() / max);
   });
-  onTouchEnd((_, id) => {
-    if (id === touchId) hideJoy();
+  onTouchEnd((_, t) => {
+    if (fingerOf(t) === touchId) hideJoy();
   });
 
   return player;

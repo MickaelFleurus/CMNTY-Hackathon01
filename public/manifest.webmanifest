@@ -1,0 +1,11 @@
+{
+  "name": "Golem Necromancer",
+  "short_name": "Golem",
+  "description": "Survivors x tower defense: protect your golem, roam for chests.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0b0b10",
+  "theme_color": "#0b0b10"
+}

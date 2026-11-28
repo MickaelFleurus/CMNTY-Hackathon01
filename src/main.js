@@ -1,5 +1,6 @@
 import kaplay from "kaplay";
 import { CFG, SHOP } from "./config.js";
+import { enableMobileFullscreen } from "./util/fullscreen.js";
 import { buildGround } from "./systems/map.js";
 import { followCamera } from "./systems/camera.js";
 import { makePlayer } from "./systems/player.js";
@@ -43,21 +44,23 @@ import { loadShopSprites, makeShop } from "./systems/shop.js";
 
 kaplay({
   background: [26, 26, 38],
-  // CFG.viewport swaps to 720x1280 on portrait phones (pickViewport in
-  // config.js) so the game fills a tall screen; desktop keeps 1280x720.
-  width: CFG.viewport.width,
-  height: CFG.viewport.height,
-  // Fill the browser window below the nav bar: the canvas takes #game-root's
-  // full size and the game view is letterboxed inside it (black bars),
-  // keeping the design aspect ratio on any screen, incl. mobile.
+  // Desktop: a fixed 1280x720 view letterboxed in #game-root (black bars).
+  // Phones (CFG.viewport.fill, pickViewport in config.js): no fixed size -
+  // the canvas fills the whole screen in any shape and follows rotation,
+  // with `scale` keeping the short side at 720 game px.
+  ...(CFG.viewport.fill
+    ? { scale: CFG.viewport.scale }
+    : { width: CFG.viewport.width, height: CFG.viewport.height, letterbox: true }),
   root: document.getElementById("game-root"),
-  letterbox: true,
   crisp: true,
   // Collision broadphase cell size (default 64). Enemies are ~24px and pack
   // densely around the player; 32px cells cut the pair checks roughly in half
   // (~38 → 60 fps at 300 enemies).
   hashGridSize: 32,
 });
+
+// Phones: real fullscreen on the first touch (Android); see util/fullscreen.js
+enableMobileFullscreen(CFG.viewport.fill);
 
 // --- assets (Survivors Starter Kit, see docs/assets.md) ---
 // Ghoul hero sheet (384x256, 64px cells): 6 cols x 4 rows, one animation per row.

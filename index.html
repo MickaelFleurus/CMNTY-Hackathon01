@@ -2,12 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- viewport-fit=cover: use the whole phone screen, also around the notch
+       (the game keeps clear of it with the safe-area padding below) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Hackathon Game - Golem Necromancer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <!-- Phones: "Add to Home Screen" opens the game fullscreen (no address bar).
+       Android uses the manifest; iPhone uses the apple-* metas. -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0b0b10" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Golem Necromancer" />
   <style>
     :root { --nav-h: 42px; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #0b0b10; }
+    /* dvh = the height that's really visible (minus the phone's address bar) */
+    @supports (height: 100dvh) { html, body { height: 100dvh; } }
     /* the nav bar sits above the canvas; the game fills the rest */
     nav {
       display: flex; align-items: center; gap: 20px;
@@ -18,8 +29,23 @@
     nav .brand { color: #e8e8f0; font-weight: 700; margin-right: auto; }
     nav a { color: #9a9aa8; text-decoration: none; }
     nav a:hover { color: #ffffff; }
-    #game-root { width: 100%; height: calc(100% - var(--nav-h)); }
+    #game-root { width: 100%; height: calc(100% - var(--nav-h)); box-sizing: border-box; }
     canvas { display: block; outline: none; }
+
+    /* Phones / tablets (touch screen, short side under 900 px - the same test
+       as pickViewport() in src/config.js): no nav bar, the game takes the
+       whole screen in portrait and landscape. Padding keeps it clear of the
+       notch / home bar; dragging can't scroll, zoom or pull-to-refresh. */
+    @media (pointer: coarse) and (max-width: 899px), (pointer: coarse) and (max-height: 899px) {
+      nav { display: none; }
+      html, body { overflow: hidden; overscroll-behavior: none; touch-action: none; }
+      #game-root {
+        height: 100%;
+        padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
+          env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+      }
+      #game-root canvas { width: 100%; height: 100%; touch-action: none; }
+    }
   </style>
 </head>
 <body>

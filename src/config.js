@@ -327,19 +327,24 @@ export const ENEMY_DROPS = [
 // Player + weapon + map (owner: Akram - src/systems/{player,weapons,map}.js)
 // ---------------------------------------------------------------------------
 
-// Design resolution. Desktop keeps the widescreen 1280x720 letterbox; phones
-// held upright get a 720x1280 swap so the game fills the tall screen instead
-// of letterboxing a tiny widescreen strip. Read once before kaplay() init
-// (src/main.js) - it must stay fixed for the whole run, kaplay sizes its
-// canvas from it at boot.
+// Design resolution (read once before kaplay() init in src/main.js).
+//   - Desktop: fixed 1280x720, letterboxed in the browser window.
+//   - Phones / tablets (touch screen, short side under 900 css px): FILL mode.
+//     No fixed size: the canvas fills the whole screen in any shape, and
+//     `scale` is chosen so the screen's SHORT side is always 720 game px (the
+//     same size things had in the old 720x1280 portrait view). Portrait and
+//     landscape both fill, and rotating the phone just resizes the view -
+//     width() / height() follow (kaplay's ResizeObserver), no reload.
+//   `portrait` is the shape at load (informational; read width() < height()
+//   for the live shape).
 function pickViewport() {
-  const portrait =
-    typeof window !== "undefined" &&
-    window.innerWidth < window.innerHeight &&
-    window.innerWidth < 900; // narrow enough to be phone-like
-  return portrait
-    ? { width: 720, height: 1280, portrait: true }
-    : { width: 1280, height: 720, portrait: false };
+  if (typeof window === "undefined") return { width: 1280, height: 720, portrait: false, fill: false };
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const touch = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+  const phone = touch && Math.min(w, h) < 900;
+  if (phone) return { fill: true, scale: Math.min(w, h) / 720, portrait: w < h };
+  return { width: 1280, height: 720, portrait: false, fill: false };
 }
 
 export const CFG = {
@@ -378,8 +383,8 @@ export const CFG = {
     // "infinite" gray zone: tiles are repositioned around the camera each frame
     tileSize: 16, // source art is 16px; scaled by map.tileScale below
     tileScale: 3, // 16px art -> 48px on screen
-    gridW: 30, // tiles across the visible band
-    gridH: 18, // tiles down the visible band
+    gridW: 30, // (unused since map.js draws exactly the visible tiles; kept for reference)
+    gridH: 18, // (unused, see gridW)
     // Decor from row 1 of Tiles_Grass (flowers, rock, mushroom; the green
     // blob is never used). Picked per world tile, so a spot never changes.
     decor: {

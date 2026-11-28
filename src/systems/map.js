@@ -1,5 +1,5 @@
-// Placeholder "gray zone" ground: a band of grass-variant tiles that recenters
-// around the camera each frame, so the player can walk forever with no real
+// Placeholder "gray zone" ground: grass-variant tiles drawn around the camera
+// every frame (exactly what the screen shows), so the player can walk forever with no real
 // level. Real map generation comes later (docs/tasks.md task 1).
 // Decor (CFG.map.decor): lone flowers, rocks and mushrooms here and there,
 // plus circular flower clusters - all picked per world tile, deterministic.
@@ -63,49 +63,56 @@ function frameAt(col, row) {
 }
 
 export function buildGround() {
-  const { tileSize, tileScale, gridW, gridH } = CFG.map;
+  const { tileSize, tileScale } = CFG.map;
   const size = tileSize * tileScale;
+
+  // The ground is DRAWN, not built from tile objects: every frame it draws
+  // exactly the world tiles the camera sees right now (+1 tile of margin),
+  // from the camera position of that same frame. So it always covers the
+  // whole screen whatever its size - desktop 1280x720, a tall phone, a phone
+  // being rotated, or the mobile address bar sliding in and out - with
+  // nothing to rebuild and no one-frame lag at the edges while moving.
+  // Tiles are drawn 1 px bigger than their spacing so the odd scales of
+  // phone screens never leave a hairline gap between them.
+  // Which frame a tile shows only depends on its world coords (frameAt), and
+  // the frames of the visible block are cached until the view moves a tile.
+  const drawScale = (size + 1) / tileSize;
+  let key = "";
+  let frames = [];
+  let block = { col: 0, row: 0, cols: 0, rows: 0 };
 
   const ground = add([
     pos(0, 0),
     z(-10),
     "ground",
+    {
+      draw() {
+        const cam = getCamPos();
+        const zoom = getCamScale?.().x || 1;
+        const halfW = width() / zoom / 2;
+        const halfH = height() / zoom / 2;
+        const col = Math.floor((cam.x - halfW) / size) - 1;
+        const row = Math.floor((cam.y - halfH) / size) - 1;
+        const cols = Math.ceil((halfW * 2) / size) + 3;
+        const rows = Math.ceil((halfH * 2) / size) + 3;
+        const k = `${col},${row},${cols},${rows}`;
+        if (k !== key) {
+          key = k;
+          block = { col, row, cols, rows };
+          frames = new Array(cols * rows);
+          for (let i = 0; i < cols * rows; i++) frames[i] = frameAt(col + (i % cols), row + Math.floor(i / cols));
+        }
+        for (let i = 0; i < block.cols * block.rows; i++) {
+          drawSprite({
+            sprite: TILE_ART,
+            frame: frames[i],
+            pos: vec2((block.col + (i % block.cols)) * size, (block.row + Math.floor(i / block.cols)) * size),
+            scale: drawScale,
+          });
+        }
+      },
+    },
   ]);
-
-  const tiles = [];
-  for (let i = 0; i < gridW * gridH; i++) {
-    tiles.push(ground.add([
-      sprite(TILE_ART, { frame: 0 }), // real variant set by placeAt()
-      scale(tileScale),
-      pos(
-        (i % gridW) * size,
-        Math.floor(i / gridW) * size,
-      ),
-    ]));
-  }
-
-  // Band origin in world tile coords; re-snap + re-pick variants only when
-  // the camera has moved into a new tile.
-  let originCol = null;
-  let originRow = null;
-
-  function placeAt(col, row) {
-    originCol = col;
-    originRow = row;
-    ground.pos = vec2(col * size, row * size);
-    tiles.forEach((t, i) => {
-      t.frame = frameAt(col + (i % gridW), row + Math.floor(i / gridW));
-    });
-  }
-
-  ground.onUpdate(() => {
-    // snap the tile band to the camera so it always covers the viewport;
-    // aligned to the tile grid so tiling never shifts under the player
-    const cam = getCamPos();
-    const col = Math.floor((cam.x - (gridW * size) / 2) / size);
-    const row = Math.floor((cam.y - (gridH * size) / 2) / size);
-    if (col !== originCol || row !== originRow) placeAt(col, row);
-  });
 
   return ground;
 }
