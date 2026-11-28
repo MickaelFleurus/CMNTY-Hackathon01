@@ -22,7 +22,10 @@ const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(
 
 export function startGameOver() {
   getTreeRoot().on("run-over", ({ reason } = {}) => {
-    stats = { reason, at: time(), kills: hudState.kills, coins: hudState.coins, wave: hudState.wave };
+    // time survived = run-stats' game clock (pauses, level up and shop
+    // excluded); its run-over handler runs first (main.js starts it earlier)
+    const secs = window.gameStats?.get().latest.timeSurvived ?? loadStats().latest.timeSurvived ?? 0;
+    stats = { reason, secs, kills: hudState.kills, coins: hudState.coins, wave: hudState.wave };
   });
 
   getTreeRoot().on("run-frozen", () => {
@@ -36,8 +39,8 @@ const REASON_TEXT = {
   "player-died": (wave) => `you fell on wave ${wave}, before the golem woke up`,
 };
 
-function open({ reason, at, wave, kills, coins }) {
-  const survived = fmt(time() - at);
+function open({ reason, secs, wave, kills, coins }) {
+  const survived = fmt(secs);
   const level = xpState.level;
 
   // best-run record: furthest wave wins, then longest survival
@@ -48,9 +51,11 @@ function open({ reason, at, wave, kills, coins }) {
   } catch {
     /* corrupt record → treat as none */
   }
-  const better = wave > (best.wave ?? 0) || (wave === (best.wave ?? 0) && survived > (best.time ?? ""));
+  // older records only have the "m:ss" text
+  const bestSecs = best.secs ?? (/^(\d+):(\d\d)$/.test(best.time ?? "") ? +best.time.split(":")[0] * 60 + +best.time.split(":")[1] : 0);
+  const better = wave > (best.wave ?? 0) || (wave === (best.wave ?? 0) && secs > bestSecs);
   if (better) {
-    best = { wave, time: survived };
+    best = { wave, time: survived, secs };
     try {
       localStorage.setItem(KEY, JSON.stringify(best));
     } catch {

@@ -1029,7 +1029,7 @@ function spawnGroup(type, level) {
   const center =
     type.spawn.at === "base" && base
       ? base.pos.add(Vec2.fromAngle(rand(360)).scale(type.spawn.distance ?? 400))
-      : edgeSpawnPoint(g.radius); // whole group starts off-screen
+      : edgeSpawnPoint(g.radius + (type.spawn.edgeMargin ?? 0)); // whole group starts off-screen (types can start farther)
   const shared = { target: null, nextRetarget: 0 };
   // rotating art (bosses): one sheet per boss wave
   const variant = (Math.max(1, Math.round(currentWave / (ENEMY_WAVES.boss?.every || 1))) - 1) % spritesOf(type).length;
