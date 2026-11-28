@@ -123,7 +123,7 @@ export function makeShop() {
       const step = b.opt.maxLevel > 1 ? span / (b.opt.maxLevel - 1) : 0;
       return vec2(colX(branches.indexOf(b)) + colW / 2, Y.nodesBottom - (lvl - 1) * step);
     };
-    const skipRect = { x: width() / 2 - 160, y: Y.skip, w: 320, h: 64 }; // taller: two hint lines live inside it
+    const skipRect = { x: width() / 2 - 160, y: Y.skip, w: 320, h: 44 }; // one hint line
 
     ui = add([
       pos(0, 0),
@@ -260,17 +260,14 @@ export function makeShop() {
         color: hot ? rgb(84, 74, 110) : rgb(60, 52, 80),
         outline: { width: 2, color: rgb(150, 140, 180) },
       });
-      // Both hint lines sit INSIDE the button (full opacity, nothing bleeds
-      // below its edge - the +22 offset used to poke out of the 44px rect).
-      // Line 1 changes once a node was bought this break: Enter is no longer
-      // "skip", it confirms the pending upgrade.
+      // One line only, inside the button: state tells the player what Enter
+      // does (skip before a buy, confirm the upgrade after).
       if (upgradesOwned > 0) {
-        drawText({ text: "ENTER: upgrade", size: 15, pos: vec2(width() / 2, skipRect.y + 20), anchor: "center", color: [255, 216, 90] });
+        drawText({ text: "ENTER: upgrade", size: 15, pos: vec2(width() / 2, skipRect.y + skipRect.h / 2), anchor: "center", color: [255, 216, 90] });
       } else {
         const keys = SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ");
-        drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + 20), anchor: "center" });
+        drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + skipRect.h / 2), anchor: "center" });
       }
-      drawText({ text: "ENTER: continue", size: 15, pos: vec2(width() / 2, skipRect.y + 42), anchor: "center", color: [255, 216, 90] });
     }
 
     // input: manual hit tests (the game is time-scaled to 0 behind the shop)
