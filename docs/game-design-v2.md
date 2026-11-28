@@ -545,6 +545,154 @@ Rules:
 Tuning (chance, weights, durations, Rage multipliers, golem heal %, boss %)
 goes in `src/config.js` (`BONUS_DROPS`).
 
+## Sound & music
+
+The game has no audio yet. This is everything that needs a sound. "Event"
+is the existing game event a sound system can listen to (no other file
+needs to import it). **(new event)** means the game doesn't fire one yet,
+so the owner of that system has to add it.
+
+Style: short, punchy **8-bit / chiptune-ish** sounds to match the 16px
+pixel art. Every sound in a group should feel like the same family.
+
+### Music
+
+| Track | When | Event |
+|---|---|---|
+| **Title / menu theme** | before the run starts | **(new event)** title screen |
+| **Wave 1 theme** (calm, lonely) | wave 1, golem still a statue | `cycle-phase` (`wave`, wave 1) |
+| **Field wave theme** (driving, gets more intense with the wave number) | waves 2+ | `cycle-phase` (`wave`) |
+| **Break / shop theme** (calm, safe) | between waves, shop open | `cycle-phase` (`break`, `shop`) |
+| **Boss theme** | boss wave | `boss-wave`, `boss-incoming` |
+| **Game over sting** then quiet loop | run lost | `run-over` |
+| **Victory sting** | boss defeated | `boss-defeated` |
+
+Music **crossfades** between tracks (about 1 s), never cuts. It gets quieter
+(ducked) while paused or on the level-up screen.
+
+### Golem
+
+| Sound | Event |
+|---|---|
+| Golem **wakes up** (stone cracking + deep rumble) | `golem-awake` |
+| Golem **powered** (first active-offense pick) | `golem-powered` |
+| Golem style picked (Guardian / Berserker / …, one sound per style) | `golem-style-pick` |
+| Golem **swipe** (heavy whoosh) | `golem-swipe` |
+| Golem **shockwave** (ground slam) | `golem-shockwave` |
+| Golem **hit** (stone thud, rate-limited) | `damage-taken` with `kind: "tower"` |
+| Golem **drain** while surrounded (low grinding loop, louder with the drain) | `damage-taken` `kind: "tower"` (reported regularly while draining; `amount` gives the strength) |
+| Golem **repaired** (stone fitting back in place) | `golem-repaired` |
+| Golem **dying** (big crumble) | `golem-dying` |
+| Golem attack shot (active offense) | **(new event)** tower fired |
+
+### Player
+
+| Sound | Event |
+|---|---|
+| **Footsteps** (soft, looping while moving, faster with Move Speed) | read `player.isMoving` / walk anim each frame (no event needed) |
+| **Hurt** (short grunt + hit) | `damage-taken` with `kind: "player"` |
+| **Low HP** warning heartbeat (loop below ~25% HP) | read player HP each frame |
+| **Death** | `player-down` |
+| **Respawn** | `player-respawn` |
+| Respawn timer got longer | `respawn-step` |
+| **Level up** (rising arpeggio) | `levelup` |
+| Shield absorbs a hit (regen shield) | **(new event)** shield hit |
+| Healed (heart, regen tick) | **(new event)** player healed |
+
+### Player weapons
+
+One "fire" sound and, if needed, one "impact" sound per weapon. Fire sounds
+are **rate-limited** (a Knife volley of 5 = one sound, not five).
+
+| Weapon | Sound | Event |
+|---|---|---|
+| Pistol / Magic Bolt | zap | **(new event)** `weapon-fire` `{ weapon }` |
+| Plank | wooden thwack | `weapon-fire` |
+| Whip | crack | `weapon-fire` |
+| Knife | thin whoosh | `weapon-fire` |
+| Axe | heavy spin whoosh | `weapon-fire` |
+| Boomerang | looping whirr (out and back) | `weapon-fire` |
+| Fireball | fwoosh + explosion on impact | `weapon-fire`, **(new event)** explosion |
+| Lightning | crackle + thunder | `weapon-fire` |
+| Holy Water | glass break + fizzle loop | `weapon-fire` |
+| Orbit Orb | soft hum loop | weapon active |
+| Aura | low hum loop | weapon active |
+| Any projectile **hits** an enemy (tiny tick, heavily rate-limited) | | `hit`, `damage-dealt` |
+
+### Enemies
+
+| Sound | Event |
+|---|---|
+| Enemy **hit** (soft, rate-limited, slight random pitch) | `damage-dealt` |
+| Enemy **death** (per family: squish for slimes/zombies, screech for bats…) | `killed` |
+| Enemy **attack** (bite / claw, rate-limited) | **(new event)** enemy attacked |
+| Special group spawned (bat swarm…) | `enemy-trigger` |
+| Enemies **frozen** / unfrozen | `enemy-freeze`, `enemy-freeze-changed` |
+| Enemies **knocked back** | `enemy-knockback` |
+
+### Boss
+
+| Sound | Event |
+|---|---|
+| Boss **warning** (horn, one wave ahead) | `boss-incoming` |
+| Boss **arrives** (roar) | `boss-wave` |
+| Boss attack | **(new event)** boss attacked |
+| Boss hit (heavier than normal enemies) | `damage-dealt` on a boss |
+| Boss **defeated** (long death + victory sting) | `boss-defeated` |
+
+### Pickups & bonuses
+
+| Sound | Event |
+|---|---|
+| XP gem collected (tiny blip; pitch rises when collected in quick succession) | **(new event)** xp collected |
+| Coin collected (clink) | `coins-changed` (only when it goes up) |
+| Heart collected | **(new event)** heart collected |
+| Bonus picked: **Bomb** (big boom), **Freeze** (ice crack), **Rage** (roar + loop while active), **Golem heal** (warm chime), **Magnet** (whoosh + stream of blips), **Recall** (portal) | `bonus-picked` `{ kind }`, `rage-changed`, `magnet-all` |
+| Chest opening (progress creak) / opened (fanfare) | **(new event)** chest, when chests are built |
+| Golem chest opened (bigger fanfare) | **(new event)** |
+| Hidden treasure: sparkle nearby (soft shimmer), digging, found | **(new event)**, when treasures are built |
+
+### Waves, shop & UI
+
+| Sound | Event |
+|---|---|
+| **Wave start** (drum hit / horn) | `wave-start` |
+| **Wave end** (relief chord) | `wave-end`, `cycle-phase` (`aftermath`) |
+| Portal appears / player **enters portal** | `cycle-phase` (`break` with `portal: true`), `portal-enter` |
+| **Shop open / close** | `shop-open`, `shop-close` |
+| Shop **purchase** (cha-ching) | `shop-pick` |
+| Not enough coins (dull buzz) | **(new event)** purchase refused |
+| Golem repair bought | `golem-repaired` |
+| Level-up card **hover / select** | **(new event)** card focus / pick (`upgrade` for the pick) |
+| Any **button click / hover** (menus, game over, restart) | **(new event)** ui click |
+| **Pause / unpause** | `game-paused`, `game-unpaused` |
+| **Base under attack!** banner (alarm, follows the banner's own spam limit) | `base-under-attack` |
+| Tower danger state (below ~25% HP, alarm loop) | read tower HP each frame |
+| **Game over** screen | `run-over` |
+| New best run | **(new event)** |
+
+### Rules for the sound system
+
+- **Volume settings**: separate **Music** and **Sound effects** sliders plus
+  a **Mute** toggle (also a key, e.g. `M`), saved in the browser.
+- **Rate limits**: frequent sounds (enemy hits, XP blips, footsteps,
+  weapon fire) have a cap on how many can play at once and a minimum gap
+  between two plays. 300 enemies must never mean 300 sounds.
+- **Random pitch** (±5-10%) on repeated sounds, so the horde doesn't sound
+  like a machine gun.
+- **Distance**: sounds from far away (enemies, golem hits while you're out
+  exploring) are quieter. Exception: the base-under-attack alarm always
+  plays at full volume.
+- **Pause** stops sound effects and ducks music.
+- **Browsers block audio until the first click or key press.** Start the
+  audio on the first input (the title screen is a good place for that).
+- **Assets**: put files in `sfx/` (next to `gfx/`), as `.ogg` (with `.mp3`
+  if needed). Use only sounds we're allowed to ship: made by us (e.g. with
+  jsfxr / ChipTone), or CC0 packs (Kenney, OpenGameArt, Freesound CC0).
+  Keep the license file next to each pack, like `gfx/`.
+- Tuning (volumes, rate limits, pitch range, crossfade time) goes in
+  `src/config.js` (`AUDIO`).
+
 ## Boss + gimmick sketch (needs iteration)
 
 - Boss waves are announced a wave ahead (HUD warning) so the player can shop
@@ -604,7 +752,9 @@ goes in `src/config.js` (`BONUS_DROPS`).
     upgrades.
 17. **Rare bonus drops** - Bomb, Freeze, Rage, Golem heal, Magnet, Recall.
     The Recall stat upgrade goes with the weapons & upgrades work.
-18. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
+18. **Sound & music** - can start any time; see "Sound & music" and task 5
+    in `tasks-v2.md`.
+19. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
 
