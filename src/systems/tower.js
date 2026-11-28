@@ -241,20 +241,28 @@ export function startTower() {
     // faint red tint, faster the faster it drains (TOWER.drainFlash).
     let lastHp = base.hp();
     let rate = 0; // smoothed HP lost per second
-    let phase = 0;
+    let phase = 0; // pulse cycles done (fraction = where in the pulse); 0 = idle
+    let hz = 0; // current pulse speed (kept while a last pulse fades out)
     base.onUpdate(() => {
       if (over || dt() === 0) return;
       const lost = Math.max(0, lastHp - base.hp()); // repairs / level-ups don't count
       lastHp = base.hp();
       rate += (lost / dt() - rate) * (1 - Math.exp(-6 * dt()));
-      if (rate < 0.3) {
-        rate = lost > 0 ? rate : 0;
+      const f = TOWER.drainFlash;
+      const draining = rate >= 0.3;
+      if (draining) hz = Math.min(f.maxHz, f.minHz + f.hzPerHp * rate);
+      else if (phase === 0) {
+        base.color = rgb(255, 255, 255); // idle
+        return;
+      }
+      const before = phase;
+      phase += dt() * hz;
+      // drain over: let the current pulse fade all the way out, then stop
+      if (!draining && Math.floor(phase) > Math.floor(before)) {
         phase = 0;
         base.color = rgb(255, 255, 255);
         return;
       }
-      const f = TOWER.drainFlash;
-      phase += dt() * Math.min(f.maxHz, f.minHz + f.hzPerHp * rate);
       const pulse = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2); // 0 → 1 → 0
       const cut = Math.round(f.strength * pulse);
       base.color = rgb(255, 255 - cut, 255 - cut);
