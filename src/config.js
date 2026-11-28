@@ -872,7 +872,8 @@ export const BONUS_DROPS = {
 export const BASE_ALERT = {
   attackedFor: 1.5, // s after the last HP loss the golem still counts as "under attack"
   bannerQuiet: 5, // s the golem must be left alone before the banner shows again
-  bannerTime: 2.5, // s the "BASE UNDER ATTACK!" banner stays up
+  bannerTime: 2.5, // s the "THE GOLEM IS UNDER ATTACK!" banner stays up
+  bannerMinDistance: 450, // px: the banner only shows when the player is at least this far from the golem
   flashTime: 0.3, // s, the HUD bar's white hit flash fades over this
   dangerRatio: 0.25, // golem HP fraction below which the danger state is on
   dangerHz: 1.2, // red edge pulses per second
@@ -889,7 +890,7 @@ export const BASE_ALERT = {
 export const BOSS_WARNING = {
   bannerTime: 4, // s, "BOSS NEXT WAVE" banner when the wave before a boss wave ends
   startBannerTime: 2.5, // s, "BOSS WAVE" banner when the boss wave starts
-  bannerY: 220, // px from the top (below the golem HP bar and "BASE UNDER ATTACK!")
+  bannerY: 220, // px from the top (below the golem HP bar and "THE GOLEM IS UNDER ATTACK!")
   bannerWidth: 560, // px
   reminderY: 178, // px: small "BOSS NEXT WAVE: <name>" pill during the break
   reminderHz: 1, // reminder outline pulses per second

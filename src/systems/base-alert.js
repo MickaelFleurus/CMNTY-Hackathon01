@@ -5,8 +5,10 @@
 //   - golem HP bar in the HUD (top center, under the survival timer), always
 //     visible once the golem is awake. It flashes when the golem takes damage.
 //     While the player is dead, their respawn countdown sits next to it.
-//   - "BASE UNDER ATTACK!" banner when the golem starts taking damage. It
-//     shows again only after the golem was left alone for BASE_ALERT.bannerQuiet s.
+//   - "THE GOLEM IS UNDER ATTACK!" banner while the golem takes damage AND
+//     the player is at least BASE_ALERT.bannerMinDistance px away (no point
+//     shouting when you're standing next to it). Once per attack: it shows
+//     again only after the golem was left alone for BASE_ALERT.bannerQuiet s.
 //   - off-screen arrow at the screen edge pointing at the golem while it's
 //     being attacked (red, pulsing). Quiet otherwise: the break-time guide
 //     arrow (guide-arrow.js) already points home when the shop is open.
@@ -39,6 +41,7 @@ export function startBaseAlert() {
   let clock = 0; // game time (s), stops while paused
   let lastHitAt = -Infinity;
   let bannerUntil = -Infinity;
+  let bannered = false; // the banner already showed for the current attack
   let flash = 0; // 1 right after a hit, fades to 0
 
   const golem = () => {
@@ -46,6 +49,12 @@ export function startBaseAlert() {
     return b?.exists() && b.awake && typeof b.hp === "function" ? b : null;
   };
   const attacked = () => clock - lastHitAt < CFG.attackedFor;
+  const playerFar = (b) => {
+    const p = get("player")[0];
+    if (!p) return true;
+    const r = b.solidRect();
+    return p.pos.dist(vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2)) >= CFG.bannerMinDistance;
+  };
 
   onUpdate(() => {
     const d = dt();
@@ -59,15 +68,18 @@ export function startBaseAlert() {
     }
     const hp = b.hp();
     if (lastHp !== null && hp < lastHp - 1e-6) {
-      // a new attack after a quiet spell → banner
-      if (clock - lastHitAt >= CFG.bannerQuiet) {
-        bannerUntil = clock + CFG.bannerTime;
-        getTreeRoot().trigger("base-under-attack", { hp, maxHP: b.maxHP() });
-      }
+      // a new attack after a quiet spell can show the banner again
+      if (clock - lastHitAt >= CFG.bannerQuiet) bannered = false;
       lastHitAt = clock;
       flash = 1;
     }
     lastHp = hp;
+    // banner: once per attack, as soon as the player is far from the golem
+    if (attacked() && !bannered && playerFar(b)) {
+      bannered = true;
+      bannerUntil = clock + CFG.bannerTime;
+      getTreeRoot().trigger("base-under-attack", { hp, maxHP: b.maxHP() });
+    }
   });
 
   add([
@@ -158,7 +170,7 @@ function drawBanner(clock, until) {
   const y = CFG.bar.y + CFG.bar.height + 30;
   drawRect({
     pos: vec2(width() / 2, y),
-    width: 380,
+    width: 500,
     height: 40,
     anchor: "center",
     radius: 8,
@@ -166,7 +178,7 @@ function drawBanner(clock, until) {
     opacity: 0.85 * alpha,
   });
   drawText({
-    text: "BASE UNDER ATTACK!",
+    text: "THE GOLEM IS UNDER ATTACK!",
     size: 26,
     pos: vec2(width() / 2, y),
     anchor: "center",
