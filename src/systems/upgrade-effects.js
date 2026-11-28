@@ -6,7 +6,9 @@
 //   damage   = base * buffs.damageMult      * stats.damageMult
 //   cooldown = base / buffs.attackSpeedMult / stats.attackSpeedMult
 //   speed    = base * stats.speedMult
-// "magnet" is handled in upgrades.js, "weapon-knife" in knife.js.
+// "magnet" is handled in upgrades.js; weapon cards in their own files:
+// "weapon-knife" knife.js, "weapon-plank" plank.js, "weapon-axe" axe.js,
+// "weapon-boomerang" boomerang.js.
 import { UPGRADE } from "../config.js";
 
 export function initUpgradeEffects(player) {
