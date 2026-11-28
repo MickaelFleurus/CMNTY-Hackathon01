@@ -174,9 +174,10 @@ function openMenu() {
     anchor("center"),
   ]);
 
-  const cardW = 260;
+  // fit 3 cards on a 720 px wide portrait phone too (CFG.viewport.portrait)
+  const gap = width() < 900 ? 12 : 30;
+  const cardW = Math.min(260, (width() - 32 - (choices.length - 1) * gap) / choices.length);
   const cardH = 300;
-  const gap = 30;
   const totalW = choices.length * cardW + (choices.length - 1) * gap;
   const startX = width() / 2 - totalW / 2 + cardW / 2;
   const cardY = height() * 0.58;

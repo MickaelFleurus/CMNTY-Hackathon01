@@ -47,6 +47,7 @@
 import { CHESTS, TREASURES, GOLEM_CHEST, GOLEM_SHOCKWAVE, SHOP } from "../config.js";
 import { spawnCoins } from "./base.js";
 import { spawnEnemy, enemyLevelForWave } from "./enemies.js";
+import { isFocusClick } from "../util/focusClick.js";
 
 const DIR = "gfx/SurvivorsStarterKit_v1.0";
 const DARK = [20, 14, 28];
@@ -281,9 +282,10 @@ export function startChests(player) {
     if (root.paused) return wait(0.2, openGolemChestScreen); // another screen first
     root.paused = true;
     const choices = shuffle(STATS).slice(0, 3);
-    const cw = 280;
+    // fits a 720 px wide portrait phone too (CFG.viewport.portrait)
+    const gap = width() < 900 ? 12 : 30;
+    const cw = Math.min(280, (width() - 32 - 2 * gap) / 3);
     const ch = 260;
-    const gap = 30;
     const x0 = width() / 2 - (choices.length * cw + (choices.length - 1) * gap) / 2;
     const y0 = height() / 2 - ch / 2 + 30;
     const cardAt = (p) => choices.findIndex((_, i) => p.x >= x0 + i * (cw + gap) && p.x <= x0 + i * (cw + gap) + cw && p.y >= y0 && p.y <= y0 + ch);
@@ -297,11 +299,11 @@ export function startChests(player) {
       {
         draw() {
           drawRect({ pos: vec2(0, 0), width: width(), height: height(), color: rgb(10, 8, 18), opacity: 0.72 });
-          drawText({ text: "GOLEM CHEST", size: 36, pos: vec2(width() / 2, 90), anchor: "top", color: rgb(...GOLD) });
+          drawText({ text: "GOLEM CHEST", size: 36, pos: vec2(width() / 2, y0 - 150), anchor: "top", color: rgb(...GOLD) }); // follows the cards (portrait too)
           drawText({
             text: "Pick 1 upgrade for your golem. It lasts the whole run. Keys 1-3, or click.",
             size: 15,
-            pos: vec2(width() / 2, 138),
+            pos: vec2(width() / 2, y0 - 102),
             anchor: "top",
             color: rgb(190, 190, 210),
           });
@@ -332,7 +334,10 @@ export function startChests(player) {
     };
     const handlers = [
       onMouseMove(() => (hover = cardAt(mousePos()))),
-      onMousePress(() => pick(cardAt(mousePos()))),
+      onMousePress(() => {
+        if (isFocusClick()) return; // the click that refocused the window: look first
+        pick(cardAt(mousePos()));
+      }),
       ...choices.map((_, i) => onKeyPress(String(i + 1), () => pick(i))),
     ];
   }
