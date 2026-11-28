@@ -36,6 +36,7 @@ import { startMinimap } from "./systems/minimap.js";
 import { loadChestAssets, startChests } from "./systems/chests.js";
 import { loadBonusAssets, startBonusDrops } from "./systems/bonus.js";
 import { startBaseAlert } from "./systems/base-alert.js";
+import { startBossWarning } from "./systems/boss-warning.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
 import { loadShopSprites, makeShop } from "./systems/shop.js";
@@ -136,6 +137,7 @@ startMinimap();
 startChests(player);
 startBonusDrops(player);
 startBaseAlert();
+startBossWarning();
 startDevTools(player);
 
 // Global key handlers still fire while the level up screen pauses the game

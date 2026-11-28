@@ -169,7 +169,10 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   - Root events:
     - `boss-incoming` `{ wave }` fires when the wave BEFORE a boss wave ends,
       so the HUD can warn and the player can shop with intent.
-    - `boss-wave` `{ wave }` fires when it starts.
+      `boss-warning.js` shows a "BOSS NEXT WAVE" banner with the boss's name,
+      then a small reminder under the timer for the whole break.
+    - `boss-wave` `{ wave }` fires when it starts (`boss-warning.js`: a short
+      "BOSS WAVE" banner).
     - `boss-defeated` `{ wave, type, name, pos }` fires when the boss dies
       (the respawn ladder steps down).
   - `wave-end` now also carries `boss: true|false`. The director exposes
