@@ -1,22 +1,35 @@
-// Shop: opens at the base when the player enters a portal, shows the 2x2
-// grid (passive-defense / passive-offense / active-defense / active-offense,
-// see docs/game-design-v2.md), and sells exactly one pick per cycle.
+// Golem upgrades as a SKILL TREE (docs/game-design-v2.md → "Upgrade UI
+// rework" and "Between waves: repair or upgrade the golem"). Opens at the
+// golem during the break and sells exactly one upgrade per break.
+//
+// Layout: one branch (column) per shop option / quadrant (passive-defense,
+// passive-offense, active-defense, active-offense). Each branch is a chain of
+// nodes, Lv1 at the bottom growing up to its maxLevel. Owned nodes are filled,
+// the NEXT node of each branch carries its key hint (1-4) and the price,
+// later nodes are locked. Keyboard-driven like the level-up screen: press a
+// branch's key (or click its next node) to buy it; E / Esc or the Skip button
+// leaves without buying. Colors follow the art direction: defense branches
+// white / gray, offense branches red.
+//
+// Price (docs → "Upgrade cost"): ONE shared counter,
+//   cost = SHOP.upgradeCost.baseCost × SHOP.upgradeCost.costGrowth ^ upgradesOwned
+// so every next upgrade costs the same whatever branch it's in.
 //
 // The shop only SELLS: it deducts coins and fires the root event
 //   getTreeRoot().trigger("shop-pick", pick)
 // with pick = { id, quadrant, level, params } - the effect systems
-// (auras/regen/tower, tasks-v2 #3, Mickael) apply the params. The pick's
-// level comes from this shop's purchase history (upgrading = buying the
-// same option again).
+// (auras / regen / tower) apply the params. The pick's level comes from this
+// shop's purchase history (upgrading = buying the same option again).
 //
-// Contract:
+// Contract (unchanged):
 //   - getTreeRoot().on("shop-open", () => …)        opened by the cycle flow
-//   - getTreeRoot().on("shop-close", () => …)       fired here after a pick
+//   - getTreeRoot().on("shop-close", () => …)       fired here after a pick / skip
+//   - the UI root is tagged "shop-ui" (pause.js won't pause over it)
+//   - new: getTreeRoot().trigger("shop-refused", { id, cost, coins }) when the
+//     player tries to buy without enough coins (sound list: "purchase refused")
 //   - Enemies are cleared and the next wave starts by the cycle director
 //     when it hears "shop-close".
-//   - While the shop is open the game keeps running (enemies may still be
-//     around after a timeout wave); player input is NOT disabled.
-import { CFG, SHOP } from "../config.js";
+import { SHOP } from "../config.js";
 import { getCoins, addCoins } from "./base.js";
 
 let spritesLoaded = false;
@@ -24,7 +37,6 @@ let spritesLoaded = false;
 export function loadShopSprites() {
   if (spritesLoaded) return;
   spritesLoaded = true;
-  // 20 upgrade icons in one sheet? No - individual Icon_*.png files.
   const icons = ["Armor", "Might", "Regen", "Lightning"];
   for (const name of icons) {
     loadSprite(
@@ -34,10 +46,26 @@ export function loadShopSprites() {
   }
 }
 
+// Branch order = key order (1-4) and left-to-right columns.
+const BRANCHES = [
+  { quadrant: "passive-defense", label: "PASSIVE · DEFENSE", color: [205, 215, 235] },
+  { quadrant: "passive-offense", label: "PASSIVE · OFFENSE", color: [240, 140, 125] },
+  { quadrant: "active-defense", label: "ACTIVE · DEFENSE", color: [245, 245, 250] },
+  { quadrant: "active-offense", label: "ACTIVE · OFFENSE", color: [240, 70, 60] },
+];
+const DARK = [20, 14, 28];
+const GOLD = [255, 220, 90];
+
 export function makeShop() {
   // levels: purchases per option id, across the whole run
   const levels = {};
+  let upgradesOwned = 0;
   let ui = null;
+
+  const costNow = () => {
+    const c = SHOP.upgradeCost;
+    return Math.floor(c.baseCost * Math.pow(c.costGrowth, upgradesOwned));
+  };
 
   function isOpen() {
     return ui !== null;
@@ -45,67 +73,195 @@ export function makeShop() {
 
   function open() {
     if (ui) return;
-    // opened by the cycle director when the player is at the golem (no teleport)
-    ui = add([pos(0, 0), z(50), fixed(), "shop-ui"]);
-    ui.add([
-      rect(CFG.viewport.width, CFG.viewport.height),
-      color(20, 18, 30),
-      opacity(0.82),
-      anchor("topleft"),
-    ]);
-    ui.add([
-      text("SHOP - pick one (coins: " + getCoins() + ")", { size: 26 }),
-      pos(60, 40),
-    ]);
+    const branches = BRANCHES.map((b, i) => ({
+      ...b,
+      key: String(i + 1),
+      opt: SHOP.options.find((o) => o.quadrant === b.quadrant),
+    })).filter((b) => b.opt);
 
-    const q = SHOP.options;
-    const cells = [
-      { x: 120, y: 120, opt: q.find((o) => o.quadrant === "passive-defense") },
-      { x: 480, y: 120, opt: q.find((o) => o.quadrant === "passive-offense") },
-      { x: 120, y: 330, opt: q.find((o) => o.quadrant === "active-defense") },
-      { x: 480, y: 330, opt: q.find((o) => o.quadrant === "active-offense") },
-    ];
+    let clock = 0;
+    let hover = null; // branch under the mouse, or "skip"
+    let refused = null; // { branch, until } red flash when too poor
 
-    // Skip button (click / tap), same as the skip keys.
-    const skip = ui.add([
-      rect(300, 56, { radius: 6 }),
-      pos(480, 540),
-      area(),
+    const L = SHOP.tree;
+    const colW = L.colWidth;
+    const startX = width() / 2 - (branches.length * colW + (branches.length - 1) * L.colGap) / 2;
+    const colX = (i) => startX + i * (colW + L.colGap);
+    const nodeAt = (b, lvl) => {
+      // lvl 1 at the bottom, maxLevel at the top
+      const span = L.nodesBottom - L.nodesTop;
+      const step = b.opt.maxLevel > 1 ? span / (b.opt.maxLevel - 1) : 0;
+      return vec2(colX(branches.indexOf(b)) + colW / 2, L.nodesBottom - (lvl - 1) * step);
+    };
+    const skipRect = { x: width() / 2 - 160, y: L.skipY, w: 320, h: 44 };
+
+    ui = add([
+      pos(0, 0),
       fixed(),
-      color(60, 52, 80),
-      outline(2, rgb(150, 140, 180)),
-      anchor("topleft"),
-      "shop-skip",
-    ]);
-    skip.add([
-      text(`Skip - no upgrade (${SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ")})`, { size: 14 }),
-      pos(150, 28),
-      anchor("center"),
-    ]);
-    skip.onClick(close);
-    skip.onHover(() => (skip.color = rgb(84, 74, 110)));
-    skip.onHoverEnd(() => (skip.color = rgb(60, 52, 80)));
+      z(1000), // over the HUD, like the level-up screen
+      "shop-ui",
+      {
+        draw() {
+          drawRect({ pos: vec2(0, 0), width: width(), height: height(), color: rgb(12, 10, 20), opacity: 0.86 });
 
-    for (const c of cells) {
-      if (!c.opt) continue;
-      buildCell(ui, c.opt, c.x, c.y, levels, buy);
+          // title + coins + price
+          drawText({ text: "GOLEM UPGRADES", size: 34, pos: vec2(width() / 2, 30), anchor: "top", color: rgb(...GOLD) });
+          drawText({
+            text: `Coins ${getCoins()}   ·   next upgrade costs ${costNow()}`,
+            size: 16,
+            pos: vec2(width() / 2, 74),
+            anchor: "top",
+            color: rgb(210, 210, 225),
+          });
+          drawText({
+            text: "One upgrade per break. Press the key next to a glowing node (1-4), or click it.",
+            size: 13,
+            pos: vec2(width() / 2, 98),
+            anchor: "top",
+            color: rgb(150, 150, 170),
+          });
+
+          branches.forEach((b, i) => drawBranch(b, i));
+          drawSkip();
+        },
+      },
+    ]);
+
+    function drawBranch(b, i) {
+      const x = colX(i);
+      const lvl = levels[b.opt.id] ?? 0;
+      const max = lvl >= b.opt.maxLevel;
+      const cost = costNow();
+      const canAfford = getCoins() >= cost;
+      const col = rgb(...b.color);
+      const isHover = hover === b;
+      const flash = refused?.branch === b && clock < refused.until;
+
+      // column card
+      drawRect({
+        pos: vec2(x, L.headerY),
+        width: colW,
+        height: L.skipY - 20 - L.headerY,
+        radius: 10,
+        color: rgb(30, 26, 44),
+        opacity: isHover ? 0.95 : 0.75,
+        outline: { width: 2, color: isHover ? rgb(...GOLD) : rgb(70, 62, 96) },
+      });
+      // header: icon, name, branch label, description
+      if (getSprite(b.opt.icon)) drawSprite({ sprite: b.opt.icon, pos: vec2(x + 30, L.headerY + 30), anchor: "center", scale: 2.5 });
+      drawText({ text: b.opt.name, size: 20, pos: vec2(x + 56, L.headerY + 14), color: col });
+      drawText({ text: b.label, size: 10, pos: vec2(x + 56, L.headerY + 38), color: rgb(150, 150, 170) });
+      drawText({
+        text: b.opt.desc.replace(/\n/g, " "),
+        size: 12,
+        width: colW - 24,
+        pos: vec2(x + 12, L.headerY + 62),
+        color: rgb(200, 200, 215),
+      });
+      drawText({
+        text: max ? "MAX" : `Lv ${lvl} / ${b.opt.maxLevel}`,
+        size: 12,
+        pos: vec2(x + colW - 12, L.headerY + 38),
+        anchor: "topright",
+        color: max ? rgb(...GOLD) : rgb(180, 180, 200),
+      });
+
+      // links between nodes
+      for (let l = 1; l < b.opt.maxLevel; l++) {
+        drawLine({ p1: nodeAt(b, l), p2: nodeAt(b, l + 1), width: 4, color: l < lvl ? col : rgb(60, 54, 80) });
+      }
+
+      // nodes
+      for (let l = 1; l <= b.opt.maxLevel; l++) {
+        const at = nodeAt(b, l);
+        const r = L.nodeRadius;
+        if (l === lvl + 1) {
+          // the next node: glowing, its level inside, the key hint badge to
+          // the left and the price to the right
+          const pulse = 0.5 + 0.5 * Math.sin(clock * 5);
+          const ring = flash ? rgb(235, 70, 60) : canAfford ? rgb(...GOLD) : rgb(150, 110, 110);
+          drawCircle({ pos: at, radius: r + 5 + 2 * pulse, color: ring, opacity: canAfford || flash ? 0.35 : 0.15 });
+          drawCircle({ pos: at, radius: r, color: rgb(40, 34, 56), outline: { width: 3, color: ring } });
+          drawText({ text: String(l), size: 14, pos: at, anchor: "center", color: canAfford ? rgb(...GOLD) : rgb(170, 140, 140) });
+          const kb = at.add(-(r + 22), 0);
+          drawRect({ pos: kb, width: 24, height: 24, anchor: "center", radius: 5, color: canAfford ? rgb(...GOLD) : rgb(120, 100, 100) });
+          drawText({ text: b.key, size: 16, pos: kb, anchor: "center", color: rgb(...DARK) });
+          drawText({
+            text: `${cost} coins`,
+            size: 13,
+            pos: at.add(r + 10, 0),
+            anchor: "left",
+            color: flash ? rgb(255, 110, 100) : canAfford ? rgb(140, 230, 140) : rgb(220, 110, 100),
+          });
+          if (flash) drawText({ text: "Not enough coins", size: 12, pos: at.add(r + 10, 16), anchor: "left", color: rgb(255, 110, 100) });
+        } else if (l <= lvl) {
+          drawCircle({ pos: at, radius: r, color: col, outline: { width: 2, color: rgb(...DARK) } });
+          drawText({ text: String(l), size: 13, pos: at, anchor: "center", color: rgb(...DARK) });
+        } else {
+          drawCircle({ pos: at, radius: r - 3, color: rgb(34, 30, 46), outline: { width: 2, color: rgb(70, 62, 96) } });
+          drawText({ text: String(l), size: 11, pos: at, anchor: "center", color: rgb(90, 84, 110) });
+        }
+      }
     }
-  }
 
-  function buy(opt) {
-    const level = levels[opt.id] ?? 0;
-    if (level >= opt.maxLevel) return;
-    const cost = Math.floor(opt.baseCost * Math.pow(opt.costGrowth, level));
-    if (getCoins() < cost) return;
-    addCoins(-cost);
-    levels[opt.id] = level + 1;
-    close();
-    getTreeRoot().trigger("shop-pick", {
-      id: opt.id,
-      quadrant: opt.quadrant,
-      level: levels[opt.id],
-      params: opt.params,
-    });
+    function drawSkip() {
+      const hot = hover === "skip";
+      drawRect({
+        pos: vec2(skipRect.x, skipRect.y),
+        width: skipRect.w,
+        height: skipRect.h,
+        radius: 8,
+        color: hot ? rgb(84, 74, 110) : rgb(60, 52, 80),
+        outline: { width: 2, color: rgb(150, 140, 180) },
+      });
+      const keys = SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ");
+      drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + skipRect.h / 2), anchor: "center" });
+    }
+
+    // input: manual hit tests (the game is time-scaled to 0 behind the shop)
+    const inSkip = (p) => p.x >= skipRect.x && p.x <= skipRect.x + skipRect.w && p.y >= skipRect.y && p.y <= skipRect.y + skipRect.h;
+    const branchAt = (p) =>
+      branches.find((b, i) => p.x >= colX(i) && p.x <= colX(i) + colW && p.y >= L.headerY && p.y <= L.skipY - 20);
+
+    const handlers = [
+      onUpdate(() => {
+        clock += 1 / 60; // real frames: dt() is 0 while the shop pauses the game
+      }),
+      onMouseMove(() => {
+        const p = mousePos();
+        hover = inSkip(p) ? "skip" : branchAt(p) ?? null;
+      }),
+      onMousePress(() => {
+        const p = mousePos();
+        if (inSkip(p)) return close();
+        const b = branchAt(p);
+        if (b) buy(b);
+      }),
+      ...branches.map((b) => onKeyPress(b.key, () => buy(b))),
+    ];
+    ui.onDestroy(() => handlers.forEach((h) => h.cancel()));
+
+    function buy(b) {
+      const opt = b.opt;
+      const level = levels[opt.id] ?? 0;
+      if (level >= opt.maxLevel) return;
+      const cost = costNow();
+      if (getCoins() < cost) {
+        refused = { branch: b, until: clock + 0.8 };
+        getTreeRoot().trigger("shop-refused", { id: opt.id, cost, coins: getCoins() });
+        return;
+      }
+      addCoins(-cost);
+      levels[opt.id] = level + 1;
+      upgradesOwned += 1;
+      close();
+      getTreeRoot().trigger("shop-pick", {
+        id: opt.id,
+        quadrant: opt.quadrant,
+        level: levels[opt.id],
+        params: opt.params,
+      });
+    }
   }
 
   function close() {
@@ -121,37 +277,5 @@ export function makeShop() {
   // director starts the next wave on shop-close, as after a pick.
   onKeyPress(SHOP.skipKeys, () => ui && close());
 
-  return { open, close, isOpen, levels: () => ({ ...levels }) };
-}
-
-function buildCell(ui, opt, x, y, levels, buy) {
-  const level = levels[opt.id] ?? 0;
-  const cost = Math.floor(opt.baseCost * Math.pow(opt.costGrowth, level));
-  const affordable = getCoins() >= cost && level < opt.maxLevel;
-
-  const cell = ui.add([
-    pos(x, y),
-    rect(300, 180),
-    area({ scale: 1 }),
-    fixed(),
-    color(affordable ? 40 : 32, affordable ? 44 : 30, 60),
-    opacity(0.95),
-    anchor("topleft"),
-    "shop-cell",
-    { opt },
-  ]);
-  cell.add([sprite(opt.icon), pos(26, 30), anchor("center"), scale(2)]);
-  cell.add([text(opt.name, { size: 18 }), pos(50, 18)]);
-  cell.add([text(opt.desc, { size: 11 }), pos(16, 60)]);
-  cell.add([
-    text(
-      level >= opt.maxLevel
-        ? "MAX"
-        : `lv ${level} - cost ${cost}`,
-      { size: 14 },
-    ),
-    pos(16, 140),
-    color(affordable ? [120, 220, 120] : [200, 90, 90]),
-  ]);
-  cell.onClick(() => buy(opt));
+  return { open, close, isOpen, levels: () => ({ ...levels }), upgradesOwned: () => upgradesOwned };
 }

@@ -48,6 +48,12 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     (alive, not frozen). The shop doesn't teleport anyone. Closing it (pick
     or **E** to skip) fires `shop-close`, and the cycle director starts the
     next wave after `CYCLE.nextWaveDelay`.
+    The shop is a **skill tree** (chippe): one branch per quadrant, nodes
+    Lv1 → maxLevel, keys 1-4 buy the next node of each branch (key badge next
+    to it), Esc / E skip. One shared price, `SHOP.upgradeCost` (`baseCost ×
+    costGrowth ^ upgradesOwned`), replaces the per-option costs. Fires
+    `shop-refused` { id, cost, coins } when too poor. TEMP keys 1-4 in
+    `main.js` are off while it is open.
   - The player and enemies can't overlap the golem: `base.solidRect()` is
     its visible body (`TOWER.body`).
 - **Tower is an enemy-family target** (Mickael): the tower gets `hp()` and is
