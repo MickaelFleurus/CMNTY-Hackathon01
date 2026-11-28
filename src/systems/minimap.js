@@ -10,12 +10,14 @@
 //   - enemies    small red dots, bosses bigger (dots outside the map are skipped)
 //   - portal     violet dot (during the break, portal.js)
 //   - bonus      yellow dot for a rare bonus drop on the ground (bonus.js)
+//   - chests     brown squares, golem chests pulsing gold stars (chests.js);
+//                stuck to the map edge when far. Hidden treasures never show.
 //
 // Hidden while the run is over. Tuning in MINIMAP (config.js).
 //
 // Contract (no imports between systems): reads objects tagged "player",
 // "base" (base.solidRect(), base.awake, hp()), "enemy" (behavior "siege" =
-// boss, dead), "portal", "bonus". Listens "run-over".
+// boss, dead), "portal", "bonus", "chest" (golemChest, opened). Listens "run-over".
 import { MINIMAP as CFG } from "../config.js";
 
 export function startMinimap() {
@@ -83,6 +85,24 @@ export function startMinimap() {
           if (inside(m)) drawCircle({ pos: m, radius: 3.5, color: rgb(255, 230, 90) });
         }
 
+        // chests (chests.js): shown even when far, stuck to the edge like the
+        // golem, so they work as a compass too. Hidden treasures never show.
+        for (const o of get("chest")) {
+          if (o.opened) continue;
+          let m = toMap(o.pos);
+          const far = !inside(m);
+          if (far) m = clampToEdge(c, m, half - 6);
+          if (o.golemChest) {
+            const s = 6 + 1.5 * Math.sin(clock * 6);
+            drawStar(m, s + 1.5, rgb(20, 14, 28));
+            drawStar(m, s, rgb(255, 215, 120));
+          } else {
+            const s = far ? 6 : 7;
+            drawRect({ pos: m, width: s + 2, height: s + 2, anchor: "center", color: rgb(20, 14, 28) });
+            drawRect({ pos: m, width: s, height: s, anchor: "center", color: rgb(200, 140, 70) });
+          }
+        }
+
         // golem: gold diamond, clamped to the edge when far (compass)
         const b = get("base")[0];
         if (b) {
@@ -116,4 +136,14 @@ function clampToEdge(c, m, half) {
 
 function drawDiamond(at, s, col) {
   drawPolygon({ pts: [at.add(0, -s), at.add(s, 0), at.add(0, s), at.add(-s, 0)], color: col });
+}
+
+function drawStar(at, s, col) {
+  const pts = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? s : s * 0.45;
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    pts.push(at.add(Math.cos(a) * r, Math.sin(a) * r));
+  }
+  drawPolygon({ pts, color: col });
 }

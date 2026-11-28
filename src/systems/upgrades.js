@@ -105,16 +105,28 @@ export function initUpgrades() {
   });
   // a level up earned right before dying waits for the respawn
   getTreeRoot().on("player-respawn", openPending);
+  // a free card from a chest (chests.js): pick 1 of 3, the level doesn't change
+  getTreeRoot().on("free-level-up-card", () => {
+    pending += 1;
+    openPending();
+  });
+  // another screen held the pause (golem style pick, golem chest): try again
+  getTreeRoot().on("golem-style-pick", () => queueMicrotask(openPending));
+  getTreeRoot().on("golem-chest-closed", () => queueMicrotask(openPending));
 }
 
 function openPending() {
   if (pending > 0 && !menuOpen && canOpenMenu()) openMenu();
 }
 
+// Other paused screens: never open on top of them (they own getTreeRoot().paused)
+const OTHER_SCREENS = ["golem-style-ui", "golem-chest-ui"];
+
 // no level up screen while dead (respawn.js), after the run is over
-// (runstate.js) or while the shop is open
+// (runstate.js), while the shop is open or another screen holds the pause
 function canOpenMenu() {
   const p = get("player")[0];
+  if (OTHER_SCREENS.some((tag) => get(tag).length > 0)) return false;
   return !!p && !p.down && !p.frozen && !shopOpen;
 }
 

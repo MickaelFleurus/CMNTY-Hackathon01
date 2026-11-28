@@ -273,6 +273,18 @@ export function makeShop() {
 
   getTreeRoot().on("shop-open", open);
 
+  // Free golem upgrade (a rare chest / treasure reward, chests.js): the next
+  // node of a random branch that isn't maxed, at no cost and without raising
+  // upgradesOwned (docs → "Chests (visible)").
+  getTreeRoot().on("golem-upgrade-free", () => {
+    const open = SHOP.options.filter((o) => (levels[o.id] ?? 0) < o.maxLevel);
+    if (!open.length) return;
+    const opt = choose(open);
+    levels[opt.id] = (levels[opt.id] ?? 0) + 1;
+    getTreeRoot().trigger("shop-pick", { id: opt.id, quadrant: opt.quadrant, level: levels[opt.id], params: opt.params, free: true });
+    getTreeRoot().trigger("golem-upgraded-free", { id: opt.id, name: opt.name, level: levels[opt.id] });
+  });
+
   // Skip without buying: SHOP.skipKeys or the Skip button. The cycle
   // director starts the next wave on shop-close, as after a pick.
   onKeyPress(SHOP.skipKeys, () => ui && close());
