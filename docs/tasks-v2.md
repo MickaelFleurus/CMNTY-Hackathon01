@@ -48,10 +48,13 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     its visible body (`TOWER.body`).
 - **Tower is an enemy-family target** (Mickael): the tower gets `hp()` and is
   targeted via the `"tower"` tag. It is **not hit per attack**: its HP
-  **drains** every frame while enemies touch its body, by
-  `ENEMY.towerDrain.perDamage` × the sum of the touching enemies' `damage`
-  HP/s (`enemies.js`, via `tower.hurt(n)`), so more and stronger enemies
-  drain it faster. `damage-taken { kind: "tower" }` reports the drained
+  **drains** every frame while enemies touch its body, **in steps**
+  (`enemies.js`, via `tower.hurt(n)`): each touching enemy is worth
+  `pressure` points (`ENEMY_TYPES[].pressure`: zombie / bat 1, crystal
+  golem 4, +1 per color tier; boss 8, 12 from the second boss on). Step =
+  `floor(points / 4) + 1` (0 with nobody on it), drain = step ×
+  `ENEMY.towerDrain.hpPerStep` (2) HP/s. So 1–3 points drain 2 HP/s, 4–7
+  drain 4, 8–11 drain 6, and so on. `damage-taken { kind: "tower" }` reports the drained
   total every `towerDrain.reportInterval` s. `tower.js` pulses a faint red
   tint, faster the faster it drains (`TOWER.drainFlash`).
 - **Base effects are built** (`auras.js`, `regen.js`, `tower.js`) and react to

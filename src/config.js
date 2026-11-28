@@ -16,10 +16,13 @@ export const ENEMY = {
   // their body is within this many px of the box.
   towerContactSlack: 4, // px
   // The golem isn't hit per attack: its HP DRAINS smoothly while enemies
-  // touch it. Each touching enemy drains perDamage x its damage HP per
-  // second, so more and stronger enemies drain it faster (none = no drain).
-  // The drained total is reported every reportInterval s (damage numbers).
-  towerDrain: { perDamage: 1.0, reportInterval: 0.5 },
+  // touch it, in STEPS. Each touching enemy is worth some "points"
+  // (ENEMY_TYPES[].pressure: zombie/bat 1, crystal golem 4, boss 8 → 12,
+  // + perTier per color tier). Points 1-3 = step 1, 4-7 = step 2, 8-11 =
+  // step 3… (one more step every pointsPerStep); drain = step x hpPerStep
+  // HP/s. No enemy on it = no drain. The drained total is reported every
+  // reportInterval s (damage numbers).
+  towerDrain: { pointsPerStep: 4, hpPerStep: 2, reportInterval: 0.5 },
 
   // Each enemy chases a random point within this many px of the player, so
   // the overlapping horde fans out a bit instead of stacking on one pixel.
@@ -112,6 +115,7 @@ export const ENEMY = {
 export const ENEMY_TYPES = [
   {
     id: "zombie",
+    pressure: { base: 1, perTier: 1 }, // golem drain points (yellow 2, orange 3…)
     sprite: "Enemy_Zombie.png",
     scale: 2,
     hitRadius: 11, // px, body hit circle (sprite is 32px drawn)
@@ -130,6 +134,7 @@ export const ENEMY_TYPES = [
   {
     // Fast, fragile swarmer: arrives in flocks, weak hits, drops less often.
     id: "bat",
+    pressure: { base: 1, perTier: 1 },
     sprite: "Enemy_Bat.png",
     scale: 2,
     hitRadius: 9,
@@ -168,6 +173,7 @@ export const ENEMY_TYPES = [
     sprite: "Enemy_Crystal_Golem.png",
     scale: 3, // bigger than the rest (48px)
     knockbackResist: 0.5, // heavy: pushed half as far
+    pressure: { base: 4, perTier: 1 },
     hitRadius: 16,
     baseHp: 45, // a lot of HP: 15x a zombie
     baseDamage: 12,
@@ -197,6 +203,7 @@ export const ENEMY_TYPES = [
     id: "boss",
     sheet: "boss",
     knockbackResist: 0.75, // barely moves
+    pressure: { base: 8, fromSecondBoss: 12 }, // golem drain points
     sprites: [
       "Boss_Slime_King.png",
       "Boss_Vampire_Lord.png",
