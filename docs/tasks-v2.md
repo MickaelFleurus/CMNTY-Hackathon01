@@ -76,7 +76,7 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     object `health()` and the `"tower"` tag, and enemies attack it. The pick
     makes it shoot. Keys `hp`, `range`, `fireInterval`, `damage`. A new pick
     levels it up and repairs it. At every `wave-end` the golem gets back
-    `TOWER.waveEndRepair` (half) of the HP it lost during that wave, and
+    `TOWER.waveEndRepair` (10%) of its max HP (never above max), and
     `golem-repaired { amount }` fires. When it's destroyed:
     `getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })`, the
     **only** lose condition once the golem is awake (see below).

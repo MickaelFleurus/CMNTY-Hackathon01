@@ -502,9 +502,9 @@ export const TOWER = {
   fireInterval: { base: 0.8, perLevel: -0.08, min: 0.3 }, // s
   damage: { base: 12, perLevel: 6 },
   projectileSpeed: 420, // px/s
-  // When a wave ends, the golem gets back this fraction of the HP it lost
-  // during that wave (lost 80 → +40). Never above its max HP.
-  waveEndRepair: 0.5,
+  // When a wave ends, the golem gets back this fraction of its MAX HP
+  // (200 max → +20). Never above its max HP.
+  waveEndRepair: 0.1,
   // Faint red pulse while its HP drains: pulse speed follows the drain rate
   // (minHz + hzPerHp x HP/s, capped at maxHz: 2 HP/s → 3 Hz, 6 → 4 Hz,
   // 10 → 5 Hz); at the peak of a pulse the golem's green/blue are lowered by

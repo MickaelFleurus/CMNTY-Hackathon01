@@ -75,10 +75,11 @@ must protect - it becomes your life total.
   8–11 drain 6… No enemy on it means no drain. A faint red pulse on the
   golem speeds up with the drain, so the player can read the pressure at a
   glance.
-- **The golem repairs between waves.** When a wave ends, the golem gets
-  back **half of the HP it lost during that wave** (lost 80 → +40, never
-  above its max; tuned in `src/config.js`, `TOWER.waveEndRepair`). Damage
-  still adds up over a run, but one bad wave isn't fatal for the rest of it.
+- **The golem repairs a little between waves.** When a wave ends, the
+  golem gets back **10% of its max HP** (200 max → +20, never above its
+  max; tuned in `src/config.js`, `TOWER.waveEndRepair`). Damage adds up over
+  a run: the free repair only softens it, the paid repair (see "Between waves: repair
+  or upgrade the golem") is how the player really patches it up.
 - **Player death → respawn timer.** When the player dies they are out until
   the respawn timer runs out, then they respawn at the base and go back to
   protecting the tower. While the player is dead, the tower is on its own,

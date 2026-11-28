@@ -34,8 +34,8 @@
 //     sweeps up the statue (TOWER.powerOnTime), the idle anim starts, then
 //     getTreeRoot().trigger("golem-powered") fires (once). base.powered = true.
 //   - listens "golem-swipe" { duration }: rainbow band sweeps up the sprite.
-//   - wave repair: on "wave-end", the golem heals TOWER.waveEndRepair (half)
-//     of the HP it lost since "wave-start" (capped at max HP), with a green
+//   - wave repair: on "wave-end", the golem heals TOWER.waveEndRepair (10%)
+//     of its max HP (capped at max HP), with a green
 //     "+N" above it, and fires getTreeRoot().trigger("golem-repaired", { amount }).
 //   - on destruction: getTreeRoot().trigger("golem-dying") at once (untagged
 //     "tower"), then after the death sequence
@@ -111,17 +111,14 @@ export function startTower() {
     }
   });
 
-  // Wave repair: remember the golem's HP when a wave starts; when it ends,
-  // give back TOWER.waveEndRepair of what was lost during the wave.
-  let hpAtWaveStart = null;
-  getTreeRoot().on("wave-start", () => {
-    hpAtWaveStart = tower?.exists() ? tower.hp() : null;
-  });
+  // Wave repair: when a wave ends, give back TOWER.waveEndRepair of the
+  // golem's max HP (only what's missing, never above max).
   getTreeRoot().on("wave-end", () => {
-    if (over || !tower?.exists() || hpAtWaveStart == null) return;
-    const lost = hpAtWaveStart - tower.hp();
-    hpAtWaveStart = null;
-    const amount = Math.min(Math.round(lost * TOWER.waveEndRepair), tower.maxHP() - tower.hp());
+    if (over || !tower?.exists()) return;
+    const amount = Math.min(
+      Math.round(tower.maxHP() * TOWER.waveEndRepair),
+      Math.floor(tower.maxHP() - tower.hp()),
+    );
     if (amount <= 0) return;
     tower.setHP(tower.hp() + amount);
     repairText(tower, amount);
