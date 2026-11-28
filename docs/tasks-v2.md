@@ -106,8 +106,8 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   fires and the game-over screen opens. Anything that should stop when the
   golem falls must listen to `"golem-dying"`, not only `"run-over"`.
 - **Golem shock wave** (`golem-shockwave.js`, `GOLEM_SHOCKWAVE`): once
-  `base.awake`, it starts when `minContact` (3) enemies touch the golem's
-  body, then fires again each time its `cooldown` (6 s) is over, as long as at least one enemy is still
+  `base.awake`, it starts when `minContact` (3) enemies have touched the
+  golem's body for `windup` (1.5) s in a row, then fires again each time its `cooldown` (6 s) is over, as long as at least one enemy is still
   touching it when the wave is ready (none → back to waiting for 3). Each
   wave fires `enemy-knockback` (over `radius`) plus
   `golem-shockwave { x, y, radius }` and draws an expanding ring. It works

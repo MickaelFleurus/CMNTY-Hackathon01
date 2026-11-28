@@ -8,7 +8,8 @@
 // When it fires (enemies "in contact" = touching the golem's body, the same
 // reach enemies.js uses for contact damage):
 //   - idle: nothing until at least GOLEM_SHOCKWAVE.minContact (3) enemies
-//     are in contact → it fires and turns active;
+//     have been in contact for `windup` s in a row (the count dropping below
+//     3 restarts the wait) → it fires and turns active;
 //   - active: each time the `cooldown` is over it checks again: at least one enemy still in
 //     contact → fires again; none → back to idle (needs minContact again).
 //   The check is made when the wave is ready, not in between: right after a
@@ -28,6 +29,7 @@ import { rectDistance } from "../util/solid.js";
 export function startGolemShockwave() {
   let charge = 0; // s until the next wave can fire
   let active = false; // swarmed: keeps firing while anything is in contact
+  let swarmTime = 0; // s with >= minContact enemies in contact (idle only)
   let over = false;
   getTreeRoot().on("run-over", () => (over = true));
   getTreeRoot().on("golem-dying", () => (over = true));
@@ -38,16 +40,24 @@ export function startGolemShockwave() {
     if (!base?.awake || !base.solidRect || base.hp?.() <= 0) return;
 
     charge = Math.max(0, charge - dt());
-    if (charge > 0) return;
-
     const r = base.solidRect();
     const touching = contactCount(r);
-    if (touching < (active ? 1 : CFG.minContact)) {
-      active = false; // nobody left on it (or not swarmed yet): wait, charged
-      return;
+
+    if (!active) {
+      // first wave of a swarm: minContact enemies on it for `windup` s
+      swarmTime = touching >= CFG.minContact ? swarmTime + dt() : 0;
+      if (swarmTime < CFG.windup || charge > 0) return;
+    } else {
+      if (charge > 0) return;
+      if (touching < 1) {
+        active = false; // nobody left on it: back to waiting for a swarm
+        swarmTime = 0;
+        return;
+      }
     }
 
     active = true;
+    swarmTime = 0;
     charge = CFG.cooldown;
     const at = vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2);
     getTreeRoot().trigger("enemy-knockback", {
