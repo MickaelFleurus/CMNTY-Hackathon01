@@ -146,8 +146,10 @@ export function makeShop() {
           });
           drawText({
             text: compact
-              ? "One upgrade per break. Press 1-4, or tap a glowing node."
-              : "One upgrade per break. Press the key next to a glowing node (1-4), or click it.",
+              ? "Buy as many as your coins allow. Press 1-4, or tap a glowing node."
+              : "Buy as many as your coins allow - each purchase costs more. Press the key next to a glowing node (1-4), or click it.",
+            // replaced "One upgrade per break": multi-buy, priced by
+            // SHOP.upgradeCost.costGrowth so a big break can buy several nodes
             size: 13,
             pos: vec2(width() / 2, Y.title + 68),
             anchor: "top",
@@ -299,7 +301,6 @@ export function makeShop() {
       addCoins(-cost);
       levels[opt.id] = level + 1;
       upgradesOwned += 1;
-      close();
       if (style) {
         getTreeRoot().trigger("golem-skill-pick", {
           style,
