@@ -61,7 +61,7 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     makes it shoot. Keys `hp`, `range`, `fireInterval`, `damage`. A new pick
     levels it up and repairs it. When it's destroyed:
     `getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })`, the
-    **only** lose condition.
+    **only** lose condition once the golem is awake (see below).
   - `level` = how many times that quadrant has been picked (1, 2, 3…).
     The shop sends it.
 - **Player buffs** (written by `auras.js` every frame, `1` outside auras):
@@ -69,8 +69,18 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   weapon must use `damageMult` for its damage and divide its cooldown by
   `attackSpeedMult` (see `weapons.js`). `player.shield` (regen) is absorbed
   before damage by `enemies.js`.
-- **Run over**: `getTreeRoot().on("run-over", ({ reason }) => …)`. A game-over
-  screen should listen to it (`main.js` shows a TEMP text until then).
+- **Golem awakening / wave 1** (`tower.js`, `respawn.js`): during wave 1 the
+  base is an inert statue. `base.awake === false`: it is still solid
+  (`solidRect()`, enemies are pushed out and walk around it), but enemies
+  don't target it or damage it, it has no HP bar and it doesn't shoot. It
+  wakes on the first `"wave-end"`: `base.awake = true` and
+  `getTreeRoot().trigger("golem-awake")` (once). Until then
+  `player.canRespawn === false` and a player death ends the run:
+  `run-over { reason: "player-died" }`, no respawn. **Anything that targets
+  or damages the tower must skip it while `awake === false`.**
+- **Run over**: `getTreeRoot().on("run-over", ({ reason }) => …)`. `reason`
+  is `"tower-destroyed"` (tower.js) or `"player-died"` (respawn.js, wave 1
+  only). The game-over screen (`gameover.js`) shows a line per reason.
 - **Run over freezes the game** (`runstate.js`, `enemies.js`). On `"run-over"`:
   the wave timer stops at its value, nothing spawns, no further wave can
   start (`wave-end` is not fired), and enemies, projectiles, coins and the
@@ -79,7 +89,8 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   `player.frozen` as well as `player.down`**. Input is NOT blocked (the
   scene isn't paused), so the game-over screen's Restart works. It can open
   on `"run-over"` or `"run-frozen"`. The director exposes `isOver()`.
-- **Player death → respawn** (`respawn.js`). Player death is not game over:
+- **Player death → respawn** (`respawn.js`). Once the golem is awake,
+  player death is not game over:
   - `player.down` is true while dead. Movement, weapons, regen and enemies
     all skip a downed player, so **any new player-driven system must check
     it**. The player is hidden and parked at the base.

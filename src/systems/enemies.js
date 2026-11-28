@@ -30,6 +30,8 @@
 //         (tower.solidRect(), else its world-area box) by their full drawn
 //         size, so no sprite hides behind the golem,
 //         and hit it (tower.hurt(n)) when touching its edge.
+//       * A tower with awake === false (the wave-1 statue, tower.js) is
+//         still solid, but is NOT a target and takes no contact damage.
 //       * AURAS: objects tagged "aura" with { radius, enemySlow } slow every
 //         enemy inside (speed *= enemySlow; the strongest aura wins).
 //   - Each enemy also carries `type` (e.g. "zombie", "bat").
@@ -233,7 +235,9 @@ let auras = [];
 // it can be attacked, and its hp fraction. counts = enemies assigned to each.
 const targets = {
   player: { avail: false, x: 0, y: 0, frac: 1 },
-  tower: { avail: false, x: 0, y: 0, frac: 1, obj: null },
+  // solid: a tower body exists (push out / detour); avail: it's awake and
+  // can be targeted and hit (the wave-1 statue is solid but not avail)
+  tower: { avail: false, solid: false, x: 0, y: 0, frac: 1, obj: null },
 };
 const counts = { player: 0, tower: 0 };
 
@@ -254,7 +258,8 @@ function refreshTargets() {
 
   const t = towers.find((o) => o.exists() && typeof o.hp === "function" && o.hp() > 0);
   const T = targets.tower;
-  T.avail = !!t;
+  T.solid = !!t;
+  T.avail = !!t && t.awake !== false;
   T.obj = t ?? null;
   if (t) {
     // the tower's visible body if it defines one (tower.js), else its area box
@@ -414,7 +419,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) 
     let toTarget = goal.add(enemy.chaseOffset).add(enemy.formation.scale(hold));
     // Go around the solid golem instead of pushing into it (unless the golem
     // IS the target: then walking up to it is the point).
-    if (enemy.target !== "tower" && targets.tower.avail) {
+    if (enemy.target !== "tower" && targets.tower.solid) {
       const corner = detourAround(enemy.pos, enemy.pos.add(toTarget), targets.tower.rect, enemy.bodyRadius);
       if (corner) toTarget = vec2(corner.x - enemy.pos.x, corner.y - enemy.pos.y);
     }
@@ -426,7 +431,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) 
     updateMoveAnimSpeed(enemy, stepSpeed);
 
     // The tower is solid: never let an enemy (sprite) overlap it.
-    if (targets.tower.avail) pushOutOfRect(enemy, targets.tower.rect, enemy.bodyRadius);
+    if (targets.tower.solid) pushOutOfRect(enemy, targets.tower.rect, enemy.bodyRadius);
   });
 
   enemy.onHurt(() => {
@@ -961,7 +966,7 @@ export function startEnemyDirector() {
   root.on("enemy-start-wave", (n) => startWave(n ?? wave + 1));
   root.on("enemy-clear", clearEnemies);
 
-  // Run over (tower destroyed): everything enemy-side stops where it is.
+  // Run over (tower destroyed, or player died in wave 1): everything enemy-side stops where it is.
   // The wave timer freezes at its current value, nothing spawns, enemies
   // (and their animations) freeze in place, no more hits or contact damage,
   // and no further wave can start. wave-end is NOT fired.

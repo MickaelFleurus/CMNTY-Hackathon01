@@ -62,6 +62,21 @@ for (const file of files) {
   }
 }
 
+// 3. "run-over" must carry a known reason: gameover.js picks its text from it,
+//    and the wave-1 rule depends on telling "player-died" from "tower-destroyed".
+const RUN_OVER_REASONS = ["tower-destroyed", "player-died"];
+for (const file of files) {
+  const src = stripComments(readFileSync(file, "utf8"));
+  for (const m of src.matchAll(/trigger\s*\(\s*["'`]run-over["'`]\s*(,[^)]*)?\)/g)) {
+    const reason = m[1]?.match(/reason\s*:\s*["'`]([^"'`]+)["'`]/)?.[1];
+    if (!RUN_OVER_REASONS.includes(reason)) {
+      report(file, lineOf(src, m.index),
+        `"run-over" needs { reason } in ${RUN_OVER_REASONS.join(" | ")} ` +
+        "(add new ones here and to gameover.js). See docs/tasks-v2.md → Run over.");
+    }
+  }
+}
+
 if (problems.length) {
   console.error(`✗ contract check failed (${problems.length}):\n  ` + problems.join("\n  "));
   process.exit(1);

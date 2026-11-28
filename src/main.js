@@ -161,6 +161,8 @@ debugLabel.onUpdate(() => {
   const /** @type {any} */ respawnState = player;
   const respawn = respawnState.down
     ? `DEAD - respawn in ${respawnState.respawnIn.toFixed(1)}s`
+    : respawnState.canRespawn === false
+    ? "next death: run over (golem asleep)"
     : `next death: ${respawnState.nextRespawn}s respawn`;
   debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}` +
     `\ntargeting: player ${tc.player} · tower ${tc.tower} · ${respawn}`;

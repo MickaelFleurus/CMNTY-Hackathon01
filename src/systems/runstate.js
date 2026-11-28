@@ -1,4 +1,4 @@
-// End of run: when the tower falls ("run-over"), the game stops behind the
+// End of run: when the tower falls or the player dies in wave 1 ("run-over"), the game stops behind the
 // game-over screen (docs/game-design-v2.md → "Game over screen").
 //
 // Freezes gameplay WITHOUT pausing the whole scene, so keyboard / mouse /

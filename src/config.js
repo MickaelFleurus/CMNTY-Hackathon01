@@ -444,7 +444,8 @@ export const REGEN = {
   shieldDuration: 3, // s
 };
 
-// The base IS the tower (docs/game-design-v2.md): it always has HP, enemies
+// The base IS the tower (docs/game-design-v2.md): it always has HP; from the
+// end of wave 1 (golem awake, tower.js) enemies
 // attack it, and when it's destroyed the run is over ("run-over"). The
 // active-offense pick makes it shoot; each further pick levels it up.
 // HP uses the tower level = picks + 1 (unpicked base: 200 hp, 1 pick: 275…);
