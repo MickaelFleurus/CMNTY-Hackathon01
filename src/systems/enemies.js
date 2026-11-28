@@ -822,6 +822,9 @@ function auraSlowAt(x, y) {
  * and absorbed first by the regen shield (player.shield).
  */
 function damagePlayer(player, amount) {
+  if (player.invulnFor > 0) return;
+  // any hit (even one the shield soaks up) starts the invulnerability window
+  player.invulnFor = CFG.player.invulnTime ?? 0;
   let dmg = amount * (player.buffs?.damageTaken ?? 1);
   if (player.shield > 0) {
     const absorbed = Math.min(player.shield, dmg);
@@ -849,6 +852,9 @@ function resolveContact(target, fallbackRadius, onHit) {
 function resolvePlayerContact() {
   const player = getPlayer();
   if (!player || typeof player.hurt !== "function" || player.down) return;
+  // invulnerable (invuln.js): enemies don't even swing, so they keep their
+  // attack cooldown ready for when the window ends
+  if (player.invulnFor > 0) return;
   resolveContact(player, ENEMY.defaultPlayerRadius, (dmg) => damagePlayer(player, dmg));
 }
 

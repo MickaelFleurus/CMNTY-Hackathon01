@@ -223,6 +223,13 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   Any new weapon should apply both, and skip firing while `player.down`,
   `player.frozen` or `player.attackDisabled`.
   Cards are announced as `player.trigger("upgrade", { id, level })`.
+- **Player invulnerability** (`invuln.js`): `player.invulnFor` = seconds the
+  player can't be hit (0 = can be hit). `enemies.js` sets it to
+  `CFG.player.invulnTime` (1 s) on every enemy hit and ignores contact while
+  it's > 0; a respawn gives `CFG.player.respawnInvulnTime` (2 s). The player
+  blinks with `opacity` meanwhile (never `hidden`, which means dead).
+  **Anything new that damages the player must skip it while
+  `player.invulnFor > 0`, and set it after a hit.**
 - **Tags added in wave 2**: `"base"`, `"portal"`, `"tower"`, `"aura"`.
   Existing wave-1 tags (`"player"`, `"enemy"`, `"projectile"`, `"xp-gem"`)
   unchanged.
