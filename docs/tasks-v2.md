@@ -34,6 +34,9 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     `golem-swipe { duration: CYCLE.swipeTime }` (a rainbow band sweeps up the
     golem, `tower.js`), then `"break"`. `portal` is true when the player is
     far from the golem (> `CYCLE.portalMinDistance`) when the break starts.
+  - **Guide arrow** (`guide-arrow.js`): during `"break"`, if the nearest of
+    the golem (shop) and the portal is off-screen, an arrow at the screen
+    edge points at it (gold "SHOP" / violet "PORTAL", `GUIDE_ARROW`).
   - **Portal** (`portal.js`): spawns next to the player on `"break"` with
     `portal: true` and despawns on any other phase. Walking in fires
     `portal-enter`, and the cycle director drops the player just below the
