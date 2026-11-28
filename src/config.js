@@ -751,6 +751,9 @@ export const HUD = {
   hpBarWidth: 40, // px, drawn under the player
   hpBarHeight: 5,
   hpBarOffset: 22, // px below the player's center
+  orb: { x: 70, y: 70, r: 46 }, // HP orb: center x from the left, y from the BOTTOM, radius
+  slot: { size: 48, gap: 8, weaponSlots: 4, statSize: 26 }, // weapon slots + stat icons next to the orb
+  counters: { y: 60 }, // coins / kills, top right (below the dev switch label)
 };
 
 // ---------------------------------------------------------------------------
