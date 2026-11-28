@@ -27,10 +27,16 @@
 //   - the UI root is tagged "shop-ui" (pause.js won't pause over it)
 //   - new: getTreeRoot().trigger("shop-refused", { id, cost, coins }) when the
 //     player tries to buy without enough coins (sound list: "purchase refused")
+//   - new: style-gated skill tree - the shop listens "golem-style-pick" and
+//     shows the picked style's skill branches (golem-skills.js getGolemSkills)
+//     instead of the generic 2x2 quadrant tree; buying fires
+//     "golem-skill-pick" { style, id, level, params }. Before any pick (the
+//     statue phase) the tree shows a "the golem wakes soon" empty state.
 //   - Enemies are cleared and the next wave starts by the cycle director
 //     when it hears "shop-close".
 import { SHOP } from "../config.js";
 import { getCoins, addCoins } from "./base.js";
+import { getGolemSkills } from "./golem-skills.js";
 import { isFocusClick } from "../util/focusClick.js";
 
 let spritesLoaded = false;
@@ -47,21 +53,26 @@ export function loadShopSprites() {
   }
 }
 
-// Branch order = key order (1-4) and left-to-right columns.
-const BRANCHES = [
-  { quadrant: "passive-defense", label: "PASSIVE · DEFENSE", color: [205, 215, 235] },
-  { quadrant: "passive-offense", label: "PASSIVE · OFFENSE", color: [240, 140, 125] },
-  { quadrant: "active-defense", label: "ACTIVE · DEFENSE", color: [245, 245, 250] },
-  { quadrant: "active-offense", label: "ACTIVE · OFFENSE", color: [240, 70, 60] },
-];
 const DARK = [20, 14, 28];
 const GOLD = [255, 220, 90];
+// Skill-branch colors per golem style (art direction: defense white/gray,
+// offense red - see the styles' config sections).
+const STYLE_COLOR = {
+  guardian: [200, 212, 230],
+  warden: [170, 200, 235],
+  berserker: [240, 70, 60],
+};
+// Header shown above the tree before any style is picked.
+const EMPTY_HINT = "The golem wakes soon - pick its style first.";
+const STYLE_NAME = { guardian: "GUARDIAN", warden: "WARDEN", berserker: "BERSERKER" };
 
 export function makeShop() {
   // levels: purchases per option id, across the whole run
   const levels = {};
   let upgradesOwned = 0;
   let ui = null;
+  let style = null; // picked golem style, from "golem-style-pick"
+  getTreeRoot().on("golem-style-pick", ({ style: s } = {}) => (style = s));
 
   const costNow = () => {
     const c = SHOP.upgradeCost;
@@ -74,11 +85,15 @@ export function makeShop() {
 
   function open() {
     if (ui) return;
-    const branches = BRANCHES.map((b, i) => ({
-      ...b,
+    // Style-gated tree: show the picked style's skill branches, or the
+    // "wakes soon" empty state before any pick (statue phase).
+    const skills = getGolemSkills(style);
+    const branches = (skills ?? []).map((opt, i) => ({
       key: String(i + 1),
-      opt: SHOP.options.find((o) => o.quadrant === b.quadrant),
-    })).filter((b) => b.opt);
+      label: "STYLE · " + style.toUpperCase(),
+      color: STYLE_COLOR[style] ?? STYLE_COLOR.berserker,
+      opt,
+    }));
 
     let clock = 0;
     let hover = null; // branch under the mouse, or "skip"
@@ -139,6 +154,15 @@ export function makeShop() {
             color: rgb(150, 150, 170),
           });
 
+          if (branches.length === 0) {
+            drawText({
+              text: EMPTY_HINT,
+              size: 20,
+              pos: vec2(width() / 2, height() / 2 - 40),
+              anchor: "center",
+              color: rgb(200, 200, 220),
+            });
+          }
           branches.forEach((b, i) => drawBranch(b, i));
           drawSkip();
         },
@@ -169,17 +193,18 @@ export function makeShop() {
       const lvText = max ? "MAX" : `Lv ${lvl} / ${b.opt.maxLevel}`;
       const lvCol = max ? rgb(...GOLD) : rgb(180, 180, 200);
       const desc = b.opt.desc.replace(/\n/g, " ");
+      const label = style ? "STYLE · " + (STYLE_NAME[style] ?? style) : b.label;
       if (compact) {
         const cx = x + colW / 2;
         if (getSprite(b.opt.icon)) drawSprite({ sprite: b.opt.icon, pos: vec2(cx, Y.header + 24), anchor: "center", scale: 2.2 });
         drawText({ text: b.opt.name, size: 15, pos: vec2(cx, Y.header + 46), anchor: "top", color: col });
-        drawText({ text: b.label, size: 9, pos: vec2(cx, Y.header + 66), anchor: "top", color: rgb(150, 150, 170) });
+        drawText({ text: label, size: 9, pos: vec2(cx, Y.header + 66), anchor: "top", color: rgb(150, 150, 170) });
         drawText({ text: lvText, size: 11, pos: vec2(cx, Y.header + 80), anchor: "top", color: lvCol });
         drawText({ text: desc, size: 10, width: colW - 14, align: "center", pos: vec2(cx, Y.header + 98), anchor: "top", color: rgb(200, 200, 215) });
       } else {
         if (getSprite(b.opt.icon)) drawSprite({ sprite: b.opt.icon, pos: vec2(x + 30, Y.header + 30), anchor: "center", scale: 2.5 });
         drawText({ text: b.opt.name, size: 20, pos: vec2(x + 56, Y.header + 14), color: col });
-        drawText({ text: b.label, size: 10, pos: vec2(x + 56, Y.header + 38), color: rgb(150, 150, 170) });
+        drawText({ text: label, size: 10, pos: vec2(x + 56, Y.header + 38), color: rgb(150, 150, 170) });
         drawText({ text: desc, size: 12, width: colW - 24, pos: vec2(x + 12, Y.header + 62), color: rgb(200, 200, 215) });
         drawText({ text: lvText, size: 12, pos: vec2(x + colW - 12, Y.header + 38), anchor: "topright", color: lvCol });
       }
@@ -275,12 +300,21 @@ export function makeShop() {
       levels[opt.id] = level + 1;
       upgradesOwned += 1;
       close();
-      getTreeRoot().trigger("shop-pick", {
-        id: opt.id,
-        quadrant: opt.quadrant,
-        level: levels[opt.id],
-        params: opt.params,
-      });
+      if (style) {
+        getTreeRoot().trigger("golem-skill-pick", {
+          style,
+          id: opt.id,
+          level: levels[opt.id],
+          params: opt.params,
+        });
+      } else {
+        getTreeRoot().trigger("shop-pick", {
+          id: opt.id,
+          quadrant: opt.quadrant,
+          level: levels[opt.id],
+          params: opt.params,
+        });
+      }
     }
   }
 
