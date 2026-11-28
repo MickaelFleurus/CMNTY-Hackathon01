@@ -803,3 +803,11 @@ export const BASE_ALERT = {
   arrowHz: 1.5, // arrow pulses per second (doubled in danger)
   bar: { width: 260, height: 14, y: 96, textSize: 12 }, // HUD golem HP bar, top center
 };
+
+// --- Golem style pick screen (src/systems/golem-styles.js, owner Akram) ---
+export const GOLEM_STYLES = {
+  openDelay: 1.2, // s after "golem-awake" before the pick screen appears
+  cardW: 260,
+  cardH: 300,
+  titleColor: [255, 220, 90],
+};
