@@ -123,7 +123,7 @@ export function makeShop() {
       const step = b.opt.maxLevel > 1 ? span / (b.opt.maxLevel - 1) : 0;
       return vec2(colX(branches.indexOf(b)) + colW / 2, Y.nodesBottom - (lvl - 1) * step);
     };
-    const skipRect = { x: width() / 2 - 160, y: Y.skip, w: 320, h: 44 };
+    const skipRect = { x: width() / 2 - 160, y: Y.skip, w: 320, h: 64 }; // taller: two hint lines live inside it
 
     ui = add([
       pos(0, 0),
@@ -261,10 +261,10 @@ export function makeShop() {
         outline: { width: 2, color: rgb(150, 140, 180) },
       });
       const keys = SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ");
-      drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + skipRect.h / 2), anchor: "center" });
-      // Enter always confirms: close the shop like Skip, after the picks
-      // already made. Drawn once next to the skip line so it reads as one hint.
-      drawText({ text: "ENTER: continue", size: 15, pos: vec2(width() / 2, skipRect.y + skipRect.h / 2 + 22), anchor: "center", color: [255, 216, 90] });
+      // Both hint lines sit INSIDE the button (full opacity, nothing bleeds
+      // below its edge - the +22 offset used to poke out of the 44px rect).
+      drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + 20), anchor: "center" });
+      drawText({ text: "ENTER: continue", size: 15, pos: vec2(width() / 2, skipRect.y + 42), anchor: "center", color: [255, 216, 90] });
     }
 
     // input: manual hit tests (the game is time-scaled to 0 behind the shop)
