@@ -13,7 +13,7 @@ import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
 import { initPlank, loadPlankAssets } from "./systems/plank.js";
 import { initAxe } from "./systems/axe.js";
-import { initBoomerang } from "./systems/boomerang.js";
+import { initBoomerang } from "./systems/boom-stick.js";
 import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
