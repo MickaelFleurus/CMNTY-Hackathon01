@@ -80,6 +80,11 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   `player.canRespawn === false` and a player death ends the run:
   `run-over { reason: "player-died" }`, no respawn. **Anything that targets
   or damages the tower must skip it while `awake === false`.**
+  Look: the golem stays a **grey, still statue** (greyscale shader,
+  `animSpeed = 0`) until its power is picked, which for now is the first
+  `"shop-close"` after waking (pick or skip). Then the shader is removed, the idle
+  animation starts, `base.powered = true` and `"golem-powered"` fires once.
+  When the golem style pick lands, it should drive this instead.
 - **Run over**: `getTreeRoot().on("run-over", ({ reason }) => …)`. `reason`
   is `"tower-destroyed"` (tower.js) or `"player-died"` (respawn.js, wave 1
   only). The game-over screen (`gameover.js`) shows a line per reason.
