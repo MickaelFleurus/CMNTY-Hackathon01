@@ -45,6 +45,9 @@
 //       getTreeRoot().trigger("enemy-clear")           despawn every enemy, no drops
 //       getTreeRoot().trigger("enemy-end-wave")        end the running wave now
 //                                                      ("cleared"; dev key, devtools.js)
+//       getTreeRoot().trigger("enemy-freeze", { frozen })  dev freeze (devtools.js):
+//         enemies stand still (anim paused), no contact damage, no spawns,
+//         wave timer stopped. Projectile hits still land.
 //       getTreeRoot().on("wave-start", (n) => …)
 //       getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)
 //         reason: "cleared" = the wave was survived (its timer ran out, or
@@ -241,6 +244,9 @@ function markGone(enemy) {
   if (live.delete(enemy)) liveByType.set(enemy.type, liveByType.get(enemy.type) - 1);
 }
 
+// Dev freeze ("enemy-freeze", devtools.js): read by every enemy's update.
+let devFrozen = false;
+
 // Towers and auras, refreshed once per frame by the director (few objects).
 let towers = [];
 let auras = [];
@@ -385,6 +391,11 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) 
 
   enemy.onUpdate(() => {
     if (enemy.dead) return;
+    if (devFrozen) {
+      // stand still; keep a hit / death anim readable, pause the walk cycle
+      if (enemy.curAnim() === "move") enemy.animSpeed = 0;
+      return;
+    }
     enemy.attackTimer = Math.max(0, enemy.attackTimer - dt());
 
     const player = getPlayer();
@@ -1055,6 +1066,7 @@ export function startEnemyDirector() {
   root.on("enemy-trigger", fireEnemyTrigger);
   root.on("enemy-trigger-clear", clearEnemyTrigger);
   root.on("enemy-start-wave", (n) => startWave(n ?? wave + 1));
+  root.on("enemy-freeze", ({ frozen } = {}) => (devFrozen = !!frozen));
   root.on("enemy-end-wave", () => {
     if (inWave && !over && !golemDown) endWave("cleared");
   });
@@ -1088,6 +1100,7 @@ export function startEnemyDirector() {
     buildGrid();
     separateEnemies();
     resolveProjectileHits();
+    if (devFrozen) return; // dev freeze: hits only - no contact, spawns or wave timer
     resolvePlayerContact();
     resolveTowerContact();
     if (!inWave) return;

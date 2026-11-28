@@ -5,6 +5,10 @@
 //   N              end the running wave now, as if survived (DEV.endWaveKey):
 //                  fires "enemy-end-wave" (enemies.js) → the normal wave-end
 //                  sequence (pouf, golem swipe, shop circle)
+//   F              toggle an enemy freeze (DEV.freezeEnemiesKey): fires
+//                  "enemy-freeze" { frozen } (enemies.js). Enemies stand still
+//                  (anim paused), deal no contact damage, nothing spawns and
+//                  the wave timer stops; they can still be shot and killed.
 //   ?noattack      URL param: start with the player's attack off
 //                  (e.g. http://localhost:5173/?noattack)
 //
@@ -22,6 +26,14 @@ export function startDevTools(player) {
     if (getTreeRoot().paused || debug.timeScale === 0) return; // level-up / shop open
     getTreeRoot().trigger("enemy-end-wave");
     console.log("[dev] wave ended early");
+  });
+
+  let enemiesFrozen = false;
+  onKeyPress(DEV.freezeEnemiesKey, () => {
+    if (getTreeRoot().paused || debug.timeScale === 0) return; // level-up / shop open
+    enemiesFrozen = !enemiesFrozen;
+    getTreeRoot().trigger("enemy-freeze", { frozen: enemiesFrozen });
+    console.log(`[dev] enemies ${enemiesFrozen ? "FROZEN" : "unfrozen"}`);
   });
 
   onKeyPress(DEV.toggleAttackKey, () => {
@@ -58,8 +70,9 @@ export function startDevTools(player) {
     },
   ]);
   label.onUpdate(() => {
-    label.text = player.attackDisabled
-      ? `DEV: player attack OFF (${DEV.toggleAttackKey.toUpperCase()})`
-      : "";
+    const lines = [];
+    if (player.attackDisabled) lines.push(`DEV: player attack OFF (${DEV.toggleAttackKey.toUpperCase()})`);
+    if (enemiesFrozen) lines.push(`DEV: enemies FROZEN (${DEV.freezeEnemiesKey.toUpperCase()})`);
+    label.text = lines.join("\n");
   });
 }
