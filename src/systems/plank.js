@@ -79,7 +79,7 @@ export function initPlank(player) {
 
 /**
  * "3, 2, 1, GO!" popping just below the player while the first poke waits
- * (below, because the run starts right under the golem and its BASE label).
+ * (below, because the run starts right under the golem).
  * Runs on dt(), so it pauses with the game (level up, shop, pause).
  */
 function startCountdown(player, secs) {

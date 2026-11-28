@@ -80,13 +80,6 @@ export function makeBase() {
     "base",
   ]);
 
-  base.add([
-    text("BASE", { size: 12 }),
-    anchor("bot"),
-    pos(0, 2),
-    opacity(0.8),
-  ]);
-
   return base;
 }
 
