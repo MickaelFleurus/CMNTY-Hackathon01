@@ -73,21 +73,36 @@ function open({ reason, secs, wave, kills, coins }) {
   if (bestLine) {
     add([text(bestLine, { align: "center", size: 22, width: width() }), pos(0, height() * 0.72), fixed(), z(1000), color(240, 200, 80)]);
   }
-  add([text("press SPACE to try again", { align: "center", size: 28, width: width() }), pos(0, height() * 0.8), fixed(), z(1000)]);
-  add([text("S: stats", { align: "center", size: 20, width: width() }), pos(0, height() * 0.88), fixed(), z(1000), color(170, 170, 200)]);
-
   let statsPage = null;
   const toggleStats = () => {
     if (statsPage) {
       statsPage.destroy();
       statsPage = null;
-    } else statsPage = openStatsPage();
+    } else statsPage = openStatsPage(toggleStats);
   };
   const restart = () => location.reload();
+
+  // only the prompts are clickable (not the whole screen)
+  const ui = add([fixed(), z(1000)]);
+  const mainButtons = [
+    button(ui, "press SPACE to try again", 28, vec2(width() / 2, height() * 0.8 + 14), [255, 255, 255], restart),
+    button(ui, "S: stats", 20, vec2(width() / 2, height() * 0.88 + 12), [170, 170, 200], toggleStats),
+  ];
+  const activeButtons = () => (statsPage ? statsPage.buttons : mainButtons);
+  const hovered = () => activeButtons().find((b) => b.hit(mousePos()));
+  onMouseMove(() => {
+    const h = hovered();
+    for (const b of [...mainButtons, ...(statsPage?.buttons ?? [])]) b.setHover(b === h);
+    setCursor(h ? "pointer" : "default");
+  });
+  // not the click that refocused the window: that would restart unseen
+  onMousePress(() => {
+    if (isFocusClick()) return;
+    hovered()?.action();
+  });
+
   onKeyPress("space", restart);
   onKeyPress("enter", restart);
-  // not the click that refocused the window: that would restart unseen
-  onClick(() => !statsPage && !isFocusClick() && restart());
   onKeyPress("s", toggleStats);
   onKeyPress("escape", () => statsPage && toggleStats());
   onKeyPress("c", () => statsPage && copyStats(statsPage));
@@ -149,7 +164,28 @@ function totalLines(t) {
   ];
 }
 
-function openStatsPage() {
+/**
+ * A clickable prompt: text on a pill that lights up under the mouse.
+ * Returns { hit(p), setHover(on), action } - the caller does the hit test.
+ */
+function button(parent, label, size, at, textColor, action) {
+  const w = label.length * size * 0.62 + 36;
+  const h = size + 18;
+  const idle = rgb(120, 110, 160);
+  const lit = rgb(255, 214, 120);
+  const pill = parent.add([rect(w, h, { radius: h / 2 }), pos(at), anchor("center"), color(30, 26, 44), opacity(0.8), outline(2, idle)]);
+  pill.add([text(label, { size }), anchor("center"), color(...textColor)]);
+  return {
+    action,
+    hit: (p) => Math.abs(p.x - at.x) <= w / 2 && Math.abs(p.y - at.y) <= h / 2,
+    setHover: (on) => {
+      pill.outline.color = on ? lit : idle;
+      pill.opacity = on ? 1 : 0.8;
+    },
+  };
+}
+
+function openStatsPage(close) {
   const s = loadStats();
   const page = add([fixed(), z(1100)]);
   page.add([rect(width(), height()), color(14, 12, 22)]);
@@ -161,12 +197,15 @@ function openStatsPage() {
   };
   column(50, "Latest run", runLines(s.latest));
   column(width() / 2 + 20, `All runs (${s.total.runs})`, totalLines(s.total));
-  page.add([
-    text("C: copy stats (JSON)   ·   D: download stats.json   ·   S / Esc: back", { size: 16, align: "center", width: width() }),
-    pos(0, height() - 40),
-    color(170, 170, 200),
-  ]);
-  page.feedback = page.add([text("", { size: 16, align: "center", width: width() }), pos(0, height() - 66), color(120, 220, 140)]);
+  // clickable prompts (keys still work: C, D, S / Esc)
+  const y = height() - 40;
+  const grey = [170, 170, 200];
+  page.buttons = [
+    button(page, "C: copy stats (JSON)", 16, vec2(width() / 2 - 290, y), grey, () => copyStats(page)),
+    button(page, "D: download stats.json", 16, vec2(width() / 2, y), grey, downloadStats),
+    button(page, "S / Esc: back", 16, vec2(width() / 2 + 270, y), grey, close),
+  ];
+  page.feedback = page.add([text("", { size: 16, align: "center", width: width() }), pos(0, height() - 76), color(120, 220, 140)]);
   return page;
 }
 
