@@ -5,22 +5,32 @@
 // seconds. It works whatever the shop picks (the active-offense "attack mode"
 // is separate, in tower.js).
 //
-// The wave only fires when at least one enemy is within the radius; otherwise
-// it stays charged and goes off as soon as one comes close.
+// When it fires (enemies "in contact" = touching the golem's body, the same
+// reach enemies.js uses for contact damage):
+//   - idle: nothing until at least GOLEM_SHOCKWAVE.minContact (3) enemies
+//     are in contact → it fires and turns active;
+//   - active: every `interval` s it checks again: at least one enemy still in
+//     contact → fires again; none → back to idle (needs minContact again).
+//   The check is made when the wave is ready, not in between: right after a
+//   wave the push itself clears the contact for a moment.
 //
 // Contract (no imports between systems):
-//   - reads the object tagged "base": base.awake (tower.js), base.solidRect()
+//   - reads the object tagged "base": base.awake (tower.js), base.solidRect(),
+//     and live enemies (tag "enemy": pos, bodyRadius) for the contact count
 //   - fires getTreeRoot().trigger("enemy-knockback", { x, y, radius, force,
 //     damage }) → enemies.js pushes the enemies
 //   - fires getTreeRoot().trigger("golem-shockwave", { x, y, radius }) for
 //     anyone who wants to react (sound, screen shake…)
 //   - stops on "run-over"; the ring is tagged "fx" (cleared by runstate.js)
-import { GOLEM_SHOCKWAVE as CFG } from "../config.js";
+import { GOLEM_SHOCKWAVE as CFG, ENEMY } from "../config.js";
+import { rectDistance } from "../util/solid.js";
 
 export function startGolemShockwave() {
-  let charge = CFG.interval; // s until the next wave can fire
+  let charge = 0; // s until the next wave can fire
+  let active = false; // swarmed: keeps firing while anything is in contact
   let over = false;
   getTreeRoot().on("run-over", () => (over = true));
+  getTreeRoot().on("golem-dying", () => (over = true));
 
   onUpdate(() => {
     if (over) return;
@@ -31,10 +41,15 @@ export function startGolemShockwave() {
     if (charge > 0) return;
 
     const r = base.solidRect();
-    const at = vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2);
-    if (!enemyWithin(at, CFG.radius)) return; // stay charged
+    const touching = contactCount(r);
+    if (touching < (active ? 1 : CFG.minContact)) {
+      active = false; // nobody left on it (or not swarmed yet): wait, charged
+      return;
+    }
 
+    active = true;
     charge = CFG.interval;
+    const at = vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2);
     getTreeRoot().trigger("enemy-knockback", {
       x: at.x,
       y: at.y,
@@ -48,14 +63,14 @@ export function startGolemShockwave() {
   });
 }
 
-function enemyWithin(at, radius) {
-  const r2 = radius * radius;
+/** Enemies touching the golem's body (enemies.js contact-damage reach). */
+function contactCount(rect) {
+  let n = 0;
   for (const e of get("enemy")) {
-    const dx = e.pos.x - at.x;
-    const dy = e.pos.y - at.y;
-    if (dx * dx + dy * dy <= r2) return true;
+    const reach = (e.bodyRadius ?? 16) + ENEMY.towerContactSlack;
+    if (rectDistance(e.pos.x, e.pos.y, rect).d <= reach) n += 1;
   }
-  return false;
+  return n;
 }
 
 /** Expanding, fading ring from the golem's center out to the wave radius. */

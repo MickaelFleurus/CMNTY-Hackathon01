@@ -505,13 +505,15 @@ export const TOWER = {
 };
 
 // Golem self-defense (docs/game-design-v2.md → "The golem awakening flow"):
-// once awake, the golem sends a shock wave every `interval` s that flings
-// nearby enemies away, whatever the shop picks (golem-shockwave.js). It only
-// fires when an enemy is within `radius`; otherwise it stays charged.
+// once awake, the golem sends shock waves that fling nearby enemies away,
+// whatever the shop picks (golem-shockwave.js). It starts once minContact
+// enemies touch the golem, then fires every `interval` s for as long as at
+// least one enemy is still touching it at that moment.
 export const GOLEM_SHOCKWAVE = {
   // Playtest (wave 5 horde, player dead, everything on the golem): golem
   // survives ~2x longer with 3 s / 1200 than with no shock wave.
-  interval: 3, // s between waves
+  minContact: 3, // enemies touching the golem before the first wave
+  interval: 3, // s between waves while it's being swarmed
   radius: 170, // px from the golem's center (its body is ~120 px wide)
   force: 1200, // px/s initial push (≈ 240 px travel with ENEMY.knockbackDecay 5)
   damage: 0, // optional damage per wave (0 = pure push)
