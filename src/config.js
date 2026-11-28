@@ -732,3 +732,22 @@ export const DAMAGE_NUMBERS = {
   jitter: 8, // px of horizontal scatter so stacked hits stay readable
   maxPerFrame: 12, // cap: hordes hitting at once must not spawn 100 texts
 };
+
+// ---------------------------------------------------------------------------
+// Base under attack UI (owner: chippe — src/systems/base-alert.js)
+// ---------------------------------------------------------------------------
+export const BASE_ALERT = {
+  attackedFor: 1.5, // s after the last HP loss the golem still counts as "under attack"
+  bannerQuiet: 5, // s the golem must be left alone before the banner shows again
+  bannerTime: 2.5, // s the "BASE UNDER ATTACK!" banner stays up
+  flashTime: 0.3, // s, the HUD bar's white hit flash fades over this
+  dangerRatio: 0.25, // golem HP fraction below which the danger state is on
+  dangerHz: 1.2, // red edge pulses per second
+  dangerEdge: 60, // px, how far the red edge glow reaches inward
+  dangerOpacity: 0.35, // edge glow opacity at the peak of a pulse
+  onScreenMargin: 40, // px: the golem this far inside the screen counts as visible
+  edgeMargin: 80, // px from the screen edge where the arrow sits (like GUIDE_ARROW)
+  arrowSize: 26, // px
+  arrowHz: 1.5, // arrow pulses per second (doubled in danger)
+  bar: { width: 260, height: 14, y: 96, textSize: 12 }, // HUD golem HP bar, top center
+};

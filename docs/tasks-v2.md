@@ -196,6 +196,12 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   When only one target is available, everyone goes for it.
 - **Base**: effects center on the first object tagged `"base"` (`base.js`).
   TEMP keys 1–4 in `main.js` still fire shop picks for testing.
+- **Base under attack UI** (chippe, `base-alert.js`): golem HP bar in the HUD
+  (flashes on hit, respawn countdown next to it while dead), "BASE UNDER
+  ATTACK!" banner (again only after `BASE_ALERT.bannerQuiet` s of quiet),
+  red off-screen arrow while it is hit (not during the break) and a red edge
+  pulse below `BASE_ALERT.dangerRatio`. Fires
+  `getTreeRoot().trigger("base-under-attack", { hp, maxHP })` with each banner.
 - **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
   `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
   It is separate from `player.buffs` (auras, rewritten every frame), so both
