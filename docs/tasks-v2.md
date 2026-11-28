@@ -229,6 +229,21 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   (`SHOP`, `CYCLE`, `AURA`, `REGEN`, `TOWER`, `BOSS`); expect config
   conflicts, rebase before PR.
 
+## Run stats (`run-stats.js`)
+
+- Saved as ONE JSON object in `localStorage["golem-necromancer-stats"]`:
+  `{ version: 1, latest: {…run…}, total: {…all runs…} }`. Counters are plain
+  numbers; per-name counts are flat maps (`kills`, `cards`, `shopPicks`,
+  `pickups`, `bonuses`, `milestones`). Format documented at the top of
+  `run-stats.js`. `window.gameStats` has `get / export / import / reset`.
+- It only **listens** to existing events. If you add something worth
+  counting, fire an event and count it there, don't import run-stats.
+- New root event **`pickup-collected { kind, value }`**: fired by `xp.js`
+  (XP gems, hearts) and `base.js` (coins) when the player collects a ground
+  pickup. Bonus drops already fire `bonus-picked { kind }`.
+- The starter weapon isn't counted as a picked card: `startRunStats()` runs
+  after `grantUpgrade("weapon-plank")` in `main.js`.
+
 ## Sequencing
 
 1 (chippe) and 2 (Akram) start in parallel. 3 depends on the pick-data shape
