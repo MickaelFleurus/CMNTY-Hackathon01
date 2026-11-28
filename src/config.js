@@ -920,19 +920,19 @@ export const SOUND = {
   muteKey: "m", // toggles mute, remembered in the browser
   volume: {
     // frequent: really low
-    plank: 0.1, // every plank poke
-    gun: 0.08, // every pistol bullet
-    axe: 0.08, // whoosh while axes are in the air
+    plank: 0.2, // every plank poke
+    gun: 0.16, // every pistol bullet
+    axe: 0.16, // whoosh while axes are in the air
     collect: 0.1, // XP gems, hearts, coins, bonus drops
     // regular
-    step: 0.3, // one footstep per stride
-    kill: 0.3,
+    step: 0.15, // one footstep per stride
+    kill: 0.15,
     // rare, important cues: a bit above the rest
-    levelUp: 0.25,
-    waveWon: 0.7,
-    gameOver: 0.3, // the run is lost
+    levelUp: 0.15,
+    waveWon: 0.4,
+    gameOver: 0.15, // the run is lost
     // background
-    music: 0.2, // LoopMusic.mp3, looped all run: quiet, under the effects
+    music: 0.30, // LoopMusic.mp3, looped all run: quiet, under the effects
   },
   musicFadeOut: 1.5, // s: the music fades out when the run is lost
   killGap: 0.06, // s: at most one kill sound per gap (bombs, big sweeps)

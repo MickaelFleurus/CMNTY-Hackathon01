@@ -67,7 +67,7 @@ appreciated, not required): see `gfx/Sounds/License*.txt`. `AxeLoop.wav`,
 | `LevelUp.ogg` | player level up |
 | `WaveWon.ogg` | a wave survived |
 | `GameOver.ogg` | the run is lost (`run-over`) |
-| `LoopMusic.mp3` | background music, looped for the whole run at a low volume (`SOUND.volume.music` 0.2), fades out on `run-over` (`SOUND.musicFadeOut`) |
+| `LoopMusic.mp3` | background music, looped for the whole run at a low volume (`SOUND.volume.music`), fades out on `run-over` (`SOUND.musicFadeOut`) |
 
 No sound yet for: Knife, Boomerang, golem shock wave / hits, boss, shop.
 
