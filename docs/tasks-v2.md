@@ -17,6 +17,7 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
 | 2 | **Akram** | `akram/base-shop` | **Base entity + shop scene + coins** - a base at a fixed home position on the map, portal spawns when a wave ends and teleports the player home, shop UI with the 2×2 grid (passive-defense / passive-offense / active-defense / active-offense), one pick per cycle, coins as currency. Shop **picks are data**: each option declares its effect type + parameters; applying the effect is the other systems' job | `src/systems/base.js`, `src/systems/shop.js`, `src/systems/portal.js`, `src/config.js` (SHOP section: option defs, coin economy) | aura effects, regen, tower behavior, enemy waves (agree the pick-data shape with Mickael/chippe first - see contract below) |
 | 3 | **Mickael** | `mickael/cycle-director` | **Cycle director + aura/regen/tower effects** - wraps the wave director into the v2 cycle (wave → clear → portal event → shop → next wave, harder each cycle); implements the three effect systems the shop picks select: passive auras (growing-radius buff zones read from the player's pick), active-defense HP-regen tick (in-range heal every X s), active-offense tethered tower (targetable by enemies - needs his own grid-hit path extended to `hp` on the tower; tower death = run over) | `src/systems/cycle.js`, `src/systems/auras.js`, `src/systems/regen.js`, `src/systems/tower.js`, `src/config.js` (CYCLE, AURA, REGEN, TOWER sections) | shop UI, portal visuals, XP gems |
 | 4 | **Mickael** | `mickael/boss` (after #3) | **Boss wave + one gimmick** - end-of-cycle boss spawning near the base, punishes a weak build; pick ONE gimmick for MVP from the v2 doc's candidates (anti-kite siege boss recommended: it sits siegeing the base and ignores the player until provoked) | `src/systems/boss.js`, `src/config.js` (BOSS section) | multiple bosses, phase-counter system |
+| 5 | **unclaimed** (put your name here) | `<name>/sound` | **Sound & music** - one audio system that plays every sound and music track listed in the GDD's "Sound & music" section by **listening to existing game events** (`getTreeRoot().on(...)`), so no other system needs to import it. Volume sliders (music / effects) + mute key, saved in the browser; rate limits and random pitch for frequent sounds; distance-based volume; music crossfade per `cycle-phase`; audio unlocked on first input. Where the GDD says **(new event)**, add the one-line `trigger` in the owning system in a **separate tiny PR** (or ask its owner) | `src/systems/audio.js`, `sfx/` (assets + license files), `src/config.js` (`AUDIO` section), one import in `src/main.js`, a short `docs/assets.md` note on the sound packs | changing gameplay, new game events beyond one-line triggers, composing a full soundtrack (start with placeholder / CC0 tracks) |
 
 ## New contract (agree in PR review before merging #2/#3)
 
@@ -221,6 +222,13 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   Any new weapon should apply both, and skip firing while `player.down`,
   `player.frozen` or `player.attackDisabled`.
   Cards are announced as `player.trigger("upgrade", { id, level })`.
+- **Player invulnerability** (`invuln.js`): `player.invulnFor` = seconds the
+  player can't be hit (0 = can be hit). `enemies.js` sets it to
+  `CFG.player.invulnTime` (1 s) on every enemy hit and ignores contact while
+  it's > 0; a respawn gives `CFG.player.respawnInvulnTime` (2 s). The player
+  blinks with `opacity` meanwhile (never `hidden`, which means dead).
+  **Anything new that damages the player must skip it while
+  `player.invulnFor > 0`, and set it after a hit.**
 - **Tags added in wave 2**: `"base"`, `"portal"`, `"tower"`, `"aura"`.
   Existing wave-1 tags (`"player"`, `"enemy"`, `"projectile"`, `"xp-gem"`)
   unchanged.
@@ -247,4 +255,4 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
 
 1 (chippe) and 2 (Akram) start in parallel. 3 depends on the pick-data shape
 only (contract above), so Mickael can start it against the contract without
-waiting for #2's UI. 4 waits for 3.
+waiting for #2's UI. 4 waits for 3. 5 (sound) has no dependency and can start any time.

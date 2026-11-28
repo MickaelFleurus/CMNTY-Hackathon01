@@ -7,17 +7,17 @@ import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 import { loadXpAssets, initXp } from "./systems/xp.js";
 import { loadUpgradeAssets, initUpgrades, grantUpgrade } from "./systems/upgrades.js";
-import { startRunStats } from "./systems/run-stats.js";
 import { initHud } from "./systems/hud.js";
 import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
 import { initPlank, loadPlankAssets } from "./systems/plank.js";
 import { initAxe } from "./systems/axe.js";
-import { initBoomerang } from "./systems/boomerang.js";
+import { initBoomerang } from "./systems/boom-stick.js";
 import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
 import { startRespawn } from "./systems/respawn.js";
+import { startInvuln } from "./systems/invuln.js";
 import { startRunState } from "./systems/runstate.js";
 import { startDevTools } from "./systems/devtools.js";
 import { startCycle } from "./systems/cycle.js";
@@ -26,10 +26,13 @@ import { startPause } from "./systems/pause.js";
 import { startDamageNumbers } from "./systems/damage-numbers.js";
 import { startGolemShockwave } from "./systems/golem-shockwave.js";
 import { startGolemStyles } from "./systems/golem-styles.js";
+import { startGolemGuardian } from "./systems/golem-guardian.js";
+import { startGolemBerserker } from "./systems/golem-berserker.js";
 import { startGuideArrow } from "./systems/guide-arrow.js";
 import { startMinimap } from "./systems/minimap.js";
 import { loadBonusAssets, startBonusDrops } from "./systems/bonus.js";
 import { startBaseAlert } from "./systems/base-alert.js";
+import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
 import { loadShopSprites, makeShop } from "./systems/shop.js";
@@ -102,12 +105,12 @@ initPlank(player);
 initAxe(player);
 initBoomerang(player);
 grantUpgrade("weapon-plank"); // the starter weapon (Plank Lv1)
-startRunStats(player); // after the starter grant: it isn't a "picked" card
-startEnemyDirector();
+const enemyDirector = startEnemyDirector();
 startAuras();
 startRegen();
 startTower();
 startRespawn(player);
+startInvuln(player);
 // game-over listens for run-over BEFORE startRunState: runstate fires
 // "run-frozen" synchronously, so the stats snapshot must exist by then.
 startGameOver();
@@ -116,6 +119,8 @@ startPause();
 startDamageNumbers();
 startGolemShockwave();
 startGolemStyles();
+startGolemGuardian();
+startGolemBerserker();
 startGuideArrow();
 startMinimap();
 startBonusDrops(player);
@@ -153,6 +158,14 @@ getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
   console.log(`wave ${wave} ended (${reason}), ${kills} kills`);
 });
 
+add([
+  text("Wave 1 - WASD/arrows to move\n(your plank pokes on its own)", {
+    size: 20,
+  }),
+  pos(16, 16),
+  fixed(),
+]);
+
 // TEMP debug: P teleports home. C grants 50 coins.
 onKeyPress("c", () => {
   if (!gamePaused()) addCoins(50);
@@ -163,3 +176,33 @@ onKeyPress("p", () => {
   if (p) p.pos = vec2(SHOP.home.x + 80, SHOP.home.y);
 });
 
+const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
+debugLabel.onUpdate(() => {
+  const types = enemyDirector.activeTypes().map((t) => `${t} ${enemyDirector.alive(t)}`);
+  const d = enemyDirector;
+  const status = d.isOver()
+    ? `RUN OVER on wave ${d.wave()} · timer stopped at ${Math.ceil(d.timeLeft())}s`
+    : d.inWave()
+    ? d.isBossWave()
+      ? `BOSS WAVE ${d.wave()} · ${d.alive()} alive`
+      : `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.alive()} alive`
+    : cycle.phase() === "shop"
+    ? `wave ${d.wave()} cleared - shop open`
+    : cycle.phase() === "starting"
+    ? `wave ${d.wave() + 1} incoming…`
+    : cycle.phase() === "aftermath"
+    ? `wave ${d.wave()} survived…`
+    : cycle.phase() === "over"
+    ? `the golem has fallen…`
+    : `wave ${d.wave()} over - go back to the golem for the shop`;
+  const tc = targetCounts();
+  // down/respawnIn/nextRespawn are assigned dynamically by respawn.js
+  const /** @type {any} */ respawnState = player;
+  const respawn = respawnState.down
+    ? `DEAD - respawn in ${respawnState.respawnIn.toFixed(1)}s`
+    : respawnState.canRespawn === false
+    ? "next death: run over (golem asleep)"
+    : `next death: ${respawnState.nextRespawn}s respawn`;
+  debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}` +
+    `\ntargeting: player ${tc.player} · tower ${tc.tower} · ${respawn}`;
+});

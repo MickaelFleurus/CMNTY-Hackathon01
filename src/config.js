@@ -321,6 +321,12 @@ export const CFG = {
   player: {
     speed: 220, // px/s
     maxHp: 60, // was 100: more fragile, so positioning matters
+    // After an enemy hit the player can't be hit again for this long, and
+    // blinks (src/systems/invuln.js). Stops a crowd from landing every hit
+    // in the same instant.
+    invulnTime: 1.0, // s
+    respawnInvulnTime: 2.0, // s of protection right after a respawn
+    invulnBlinkHz: 10, // blinks per second while invulnerable
     scale: 2, // sprite scale (16px art -> 32px on screen)
     // Draw layer: above every world object (ground -10, auras -5, enemies 0,
     // coins 4, base 5, portal/projectiles 6) so the player is never hidden,
@@ -566,6 +572,36 @@ export const GOLEM_SHOCKWAVE = {
   color: [150, 220, 255], // ring color (the golem's crystal blue)
 };
 
+// Berserker golem style (docs/game-design-v2.md → "The golem awakening
+// flow" → Berserker: offense-centered, "fights mobs itself - swipes,
+// charges, kills for you"). Picked via the "golem-style-pick" event, run
+// by golem-berserker.js: a damaging AOE swipe around the golem and a ranged
+// charge strike at the nearest pack, both through the enemies.js
+// "enemy-knockback" contract (damage + knockback). The built-in
+// self-defense shock wave (GOLEM_SHOCKWAVE) still runs on top of it.
+export const GOLEM_BERSERKER = {
+  // Swipe: damaging knockback wave centered on the golem.
+  swipeInterval: 2.5, // s between swipes (fire only when an enemy is in reach)
+  swipeRadius: 190, // px from the golem's center (a bit past GOLEM_SHOCKWAVE.radius)
+  swipeForce: 900, // px/s initial push (less than the pure-defense shock wave)
+  swipeDamage: 10, // damage per swipe at wave 1 (scales with swipeDamageGrowth)
+  swipeColor: [255, 120, 90], // ring color (berserker red)
+  // Charge: strike at the nearest enemy up to chargeRange px away - the
+  // knockback lands at the strike point, so distant packs get hit too.
+  chargeInterval: 5, // s between charge strikes
+  chargeRange: 420, // px, how far the golem will look for a strike target
+  chargeReach: 240, // px, the strike point at most this far from the golem
+  chargeRadius: 110, // px, AOE radius around the strike point
+  chargeForce: 1100, // px/s initial push
+  chargeDamage: 16, // damage per strike at wave 1
+  chargeColor: [255, 180, 60], // streak + ring color (berserker amber)
+  // Damage scaling: like the enemy side (ENEMY_LEVEL.hpGrowth with 2 levels
+  // per wave), the golem's output has to keep pace with enemy HP or the
+  // style falls off. damage = base x (1 + damageGrowth x (wave - 1)).
+  damageGrowth: 0.35,
+  ringTime: 0.45, // s, ring/streak animation length (as GOLEM_SHOCKWAVE)
+};
+
 // Smart enemy targeting (docs/game-design-v2.md → "Enemy targeting").
 // Enemies pick between the player and the base/tower:
 //   1. focus the clearly weaker one (lower hp / maxHp by at least focusMargin)
@@ -683,7 +719,7 @@ export const AXE = {
   scale: 2.5,
 };
 
-// Boomerang (src/systems/boomerang.js, card "weapon-boomerang"): flies out to
+// Boomerang (src/systems/boom-stick.js, card "weapon-boomerang"): flies out to
 // the nearest enemy (or the facing side), slows down, comes back to the
 // player; it can hit the same enemies again on the way back.
 // Every level: +damagePerLevel. Path alternates: Lv2 +1 boomerang → Lv3
@@ -820,4 +856,20 @@ export const MINIMAP = {
   golemSize: 7, // px, half-diagonal of the golem diamond
   attackedFor: 1.5, // s after the golem's last HP loss it pulses red
   pulseHz: 2, // red pulses per second while under attack
+};
+
+// ---------------------------------------------------------------------------
+// Golem styles (owner: Akram - src/systems/golem-guardian.js)
+// ---------------------------------------------------------------------------
+// Guardian (docs/game-design-v2.md → "The golem awakening flow" → pick 1 of 3
+// golem styles): the defensive, stay-home identity. A protective aura around
+// the golem slows enemies inside, and a shield refreshes while the player
+// roams near it and holds a while after they leave. Picked with the root
+// event "golem-style-pick" { style: "guardian", level?, params? }.
+export const GOLEM_GUARDIAN = {
+  radius: { base: 220, perLevel: 40 }, // px, aura around the golem
+  enemySlow: { base: 0.75, perLevel: -0.05, min: 0.5 }, // enemy speed x inside
+  shield: { base: 15, perLevel: 5 }, // hp absorbed while inside (refreshed)
+  shieldDuration: 6, // s the shield holds after leaving the aura
+  color: [200, 212, 230], // white/gray: defense paths (game-design-v2.md)
 };
