@@ -38,6 +38,8 @@ must protect - it becomes your life total.
    |---|---|---|
    | **Passive** | base emits a **defense aura** (armor/slow/regen aura, growing range per upgrade) | base emits an **offense aura** (buffs your damage/attack speed; stronger the more you invest) |
    | **Active** | base **regens your HP every X s** while you're in range (flesh out: heal tick + brief shield on trigger?) | base **fights for you** (a tower that auto-attacks; stronger than passives) |
+   Coins can also **repair** the golem or **upgrade** it (see "Between
+   waves: repair or upgrade the golem").
 5. **Next wave** - portal out, field wave harder than the last, repeat.
 6. **Boss** - a boss eventually spawns **near your base**. If your base (and
    you) aren't strong enough by boss time, you lose - the boss punishes a
@@ -358,6 +360,94 @@ passive/active shop grid, or sit on top of it as a separate layer?
 (Working answer: sit on top - the shop stays generic; the golem style is
 the run's identity pick.)
 
+## Between waves: repair or upgrade the golem
+
+During the break between two waves, at the golem, the player spends coins
+on two things:
+
+- **Repair**: restore golem HP.
+- **Upgrade**: improve the golem's capabilities (the shop picks and,
+  later, the golem style's skill tree).
+
+Both come out of the same coin purse, so every break is a real choice:
+patch up the golem to survive the next wave, or invest to make it stronger
+for the waves after.
+
+### Repair cost
+
+The price depends on **how much damage the golem has taken** and on **the
+current wave**:
+
+```
+repairCost = missingHp × costPerHp × (1 + waveFactor × (wave - 1))
+```
+
+- `missingHp` = max HP − current HP, counted after the free
+  `TOWER.waveEndRepair` (see "Lose condition + player respawn"). The free
+  repair still happens; paid repair is on top of it.
+- Repairing gets **more expensive later in the run**, so neglecting the
+  golem early can't be fixed cheaply at wave 10.
+- The player can repair **partially** (e.g. in 25% steps, or "repair as
+  much as I can afford"), so a short purse still buys something.
+- Example tuning: `costPerHp: 0.2`, `waveFactor: 0.25`. 100 missing HP
+  costs 20 coins at wave 1, and 45 coins at wave 6.
+
+### Upgrade cost
+
+The price depends **only on how many upgrades the golem already has**:
+
+```
+upgradeCost = baseCost × costGrowth ^ upgradesOwned
+```
+
+- `upgradesOwned` counts **every** golem upgrade bought so far in this run,
+  whatever quadrant or branch it was in. The current wave and the golem's
+  damage don't change it.
+- So the fifth upgrade costs the same at wave 5 or at wave 15. Delaying
+  upgrades to save coins doesn't make them cheaper or pricier.
+- Note: the current shop (`SHOP` in `src/config.js`) prices each option on
+  its own (`baseCost`, `costGrowth` per option). This rule replaces that
+  with one shared counter.
+
+Tuning (`costPerHp`, `waveFactor`, repair step size, `baseCost`,
+`costGrowth`) goes in `src/config.js`.
+
+## Chests & hidden treasures
+
+Reasons to leave the golem's side during a wave: rewards scattered around
+the map. Going after them is a risk, because the golem is alone while
+you're away.
+
+### Chests (visible)
+
+- **1-3 chests spawn per wave** at random spots on the map, never too close
+  to the golem. **The farther from the golem, the better the loot.**
+- Look: `Pickup_Chest` sprite. Chests show on the minimap / compass.
+- **Opening**: walk up to it and stay next to it for about **1 s** (a small
+  progress ring). Taking damage doesn't cancel it, but walking away does.
+- Some chests are **guarded**: a small pack of enemies spawns around them.
+- **Contents** (one roll per chest):
+  - a coin bag (`Pickup_Coin_Bag`), scaled with the wave;
+  - a free **level-up card** (pick 1 of 3, like a level-up);
+  - a heart / full player heal;
+  - rare: a free **golem repair** or a free **golem upgrade** (doesn't
+    raise `upgradesOwned`).
+- Unopened chests **vanish at the end of the wave**.
+
+### Hidden treasures (buried)
+
+- **Invisible spots** on the map, a few per wave, more as the run goes on.
+- **Hint**: a faint sparkle (`FX_Sparkle`) appears when the player gets
+  within a short radius. Not on the minimap.
+- **Digging**: stand on the spot for about **2 s**. Walking away cancels.
+- **Contents**: bigger rewards than chests, mostly coins (a good way to pay
+  for repairs), sometimes a rare item from the chest list.
+- **Luck** (stat upgrade) increases the sparkle radius and the number of
+  treasures per wave.
+
+Tuning (chest count, distance → loot curve, open/dig times, loot tables,
+treasure count) goes in `src/config.js` (`CHESTS`, `TREASURES`).
+
 ## Boss + gimmick sketch (needs iteration)
 
 - Boss waves are announced a wave ahead (HUD warning) so the player can shop
@@ -409,7 +499,11 @@ the run's identity pick.)
     slots, player-centered camera, portrait layout on phones.
 13. **Pause** - Space/Esc overlay.
 14. **Minimap / compass** - pointing at the base.
-15. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
+15. **Golem repair + upgrade costs** - paid repair (damage × wave) and one
+    shared upgrade counter in the between-waves shop.
+16. **Chests & hidden treasures** - chests per wave (farther = better),
+    buried treasures with a sparkle hint.
+17. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
 
@@ -421,5 +515,8 @@ the run's identity pick.)
   enemies attack it, and its destruction ends the run. The active-offense
   pick makes the base itself shoot and levels it up.
 - Coins vs XP as the shop currency - both exist already in the asset pack.
+- Between waves, can the player both repair **and** upgrade the golem
+  (only the coins limit them), or only one of the two per break?
+  (Working answer: both, coins are the limit.)
 - Are the 4 shop options fixed every cycle, or does the pool grow with
   unlocks? (Fixed = readable; growing = roguelite.)
