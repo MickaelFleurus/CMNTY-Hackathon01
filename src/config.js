@@ -899,7 +899,7 @@ export const SOUND = {
     // frequent: really low
     plank: 0.1, // every plank poke
     gun: 0.08, // every pistol bullet
-    axe: 0.08, // loop while axes are in the air
+    axe: 0.08, // whoosh while axes are in the air
     collect: 0.1, // XP gems, hearts, coins, bonus drops
     // regular
     step: 0.3, // one footstep per stride
@@ -907,6 +907,7 @@ export const SOUND = {
     // rare, important cues: loud
     levelUp: 0.6,
     waveWon: 0.7,
+    gameOver: 0.7, // the run is lost
   },
   killGap: 0.06, // s: at most one kill sound per gap (bombs, big sweeps)
   collectGap: 0.05, // s: same for pickups (magnet bursts)
@@ -914,4 +915,7 @@ export const SOUND = {
   // player actually walks (220 px/s base speed → 4 steps/s; Move Speed cards
   // make the steps faster). Walking.ogg is a single step, so no loop.
   stride: 55,
+  // Axe whoosh rhythm while axes fly: one every axeEvery s (≈ one per half
+  // turn of the axe, AXE.spin 720°/s).
+  axeEvery: 0.25,
 };

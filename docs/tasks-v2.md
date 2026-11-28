@@ -255,8 +255,11 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
 - Tags it reads: `"plank"` + `"fx"` (one per poke), `"bullet"` (pistol, set in
   `weapons.js`), `"axe"` (loop while any exist). Events: `killed`,
   `pickup-collected`, `bonus-picked`, player `levelup`, `wave-end`.
-- The axe loop pauses whenever the game doesn't run (level-up screen,
-  shop, pause, frozen / down player). Footsteps aren't a loop: one per
+- The axe whoosh repeats every `SOUND.axeEvery` s while axes fly, only
+  while the game runs (not on the level-up screen, in the shop, paused,
+  frozen / down player). It's one-shots, not a KAPLAY loop: in 3001 a
+  paused-then-resumed loop restarts at a wrong offset (often silent).
+  `run-over` plays the game over sound. Footsteps aren't a loop: one per
   `SOUND.stride` px actually walked (teleports ignored). **M** toggles mute (saved in the browser).
 
 ## Run stats (`run-stats.js`)
