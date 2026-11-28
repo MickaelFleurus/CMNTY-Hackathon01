@@ -5,11 +5,13 @@ import { CFG, SHOP, RESPAWN } from "../config.js";
 
 export function makePlayer() {
   const player = add([
-    sprite("hero-knight", { anim: "idle" }),
+    sprite("hero-ghoul", { anim: "idle" }),
     scale(CFG.player.scale),
     // start just below the golem (SHOP.home is its feet), not inside it
     pos(SHOP.home.x, SHOP.home.y + RESPAWN.belowBase),
-    area(),
+    // Keep the gameplay hitbox at the old 32px hero size despite the larger art
+    // (64px sprite): the bigger silhouette must not make the player easier to hit.
+    area({ shape: new Rect(vec2(-16, -16), 32, 32) }),
     anchor("center"),
     z(CFG.player.z), // always drawn above the world (e.g. walking behind the base)
     health(CFG.player.maxHp),
@@ -17,6 +19,7 @@ export function makePlayer() {
   ]);
 
   const speed = CFG.player.speed;
+  player.attackPoseFor = 0;
   let joystickVec = vec2(0); // set by the joystick when active
 
   // Opposite keys held together: the most recently pressed one wins (instead
@@ -44,6 +47,12 @@ export function makePlayer() {
   onUpdate(() => {
     // dead, waiting to respawn (respawn.js) / run over (runstate.js)
     if (player.down || player.frozen) return;
+    // The scythe sets attackPoseFor when it strikes; keep the strike pose
+    // instead of flipping straight back to idle/walk mid-swing.
+    if (player.attackPoseFor > 0) {
+      player.attackPoseFor = Math.max(0, player.attackPoseFor - dt());
+      if (player.curAnim() !== "attack") player.play("attack");
+    }
     let dir = vec2(axis(LEFT, RIGHT, lastX), axis(UP, DOWN, lastY));
     dir = dir.add(joystickVec).unit();
     // stats.speedMult comes from the Move Speed level up card (upgrade-effects.js)
@@ -51,7 +60,9 @@ export function makePlayer() {
 
     // walk/idle animation + facing
     const moving = dir.len() > 0.01;
-    if (moving) {
+    if (player.attackPoseFor > 0) {
+      // attack pose owns the sprite until the swing finishes
+    } else if (moving) {
       if (player.curAnim() !== "walk") player.play("walk");
       // keep the current facing when moving purely vertically
       if (Math.abs(dir.x) > 0.01) player.flipX = dir.x < 0;

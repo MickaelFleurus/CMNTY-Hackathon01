@@ -209,7 +209,7 @@ export const ENEMY_TYPES = [
     // the base, attacks it and ignores the player until provoked.
     id: "boss",
     sheet: "boss",
-    knockbackResist: 0.75, // barely moves
+    knockbackResist: 0.9, // barely moves
     pressure: { base: 8, fromSecondBoss: 12 }, // golem drain points
     sprites: [
       "Boss_Slime_King.png",
@@ -218,9 +218,9 @@ export const ENEMY_TYPES = [
       "Boss_Demon_Lord.png",
       "Boss_Treant.png",
     ],
-    scale: 3, // 32 px art -> 96 px
-    hitRadius: 36,
-    baseHp: 150, // 360 at wave 3, 675 at wave 6, 1050 at wave 9
+    scale: 4.5, // 32 px art -> 144 px
+    hitRadius: 54,
+    baseHp: 375, // 900 at wave 3, 1690 at wave 6, 2625 at wave 9
     baseDamage: 8, // 14 per hit at wave 3
     speed: 45,
     tierMinHp: [0, Infinity, Infinity, Infinity, Infinity], // keep the boss art
@@ -343,7 +343,7 @@ export const CFG = {
     invulnTime: 1.0, // s
     respawnInvulnTime: 2.0, // s of protection right after a respawn
     invulnBlinkHz: 10, // blinks per second while invulnerable
-    scale: 2, // sprite scale (16px art -> 32px on screen)
+    scale: 1, // sprite scale (64px hero art -> 64px on screen)
     // Draw layer: above every world object (ground -10, auras -5, enemies 0,
     // coins 4, base 5, portal/projectiles 6) so the player is never hidden,
     // below overlays (HP bars / shield 50, floating text 60, UI 100).
@@ -714,10 +714,8 @@ export const KNIFE = {
 };
 
 // Plank (src/systems/plank.js): the STARTER weapon (every run begins with it
-// at level 1; its card "weapon-plank" levels it up). A long poke in front of
-// the player that hits along its whole length. ART PLACEHOLDER: drawn as the
-// knife sprite, recolored bright pink and stretched, until a real plank
-// sprite exists (see docs/assets.md → "Placeholder art to replace").
+// at level 1; its card "weapon-plank" levels it up). A long spectral scythe
+// thrust in front of the player that hits along its whole length.
 // Every level: +damagePerLevel. Path alternates: Lv2 +length → Lv3 a chained
 // poke the other way → Lv4 +length → Lv5 another chained poke (the other way
 // again).
@@ -731,9 +729,22 @@ export const PLANK = {
   chainDelay: 0.16, // s between the chained pokes of one attack
   thrust: 26, // px it slides out and back during a poke
   pokeTime: 0.2, // s the poke stays out
+  attackPoseTime: 0.24, // s the hero holds the extended-arm strike pose
   hitRadius: 16, // px, hit circles spaced along the plank
-  thickness: 3, // y scale of the stretched knife sprite
-  tint: [255, 70, 200], // bright pink = placeholder art
+  // Procedural spectral-scythe look (no sprite stretching). Kept here so the
+  // colours and opacity are tunable without touching the weapon logic.
+  visual: {
+    color: [168, 118, 255],
+    coreColor: [235, 220, 255],
+    curveLiftRatio: 0.24, // blade bow as a fraction of its length
+    glowWidth: 22,
+    bladeWidth: 9,
+    coreWidth: 2.2,
+    glowOpacity: 0.2,
+    bladeOpacity: 0.52,
+    coreOpacity: 0.95,
+    originRadius: 4, // spectral flare where the blade leaves the player
+  },
 };
 
 // Axe (src/systems/axe.js, card "weapon-axe"): thrown up in an arc, falls
