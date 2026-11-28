@@ -15,6 +15,11 @@ export const ENEMY = {
   // none can hide behind the golem sprite. They attack it from the edge, when
   // their body is within this many px of the box.
   towerContactSlack: 4, // px
+  // The golem isn't hit per attack: its HP DRAINS smoothly while enemies
+  // touch it. Each touching enemy drains perDamage x its damage HP per
+  // second, so more and stronger enemies drain it faster (none = no drain).
+  // The drained total is reported every reportInterval s (damage numbers).
+  towerDrain: { perDamage: 1.0, reportInterval: 0.5 },
 
   // Each enemy chases a random point within this many px of the player, so
   // the overlapping horde fans out a bit instead of stacking on one pixel.
@@ -493,6 +498,10 @@ export const TOWER = {
   // When a wave ends, the golem gets back this fraction of the HP it lost
   // during that wave (lost 80 → +40). Never above its max HP.
   waveEndRepair: 0.5,
+  // Faint red pulse while its HP drains: pulse speed follows the drain rate
+  // (minHz + hzPerHp x HP/s, capped at maxHz); at the peak of a pulse the
+  // golem's green/blue are lowered by `strength` (0-255): faint but visible.
+  drainFlash: { minHz: 1, hzPerHp: 0.12, maxHz: 6, strength: 85 },
 
   // Golem FX (one shader on the golem sprite, see tower.js):
   statueGrey: 1, // 0..1 how grey the sleeping statue is (1 = fully desaturated)

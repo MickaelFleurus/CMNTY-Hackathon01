@@ -47,7 +47,13 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   - The player and enemies can't overlap the golem: `base.solidRect()` is
     its visible body (`TOWER.body`).
 - **Tower is an enemy-family target** (Mickael): the tower gets `hp()` and is
-  hit by the existing enemy grid-hit path tagged `"tower"`.
+  targeted via the `"tower"` tag. It is **not hit per attack**: its HP
+  **drains** every frame while enemies touch its body, by
+  `ENEMY.towerDrain.perDamage` × the sum of the touching enemies' `damage`
+  HP/s (`enemies.js`, via `tower.hurt(n)`), so more and stronger enemies
+  drain it faster. `damage-taken { kind: "tower" }` reports the drained
+  total every `towerDrain.reportInterval` s. `tower.js` pulses a faint red
+  tint, faster the faster it drains (`TOWER.drainFlash`).
 - **Base effects are built** (`auras.js`, `regen.js`, `tower.js`) and react to
   `"shop-pick"`. What each quadrant does, and the `params` keys a pick may
   override (plain number, or `{ base, perLevel, min?, max? }`). Defaults and
