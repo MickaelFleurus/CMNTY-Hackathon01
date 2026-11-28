@@ -56,6 +56,10 @@ must protect - it becomes your life total.
 
 ## Lose condition + player respawn
 
+- **Wave 1 is the exception** (see "The golem awakening flow"): the golem is
+  still an inert statue, so the player is the run's only life. Dying in
+  wave 1 ends the run, with no respawn. Everything below applies **from
+  the moment the golem wakes up** (end of wave 1).
 - **The tower being destroyed is the game over.** It is the run's life
   total. Player death is **not** game over.
 - **Player death → respawn timer.** When the player dies they are out until
@@ -87,8 +91,9 @@ in one place:
    attacking the tower, a new or idle enemy goes for the player, and the
    other way round. The horde splits itself between both targets instead of
    stacking on one.
-3. **Only one target available** (player dead and waiting to respawn, or no
-   tower yet): everything goes for the one that's left.
+3. **Only one target available** (player dead and waiting to respawn, or
+   wave 1 while the golem is still a statue): everything goes for the one
+   that's left. In wave 1 enemies ignore the statue entirely.
 4. Enemies **re-evaluate regularly** (a short interval, not every frame) and
    don't switch target constantly. A little stickiness keeps their movement
    readable and stops them from jittering between the two targets.
@@ -243,10 +248,12 @@ from there only Restart works.
 
 ### Game over screen (with run stats)
 
-Shown when the run ends (the tower is destroyed, `"run-over"` event). The
+Shown when the run ends (the tower is destroyed, or the player dies in
+wave 1; `"run-over"` event). The
 game stops behind it (dimmed), and the screen shows:
 
-- **Why the run ended**, e.g. "Your tower fell on wave 7".
+- **Why the run ended**, e.g. "Your tower fell on wave 7", or "You fell on
+  wave 1" (before the golem woke up).
 - **Run stats:**
   - waves survived, bosses defeated;
   - time survived;
@@ -255,11 +262,6 @@ game stops behind it (dimmed), and the screen shows:
   - player level reached;
   - coins earned, plus the shop picks taken (e.g. "Active offense ×3,
     Passive defense ×1"), so the player sees which build they played.
-- **Minimap or compass** (Akram): a small corner minimap (base = gold
-  diamond, player = white dot, enemy dots) or, if the minimap reads
-  poorly, a compass arrow near the player that always points at the base.
-  Complements the base-under-attack arrow, which only speaks up when the
-  tower is being hit.
 - **Best run** for comparison (waves survived), stored in the browser.
   "New best!" if this run beat it.
 - **Restart** button (also Space / Enter, and tap on mobile): starts a fresh
@@ -286,14 +288,23 @@ being hit and how much HP it has left:
   alone for a few seconds, so it doesn't spam.
 - **Danger state** when the tower drops below ~25% HP: a red pulse around
   the screen edges and a stronger arrow, so the player knows to go home now.
-- **Art direction for path visuals** (Akram, ComfyUI asset generation):
-  upgrade paths grow visually distinct per tier - offense paths drift
-  toward red with tier, defense paths toward white/gray; actives get an
-  aggressive silhouette (spikes/horns), passives stay soft-cornered.
-  First asset passes by Akram.
 - **While the player is dead**, the respawn countdown is shown next to the
   tower HP bar, so they can watch whether the tower will hold until they're
   back.
+
+### Minimap / compass
+
+A small corner minimap (Akram): base = gold diamond, player = white dot,
+enemies = dots. If the minimap reads poorly, use a compass arrow near the
+player that always points at the base instead. It complements the
+base-under-attack arrow, which only speaks up when the tower is being hit.
+
+### Art direction (upgrade path visuals)
+
+Akram, ComfyUI asset generation: upgrade paths grow visually distinct per
+tier. Offense paths drift toward red with tier, defense paths toward
+white/gray. Actives get an aggressive silhouette (spikes/horns), passives
+stay soft-cornered. Akram does the first asset passes.
 
 ## The golem awakening flow (revising the run structure)
 
@@ -384,7 +395,15 @@ the run's identity pick.)
    **Weapons & upgrades** (see "Weapons & upgrades catalog") can be built in
    parallel with 6–9: first wire the existing stat cards, then add weapons
    one per PR (one file each under `src/systems/`, like `knife.js`).
-10. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
+10. **Golem awakening flow** - wave 1 player-only (statue ignored, death =
+    run over), golem wakes at the end of wave 1, pick 1 of 3 golem styles,
+    built-in knockback swipe. Skill tree and its UI come later (wave 5+).
+11. **Damage numbers** - one shared damage helper, floating numbers on hit.
+12. **HUD redesign + screen layout** - HP orb, green-to-empty bars, icon
+    slots, player-centered camera, portrait layout on phones.
+13. **Pause** - Space/Esc overlay.
+14. **Minimap / compass** - pointing at the base.
+15. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
 
