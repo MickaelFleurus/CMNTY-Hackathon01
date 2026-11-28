@@ -60,15 +60,15 @@ and `PlankAttack.wav` were added by the team.
 |---|---|
 | `PlankAttack.wav` | each Plank poke (chained pokes too) |
 | `GunSound.ogg` | each Pistol bullet |
-| `AxeLoop.wav` | loops while at least one axe is in the air |
+| `AxeLoop.wav` (a ~0.25 s whoosh) | replayed every 0.25 s (`SOUND.axeEvery`) while at least one axe is in the air |
 | `Walking.ogg` (a single step) | one footstep per 55 px walked (`SOUND.stride`), so the rhythm follows the walking speed |
 | `EnemyKilled.ogg` | each kill (rate-limited) |
 | `CollectItem.ogg` | XP gems, hearts, coins, bonus drops picked up (rate-limited) |
 | `LevelUp.ogg` | player level up |
 | `WaveWon.ogg` | a wave survived |
+| `GameOver.ogg` | the run is lost (`run-over`) |
 
-No sound yet for: Knife, Axe throw (only the loop), Boomerang, golem shock
-wave / hits, boss, game over, shop.
+No sound yet for: Knife, Boomerang, golem shock wave / hits, boss, shop.
 
 ## Placeholder art to replace
 

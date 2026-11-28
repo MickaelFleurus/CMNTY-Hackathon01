@@ -3,7 +3,9 @@
 //
 //   PlankAttack  each plank poke (object tagged "plank" + "fx" = one poke)
 //   GunSound     each pistol bullet (tagged "bullet", weapons.js)
-//   AxeLoop      LOOPS while at least one axe (tag "axe") is in the air
+//   AxeLoop      while at least one axe (tag "axe") is in the air, its whoosh
+//                replays every SOUND.axeEvery s (the file is a ~0.25 s whoosh
+//                + silence, so a plain loop only whooshed once a second)
 //   Walking      one footstep per SOUND.stride px the player actually walks,
 //                so the step rhythm follows the walking speed (the file is a
 //                single step; teleports don't count)
@@ -13,6 +15,7 @@
 //                (bonus.js) - rate limited too
 //   LevelUp      player "levelup" (xp.js)
 //   WaveWon      root "wave-end" (a wave survived, enemies.js)
+//   GameOver     root "run-over" (the run is lost; the axe loop stops)
 //
 // Mix: master x SOUND.volume[name] - attacks and pickups very low, rare cues
 // (level up, wave won) loud. See SOUND in config.js.
@@ -33,6 +36,7 @@ import killUrl from "../../gfx/Sounds/EnemyKilled.ogg";
 import collectUrl from "../../gfx/Sounds/CollectItem.ogg";
 import levelUpUrl from "../../gfx/Sounds/LevelUp.ogg";
 import waveWonUrl from "../../gfx/Sounds/WaveWon.ogg";
+import gameOverUrl from "../../gfx/Sounds/GameOver.ogg";
 
 const FILES = {
   plank: plankUrl,
@@ -43,6 +47,7 @@ const FILES = {
   collect: collectUrl,
   levelUp: levelUpUrl,
   waveWon: waveWonUrl,
+  gameOver: gameOverUrl,
 };
 
 const MUTE_KEY = "golem-necromancer-muted";
@@ -110,21 +115,19 @@ export function startSounds(player) {
   getTreeRoot().on("bonus-picked", () => sfx("collect"));
   player.on("levelup", () => sfx("levelUp"));
   getTreeRoot().on("wave-end", () => sfx("waveWon"));
+  let over = false;
+  getTreeRoot().on("run-over", () => {
+    over = true;
+    sfx("gameOver");
+  });
 
-  // loops: started once, paused / resumed by their condition
-  const loop = (name) => {
-    const h = play(`sfx-${name}`, { loop: true, volume: SOUND.volume[name] ?? 1 });
-    h.paused = true;
-    return h;
-  };
-  const axe = loop("axe");
-
+  // Axe whoosh: replayed every SOUND.axeEvery s while axes fly, as one-shots
+  // (no looping handle: KAPLAY 3001 resumes a paused loop at a wrong offset,
+  // often silent). Stops as soon as no axe is in the air or the game stops.
   const running = () =>
-    !getTreeRoot().paused && debug.timeScale > 0 && !player.frozen && !player.down;
+    !over && !getTreeRoot().paused && debug.timeScale > 0 && !player.frozen && !player.down;
   const updateLoops = () => {
-    const go = running();
-    const axes = go && get("axe").length > 0;
-    if (axe.paused === axes) axe.paused = !axes;
+    if (running() && get("axe").length > 0) sfx("axe", { gap: SOUND.axeEvery, vary: 50 });
   };
-  setInterval(updateLoops, 50); // runs even while the tree is paused
+  setInterval(updateLoops, 25); // runs even while the tree is paused
 }
