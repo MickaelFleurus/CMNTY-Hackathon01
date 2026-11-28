@@ -50,7 +50,7 @@ that folder's `README.txt`; this doc is the quick index for agents.
 
 Played by `src/systems/sounds.js` (volumes in `src/config.js` → `SOUND`,
 **M** mutes). Mix: what you hear = `SOUND.master` × `SOUND.volume[sound]`;
-attacks and pickups are kept very low, level up / wave won loud. The files are imported, so Vite bundles them in the build.
+attacks and pickups are kept very low, level up / game over a bit above them, wave won the loudest. The files are imported, so Vite bundles them in the build.
 The `.ogg` files come from Kenney's "Impact Sounds" and "Music Jingles"
 packs, **CC0** (free for any use; crediting Kenney / kenney.nl is
 appreciated, not required): see `gfx/Sounds/License*.txt`. `AxeLoop.wav`,
