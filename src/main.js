@@ -157,6 +157,10 @@ debugLabel.onUpdate(() => {
     ? `wave ${d.wave()} cleared - shop open`
     : cycle.phase() === "starting"
     ? `wave ${d.wave() + 1} incoming…`
+    : cycle.phase() === "aftermath"
+    ? `wave ${d.wave()} survived…`
+    : cycle.phase() === "over"
+    ? `the golem has fallen…`
     : `wave ${d.wave()} over - go back to the golem for the shop`;
   const tc = targetCounts();
   // down/respawnIn/nextRespawn are assigned dynamically by respawn.js

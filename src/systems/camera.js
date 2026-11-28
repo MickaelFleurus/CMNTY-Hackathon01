@@ -17,8 +17,21 @@ export function followCamera(target) {
   let frozen = false;
   getTreeRoot().on("run-over", () => (frozen = true));
 
+  // The golem is falling: glide over to it so its death is on screen.
+  let focus = null;
+  getTreeRoot().on("golem-dying", () => {
+    const base = get("base")[0];
+    const r = base?.solidRect?.();
+    if (r) focus = vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2);
+  });
+
   onUpdate(() => {
     if (frozen || !target.exists()) return;
+    if (focus) {
+      cam = cam.lerp(focus, smooth(CAMERA.followRate * 0.5));
+      setCamPos(cam);
+      return;
+    }
 
     // Movement direction from actual displacement, so it works for keyboard,
     // joystick, knockback… without knowing how the player moves.

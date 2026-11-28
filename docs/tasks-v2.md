@@ -24,19 +24,23 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   `{ id, quadrant: "passive-defense" | "passive-offense" | "active-defense" | "active-offense", level, params: {...} }`,
   triggered as `getTreeRoot().trigger("shop-pick", pick)`. No system imports
   another.
-- **Cycle director** (`cycle.js`, built). The loop is wave → break → shop
-  at the golem → next wave:
+- **Cycle director** (`cycle.js`, built). The loop is wave → aftermath →
+  break → shop at the golem → next wave:
   - It fires `getTreeRoot().trigger("cycle-phase", { phase, wave, portal })`
-    with `phase` one of `"wave"`, `"break"`, `"shop"` or `"starting"`.
-    `"break"` follows the end of wave `wave`. `portal` is true when the
-    player was far from the golem (> `CYCLE.portalMinDistance`) at the end
-    of the wave.
+    with `phase` one of `"wave"`, `"aftermath"`, `"break"`, `"shop"` or
+    `"starting"`.
+  - **Aftermath** (right after `wave-end`): enemies have poufed away
+    (`enemies.js`), `CYCLE.afterWaveDelay` s of calm, then
+    `golem-swipe { duration: CYCLE.swipeTime }` (a rainbow band sweeps up the
+    golem, `tower.js`), then `"break"`. `portal` is true when the player is
+    far from the golem (> `CYCLE.portalMinDistance`) when the break starts.
   - **Portal** (`portal.js`): spawns next to the player on `"break"` with
     `portal: true` and despawns on any other phase. Walking in fires
     `portal-enter`, and the cycle director drops the player just below the
     golem.
   - **Shop** (`shop.js`): the cycle director fires `shop-open` when the
-    player is within `CYCLE.shopRadius` of the golem during the break
+    player is inside the **shop circle** (`CYCLE.shopCircle` px from the
+    golem's body center, drawn as a faint glowing ring during the break)
     (alive, not frozen). The shop doesn't teleport anyone. Closing it (pick
     or **E** to skip) fires `shop-close`, and the cycle director starts the
     next wave after `CYCLE.nextWaveDelay`.
@@ -84,7 +88,17 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   `animSpeed = 0`) until its power is picked, which for now is the first
   `"shop-close"` after waking (pick or skip). Then the shader is removed, the idle
   animation starts, `base.powered = true` and `"golem-powered"` fires once.
-  When the golem style pick lands, it should drive this instead.
+  When the golem style pick lands, it should drive this instead. The
+  power-on is animated: colour sweeps up from the feet (`TOWER.powerOnTime`),
+  then `"golem-powered"` fires.
+- **Golem death sequence** (`tower.js`): at 0 HP the golem fires
+  `"golem-dying"` at once. `enemies.js` stops the wave (no `wave-end`) and
+  poufs every enemy, `runstate.js` sets `player.frozen`, `respawn.js` and
+  `cycle.js` stop, and the camera glides to the golem. After
+  `TOWER.deathDelay` s the colour drains top to bottom
+  (`TOWER.powerDownTime`), **then** `run-over { reason: "tower-destroyed" }`
+  fires and the game-over screen opens. Anything that should stop when the
+  golem falls must listen to `"golem-dying"`, not only `"run-over"`.
 - **Golem shock wave** (`golem-shockwave.js`, `GOLEM_SHOCKWAVE`): once
   `base.awake`, every `interval` s (only when an enemy is within `radius`)
   the golem fires `enemy-knockback` plus `golem-shockwave { x, y, radius }`

@@ -9,7 +9,15 @@
 // it doesn't shoot. It wakes up at the end of wave 1 (the first "wave-end").
 // Statue look: grey (desaturated) and not animated, until its power is picked:
 // the first shop close after it woke (pick or skip) - later the golem style
-// pick. Then it gets its colours back and starts its idle animation.
+// pick. Then its colours sweep up from its feet and its idle animation starts.
+//
+// Golem FX: one shader (GOLEM_FX) draws the statue grey, the rainbow swipe
+// at the end of each wave ("golem-swipe" from cycle.js) and the grey/colour
+// sweeps (power-on: up; death: down, the reverse).
+//
+// Death sequence: HP 0 → "golem-dying" (enemies pouf, the wave stops, the
+// player freezes) → TOWER.deathDelay s → colour drains top to bottom
+// (TOWER.powerDownTime) → "run-over" → game-over screen.
 //
 // Contract (no imports between systems):
 //   - attaches to the object tagged "base" (base.js) once it exists: adds
@@ -22,14 +30,17 @@
 //     enemies.js only targets / damages a tower with awake === true.
 //   - on waking: getTreeRoot().trigger("golem-awake") (fired once, on the
 //     first "wave-end"). respawn.js listens: until then, player death = run over.
-//   - powered (look only): on the first "shop-close" after waking, the grey
-//     statue shader is removed, the idle anim starts, and
+//   - powered (look only): on the first "shop-close" after waking, colour
+//     sweeps up the statue (TOWER.powerOnTime), the idle anim starts, then
 //     getTreeRoot().trigger("golem-powered") fires (once). base.powered = true.
+//   - listens "golem-swipe" { duration }: rainbow band sweeps up the sprite.
 //   - wave repair: on "wave-end", the golem heals TOWER.waveEndRepair (half)
 //     of the HP it lost since "wave-start" (capped at max HP), with a green
 //     "+N" above it, and fires getTreeRoot().trigger("golem-repaired", { amount }).
-//   - on destruction: getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })
-//     (fired once). Once the golem is awake, this is the run's ONLY lose condition.
+//   - on destruction: getTreeRoot().trigger("golem-dying") at once (untagged
+//     "tower"), then after the death sequence
+//     getTreeRoot().trigger("run-over", { reason: "tower-destroyed" }) (fired
+//     once). Once the golem is awake, this is the run's ONLY lose condition.
 import boltUrl from "../../gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Magic_Bolt.png";
 import { TOWER } from "../config.js";
 import { levelStat, resolveStats } from "../util/levelStat.js";
@@ -37,15 +48,32 @@ import { pushOutOfRect } from "../util/solid.js";
 
 const QUADRANT = "active-offense";
 const BOLT = "tower-bolt";
-const STATUE_SHADER = "golem-statue";
+const GOLEM_FX = "golem-fx";
 
-// Grey statue: the art's own brightness (outline + shading survive), no hue.
-const STATUE_FRAG = `
-uniform float u_amount;
+// v = 0 at the top of the current frame, 1 at its bottom (from the frame's
+// uv rect in the atlas). Pixels above u_line get u_above greyness, below it
+// u_below (grey keeps the art's brightness, so outline + shading survive).
+// A rainbow band of half-width u_band rides on the line when u_rainbow > 0.
+const GOLEM_FRAG = `
+uniform float u_qy;
+uniform float u_qh;
+uniform float u_line;
+uniform float u_above;
+uniform float u_below;
+uniform float u_rainbow;
+uniform float u_band;
+uniform float u_time;
+vec3 hue(float h) {
+  return clamp(abs(mod(h * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+}
 vec4 frag(vec2 pos, vec2 uv, vec4 color, sampler2D tex) {
   vec4 c = def_frag();
+  float v = (uv.y - u_qy) / u_qh;
   float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-  return vec4(mix(c.rgb, vec3(l), u_amount), c.a);
+  vec3 rgb = mix(c.rgb, vec3(l), v < u_line ? u_above : u_below);
+  float band = u_rainbow * (1.0 - smoothstep(0.0, u_band, abs(v - u_line)));
+  vec3 rb = hue(fract(v * 1.5 - u_time * 1.2)) * (0.6 + 0.7 * l);
+  return vec4(mix(rgb, rb, band * 0.85), c.a);
 }
 `;
 
@@ -54,7 +82,7 @@ export function loadTowerSprites() {
     sliceX: 4,
     anims: { fly: { from: 0, to: 3, loop: true, speed: 12 } },
   });
-  loadShader(STATUE_SHADER, null, STATUE_FRAG);
+  loadShader(GOLEM_FX, null, GOLEM_FRAG);
 }
 
 export function startTower() {
@@ -66,6 +94,9 @@ export function startTower() {
   let over = false;
   let awake = false; // wave 1: inert statue
   let powered = false; // statue look (grey, still) until its power is picked
+  // running golem FX: { kind: "rainbow" | "power-on" | "power-down", t, duration, done }
+  let fx = null;
+  const playFx = (kind, duration, done) => (fx = { kind, t: 0, duration, done });
 
   const maxHpFor = (p) => Math.round(levelStat(params.hp ?? TOWER.hp, p + 1));
 
@@ -108,14 +139,52 @@ export function startTower() {
 
   // Power picked: the first shop close after waking (pick or skip).
   // TODO: switch to the golem style pick event once that screen exists.
+  let powering = false;
   getTreeRoot().on("shop-close", () => {
-    if (!awake || powered || over || !tower?.exists()) return;
-    powered = true;
-    tower.powered = true;
-    tower.unuse("shader");
+    if (!awake || powered || powering || over || !tower?.exists()) return;
+    powering = true;
     tower.animSpeed = TOWER.idleAnimSpeed; // slow, heavy idle
-    getTreeRoot().trigger("golem-powered");
+    playFx("power-on", TOWER.powerOnTime, () => {
+      powered = true;
+      tower.powered = true;
+      getTreeRoot().trigger("golem-powered");
+    });
   });
+
+  // Wave end flourish (cycle.js): a rainbow band sweeps up the golem.
+  getTreeRoot().on("golem-swipe", ({ duration } = {}) => {
+    if (over || !tower?.exists()) return;
+    playFx("rainbow", duration ?? 0.8);
+  });
+
+  /** Shader uniforms for the current look + running FX (read every frame). */
+  function fxUniforms() {
+    const statue = TOWER.statueGrey;
+    const g = powered ? 0 : statue;
+    let line = -1, above = g, below = g, rainbow = 0;
+    if (fx) {
+      const k = Math.min(1, fx.t / fx.duration);
+      const bw = TOWER.swipeBand;
+      const travel = 1 + 2 * bw; // start and end fully off the sprite
+      rainbow = 1;
+      if (fx.kind === "power-down") {
+        line = -bw + travel * k; // top → bottom: grey above the line
+        above = statue;
+        below = 0;
+      } else {
+        line = 1 + bw - travel * k; // bottom → top
+        if (fx.kind === "power-on") {
+          above = statue; // not reached yet: still grey
+          below = 0;
+        }
+      }
+    }
+    const q = tower ? frameQuad(tower) : { y: 0, h: 1 };
+    return {
+      u_qy: q.y, u_qh: q.h, u_line: line, u_above: above, u_below: below,
+      u_rainbow: rainbow, u_band: TOWER.swipeBand, u_time: time(),
+    };
+  }
 
   onUpdate(() => {
     if (!tower) {
@@ -124,6 +193,15 @@ export function startTower() {
       return;
     }
     if (!tower.exists()) return;
+
+    if (fx) {
+      fx.t += dt();
+      if (fx.t >= fx.duration) {
+        const done = fx.done;
+        fx = null;
+        done?.();
+      }
+    }
 
     // the player can't walk through the golem (it stays solid after the fall)
     const player = get("player")[0];
@@ -143,10 +221,11 @@ export function startTower() {
   function arm(base) {
     const hp = maxHpFor(picks);
     base.use(health(hp, hp));
-    // statue look: grey and frozen on its first idle frame until powered
+    // golem FX shader (statue grey, swipes); frozen on its first idle frame
+    // until powered
     base.powered = powered;
+    base.use(shader(GOLEM_FX, fxUniforms));
     if (!powered) {
-      base.use(shader(STATUE_SHADER, { u_amount: TOWER.statueGrey }));
       base.animSpeed = 0;
       base.frame = 0;
     } else {
@@ -165,13 +244,24 @@ export function startTower() {
       flash = wait(0.08, () => base.exists() && !over && (base.color = rgb(255, 255, 255)));
     });
 
+    // Death sequence: enemies pouf + everything stops ("golem-dying"), a
+    // silence, then the colour drains top to bottom (the reverse of the
+    // power-on), then the run is over.
     base.onDeath(() => {
       if (over) return;
       over = true;
       flash?.cancel();
-      base.color = rgb(120, 70, 70); // destroyed look (stays: the game is frozen)
+      base.color = rgb(255, 255, 255);
+      base.animSpeed = 0; // the golem goes still
       base.untag("tower"); // enemies stop targeting it
-      getTreeRoot().trigger("run-over", { reason: "tower-destroyed" });
+      getTreeRoot().trigger("golem-dying");
+      wait(TOWER.deathDelay, () => {
+        playFx("power-down", TOWER.powerDownTime, () => {
+          powered = false; // stays a grey statue behind the game-over screen
+          base.powered = false;
+          getTreeRoot().trigger("run-over", { reason: "tower-destroyed" });
+        });
+      });
     });
 
     // HP bar above the base (separate object so the base's scale doesn't apply)
@@ -213,6 +303,12 @@ function solidRect(base) {
     x1: b.pos.x + b.width - right * sx,
     y1: b.pos.y + b.height - bottom * sy,
   };
+}
+
+/** The current frame's uv rect in the sprite atlas ({ y, h } used by the shader). */
+function frameQuad(base) {
+  const frames = getSprite(base.sprite)?.data?.frames;
+  return frames?.[base.frame] ?? { y: 0, h: 1 };
 }
 
 /** Green "+N" rising above the golem's head after a wave repair. */

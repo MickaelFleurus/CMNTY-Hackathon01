@@ -1,30 +1,35 @@
 // Cycle director (docs/game-design-v2.md, tasks-v2 #3): drives the v2 loop
 //
-//   wave N  →  break  →  shop (at the golem)  →  wave N+1  → …
+//   wave N  →  aftermath  →  break  →  shop (at the golem)  →  wave N+1  → …
 //
-// - When a wave ends, the break starts. If the player is far from the golem
+// - When a wave ends, enemies pouf away (enemies.js) and the aftermath plays:
+//   CYCLE.afterWaveDelay s of calm, then a rainbow swipe up the golem
+//   ("golem-swipe", CYCLE.swipeTime s, tower.js). Then the break starts.
+// - During the break a faint glowing circle (CYCLE.shopCircle px around the
+//   golem's body center) shows where the shop triggers. If the player is far from the golem
 //   (> CYCLE.portalMinDistance) a portal appears next to them; entering it
 //   drops them next to the golem. Otherwise (or if they prefer) they just
 //   walk back.
-// - During the break, getting close to the golem (< CYCLE.shopRadius from its
-//   body) opens the shop.
+// - During the break, stepping inside the circle opens the shop.
 // - While the shop is open the game is paused (CYCLE.pauseInShop): the time
 //   scale is 0, so everything driven by dt (movement, timers, animations,
 //   coins, respawn countdown) stops, while input still reaches the shop UI.
 // - Closing the shop (pick or skip) resumes the game and starts the next wave
 //   after CYCLE.nextWaveDelay.
-// - On "run-over" everything stops.
+// - On "golem-dying" / "run-over" everything stops.
 //
 // Contract (root events, no imports between systems):
 //   fires   getTreeRoot().trigger("cycle-phase", { phase, wave, portal })
-//             phase: "wave" (wave `wave` running) | "break" (after wave
-//             `wave`; portal = whether a portal was offered) | "shop" (open)
+//             phase: "wave" (wave `wave` running) | "aftermath" (wave just
+//             ended, flourish playing) | "break" (after wave `wave`; portal =
+//             whether a portal was offered) | "shop" (open) | "starting"
+//           getTreeRoot().trigger("golem-swipe", { duration }) → tower.js
 //           getTreeRoot().trigger("shop-open")          → shop.js opens its UI
 //           getTreeRoot().trigger("enemy-start-wave", n) → enemies.js
 //   listens "wave-start", "wave-end" (enemies.js), "portal-enter" (portal.js),
-//           "shop-close" (shop.js), "run-over" (tower.js, respawn.js)
+//           "shop-close" (shop.js), "golem-dying" (tower.js),
+//           "run-over" (tower.js, respawn.js)
 import { CYCLE } from "../config.js";
-import { rectDistance } from "../util/solid.js";
 
 export function startCycle() {
   const root = getTreeRoot();
@@ -53,13 +58,18 @@ export function startCycle() {
   const base = () => get("base")[0];
   const player = () => get("player")[0];
 
-  // Distance from the player to the golem's body (falls back to its anchor).
-  function distToBase() {
+  // Center of the golem's body (falls back to its anchor).
+  function baseCenter() {
     const b = base();
+    if (!b) return null;
+    const r = b.solidRect?.();
+    return r ? vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2) : b.pos;
+  }
+  // Distance from the player to the golem's body center.
+  function distToBase() {
+    const c = baseCenter();
     const p = player();
-    if (!b || !p) return Infinity;
-    if (b.solidRect) return rectDistance(p.pos.x, p.pos.y, b.solidRect()).d;
-    return p.pos.dist(b.pos);
+    return c && p ? p.pos.dist(c) : Infinity;
   }
 
   root.on("wave-start", (n) => {
@@ -67,11 +77,20 @@ export function startCycle() {
     setPhase("wave");
   });
 
+  // Wave end: enemies pouf (enemies.js) → calm → golem rainbow swipe → break.
   root.on("wave-end", ({ wave: n }) => {
     if (over) return;
     wave = n;
-    const portal = distToBase() > CYCLE.portalMinDistance;
-    setPhase("break", { portal });
+    setPhase("aftermath");
+    wait(CYCLE.afterWaveDelay, () => {
+      if (over) return;
+      root.trigger("golem-swipe", { duration: CYCLE.swipeTime });
+      wait(CYCLE.swipeTime, () => {
+        if (over) return;
+        const portal = distToBase() > CYCLE.portalMinDistance;
+        setPhase("break", { portal });
+      });
+    });
   });
 
   // Portal: drop the player just below the golem; the proximity check below
@@ -97,13 +116,44 @@ export function startCycle() {
     over = true;
     phase = "over";
   });
+  root.on("golem-dying", () => {
+    over = true;
+    phase = "over";
+  });
 
-  // Break: walking up to the golem opens the shop (not while dead or frozen).
+  // Shop circle: a faint glowing ring around the golem during the break,
+  // showing how close the player must get. Fades in, breathes gently.
+  let circleAlpha = 0;
+  const [cr, cg, cb] = CYCLE.shopCircleColor;
+  const circle = add([
+    pos(0, 0),
+    z(3), // on the ground: under enemies' flyers, the golem (5) and the player
+    {
+      draw() {
+        const c = baseCenter();
+        if (!c || circleAlpha <= 0) return;
+        const breathe = 0.75 + 0.25 * Math.sin(time() * 2.4);
+        const a = circleAlpha * breathe;
+        const col = rgb(cr, cg, cb);
+        drawCircle({ pos: c, radius: CYCLE.shopCircle, color: col, opacity: 0.07 * a });
+        // soft glow: a wide faint stroke under a thin brighter one
+        drawCircle({ pos: c, radius: CYCLE.shopCircle, fill: false, outline: { width: 10, color: col }, opacity: 0.12 * a });
+        drawCircle({ pos: c, radius: CYCLE.shopCircle, fill: false, outline: { width: 2, color: col }, opacity: 0.55 * a });
+      },
+    },
+  ]);
+  circle.onUpdate(() => {
+    const goal = phase === "break" && !over ? 1 : 0;
+    circleAlpha += (goal - circleAlpha) * Math.min(1, dt() * 5);
+    if (goal === 0 && circleAlpha < 0.01) circleAlpha = 0;
+  });
+
+  // Break: stepping inside the shop circle opens the shop (not while dead or frozen).
   onUpdate(() => {
     if (phase !== "break" || over) return;
     const p = player();
     if (!p || p.down || p.frozen) return;
-    if (distToBase() <= CYCLE.shopRadius) {
+    if (distToBase() <= CYCLE.shopCircle) {
       setPhase("shop");
       pauseGame();
       root.trigger("shop-open");

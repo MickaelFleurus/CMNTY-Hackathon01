@@ -239,9 +239,11 @@ export const ENEMY_WAVES = {
   // there's no timer: the wave ends when the boss is defeated (leftover
   // minions die with it).
   boss: { every: 3, minionRateMult: 0.5 },
-  // When a wave ends, remaining enemies die immediately (death anim, no drops,
-  // not counted as kills). false = they keep chasing until "enemy-clear".
+  // When a wave ends (or the golem falls), remaining enemies vanish in a puff
+  // of smoke ("pouf": no drops, not counted as kills). false = they keep
+  // chasing until "enemy-clear".
   killOnEnd: true,
+  poufTime: 0.4, // s, the smoke puff left where each enemy vanished
 };
 
 // Enemy level comes from the wave number. An enemy keeps its spawn level.
@@ -467,7 +469,6 @@ export const TOWER = {
   // Enemies and the player can't overlap it; the HP bar sits just above it.
   body: { cell: 32, left: 1, top: 3, right: 1, bottom: 0 },
   idleAnimSpeed: 0.4, // x the golem's authored 8 fps idle (a slow, heavy breathe)
-  statueGrey: 1, // 0..1 how grey the sleeping statue is (1 = fully desaturated)
   playerRadius: 12, // px, the player's body when pushed out of the base
   hp: { base: 200, perLevel: 75 },
   range: { base: 320, perLevel: 30 }, // px, shooting range
@@ -477,6 +478,15 @@ export const TOWER = {
   // When a wave ends, the golem gets back this fraction of the HP it lost
   // during that wave (lost 80 → +40). Never above its max HP.
   waveEndRepair: 0.5,
+
+  // Golem FX (one shader on the golem sprite, see tower.js):
+  statueGrey: 1, // 0..1 how grey the sleeping statue is (1 = fully desaturated)
+  swipeBand: 0.22, // rainbow band thickness, as a fraction of the sprite height
+  powerOnTime: 1.0, // s, colour sweeps up the statue (first shop close)
+  // Golem death: enemies pouf, deathDelay s of silence, then the colour drains
+  // from top to bottom (powerDownTime s), then the game-over screen.
+  deathDelay: 2.5,
+  powerDownTime: 1.4,
 };
 
 // Golem self-defense (docs/game-design-v2.md → "The golem awakening flow"):
@@ -584,7 +594,14 @@ export const DEV = {
 // ---------------------------------------------------------------------------
 export const CYCLE = {
   portalMinDistance: 500, // px from the golem: farther than this at wave end → a portal appears
-  shopRadius: 70, // px from the golem's body: closer than this during the break → shop opens
+  // Wave end: enemies pouf → afterWaveDelay s → rainbow swipe up the golem
+  // (swipeTime s) → break: the shop circle shows, a portal if far.
+  afterWaveDelay: 2.5,
+  swipeTime: 0.8,
+  // Shop circle (px from the golem's body center): inside it during the
+  // break → the shop opens. Drawn as a faint glowing ring.
+  shopCircle: 130,
+  shopCircleColor: [255, 214, 120],
   arrivalGap: 50, // px below the golem where the portal drops the player
   nextWaveDelay: 2, // s between closing the shop and the next wave
   pauseInShop: true, // freeze the game (time scale 0) while the shop is open

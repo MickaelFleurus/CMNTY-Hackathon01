@@ -30,6 +30,13 @@ export function startRunState(player) {
   let over = false;
   player.frozen = false;
 
+  // The golem is falling (tower.js plays its death, then fires "run-over"):
+  // the player can't act any more, but the scene keeps running for the FX.
+  getTreeRoot().on("golem-dying", () => {
+    player.frozen = true;
+    if (player.curAnim?.() === "walk") player.play("idle");
+  });
+
   getTreeRoot().on("run-over", () => {
     if (over) return;
     over = true;
