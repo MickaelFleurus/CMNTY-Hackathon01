@@ -45,9 +45,14 @@
 //       getTreeRoot().trigger("enemy-clear")           despawn every enemy, no drops
 //       getTreeRoot().trigger("enemy-end-wave")        end the running wave now
 //                                                      ("cleared"; dev key, devtools.js)
-//       getTreeRoot().trigger("enemy-freeze", { frozen })  dev freeze (devtools.js):
-//         enemies stand still (anim paused), no contact damage, no spawns,
-//         wave timer stopped. Projectile hits still land.
+//       getTreeRoot().trigger("enemy-freeze", { frozen, duration? })  freeze all
+//         enemies (dev key F in devtools.js; later a rare power-up drop).
+//         Frozen enemies stand still (walk anim paused) and deal no contact
+//         damage; projectile hits still land. Spawning and the wave timer
+//         keep going, and new enemies arrive frozen. `duration` (s) unfreezes
+//         by itself (a longer freeze wins); without it the freeze lasts until
+//         { frozen: false }.
+//       getTreeRoot().on("enemy-freeze-changed", ({ frozen }) => …)  state changed
 //       getTreeRoot().on("wave-start", (n) => …)
 //       getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)
 //         reason: "cleared" = the wave was survived (its timer ran out, or
@@ -244,8 +249,15 @@ function markGone(enemy) {
   if (live.delete(enemy)) liveByType.set(enemy.type, liveByType.get(enemy.type) - 1);
 }
 
-// Dev freeze ("enemy-freeze", devtools.js): read by every enemy's update.
-let devFrozen = false;
+// Enemy freeze ("enemy-freeze"): read by every enemy's update. freezeLeft =
+// seconds left (Infinity = until unfrozen, 0 = not frozen).
+let frozen = false;
+let freezeLeft = 0;
+function setFrozen(on) {
+  if (frozen === on) return;
+  frozen = on;
+  getTreeRoot().trigger("enemy-freeze-changed", { frozen });
+}
 
 // Towers and auras, refreshed once per frame by the director (few objects).
 let towers = [];
@@ -391,7 +403,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) 
 
   enemy.onUpdate(() => {
     if (enemy.dead) return;
-    if (devFrozen) {
+    if (frozen) {
       // stand still; keep a hit / death anim readable, pause the walk cycle
       if (enemy.curAnim() === "move") enemy.animSpeed = 0;
       return;
@@ -1066,7 +1078,15 @@ export function startEnemyDirector() {
   root.on("enemy-trigger", fireEnemyTrigger);
   root.on("enemy-trigger-clear", clearEnemyTrigger);
   root.on("enemy-start-wave", (n) => startWave(n ?? wave + 1));
-  root.on("enemy-freeze", ({ frozen } = {}) => (devFrozen = !!frozen));
+  root.on("enemy-freeze", ({ frozen: on, duration } = {}) => {
+    if (!on) {
+      freezeLeft = 0;
+      setFrozen(false);
+      return;
+    }
+    freezeLeft = Math.max(freezeLeft, Number.isFinite(duration) ? duration : Infinity);
+    setFrozen(true);
+  });
   root.on("enemy-end-wave", () => {
     if (inWave && !over && !golemDown) endWave("cleared");
   });
@@ -1100,9 +1120,17 @@ export function startEnemyDirector() {
     buildGrid();
     separateEnemies();
     resolveProjectileHits();
-    if (devFrozen) return; // dev freeze: hits only - no contact, spawns or wave timer
-    resolvePlayerContact();
-    resolveTowerContact();
+    if (frozen) {
+      // frozen enemies can be hit but don't hurt anyone; spawns + timer go on
+      freezeLeft -= dt();
+      if (freezeLeft <= 0) {
+        freezeLeft = 0;
+        setFrozen(false);
+      }
+    } else {
+      resolvePlayerContact();
+      resolveTowerContact();
+    }
     if (!inWave) return;
 
     waveTime += dt();

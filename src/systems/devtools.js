@@ -7,8 +7,10 @@
 //                  sequence (pouf, golem swipe, shop circle)
 //   F              toggle an enemy freeze (DEV.freezeEnemiesKey): fires
 //                  "enemy-freeze" { frozen } (enemies.js). Enemies stand still
-//                  (anim paused), deal no contact damage, nothing spawns and
-//                  the wave timer stops; they can still be shot and killed.
+//                  (anim paused) and deal no contact damage; spawning and the
+//                  wave timer go on (new enemies arrive frozen). They can
+//                  still be shot and killed. Same freeze as the future
+//                  power-up, which passes a duration.
 //   ?noattack      URL param: start with the player's attack off
 //                  (e.g. http://localhost:5173/?noattack)
 //
@@ -28,11 +30,11 @@ export function startDevTools(player) {
     console.log("[dev] wave ended early");
   });
 
-  let enemiesFrozen = false;
+  let enemiesFrozen = false; // synced from enemies.js (a timed freeze ends by itself)
+  getTreeRoot().on("enemy-freeze-changed", ({ frozen }) => (enemiesFrozen = frozen));
   onKeyPress(DEV.freezeEnemiesKey, () => {
     if (getTreeRoot().paused || debug.timeScale === 0) return; // level-up / shop open
-    enemiesFrozen = !enemiesFrozen;
-    getTreeRoot().trigger("enemy-freeze", { frozen: enemiesFrozen });
+    getTreeRoot().trigger("enemy-freeze", { frozen: !enemiesFrozen });
     console.log(`[dev] enemies ${enemiesFrozen ? "FROZEN" : "unfrozen"}`);
   });
 

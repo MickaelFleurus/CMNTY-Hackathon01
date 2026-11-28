@@ -604,7 +604,7 @@ export const HUD = {
 export const DEV = {
   toggleAttackKey: "k", // toggle the player's attack (also ?noattack in the URL)
   endWaveKey: "n", // end the running wave now, as if survived (boss waves too)
-  freezeEnemiesKey: "f", // toggle: enemies stand still, no spawns, wave timer stops
+  freezeEnemiesKey: "f", // toggle: enemies frozen in place (spawns + wave timer go on)
 };
 
 // ---------------------------------------------------------------------------
