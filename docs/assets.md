@@ -53,8 +53,8 @@ Played by `src/systems/sounds.js` (volumes in `src/config.js` → `SOUND`,
 attacks and pickups are kept very low, level up / wave won loud. The files are imported, so Vite bundles them in the build.
 The `.ogg` files come from Kenney's "Impact Sounds" and "Music Jingles"
 packs, **CC0** (free for any use; crediting Kenney / kenney.nl is
-appreciated, not required): see `gfx/Sounds/License*.txt`. `AxeLoop.wav`
-and `PlankAttack.wav` were added by the team.
+appreciated, not required): see `gfx/Sounds/License*.txt`. `AxeLoop.wav`,
+`PlankAttack.wav` and `LoopMusic.mp3` were added by the team.
 
 | File | When it plays |
 |---|---|
@@ -67,6 +67,7 @@ and `PlankAttack.wav` were added by the team.
 | `LevelUp.ogg` | player level up |
 | `WaveWon.ogg` | a wave survived |
 | `GameOver.ogg` | the run is lost (`run-over`) |
+| `LoopMusic.mp3` | background music, looped for the whole run at a low volume (`SOUND.volume.music` 0.2), fades out on `run-over` (`SOUND.musicFadeOut`) |
 
 No sound yet for: Knife, Boomerang, golem shock wave / hits, boss, shop.
 

@@ -16,6 +16,9 @@
 //   LevelUp      player "levelup" (xp.js)
 //   WaveWon      root "wave-end" (a wave survived, enemies.js)
 //   GameOver     root "run-over" (the run is lost; the axe loop stops)
+//   LoopMusic    background music, looped from the start of the run, kept
+//                quiet (SOUND.volume.music); fades out on "run-over" so the
+//                game over sound stands out
 //
 // Mix: master x SOUND.volume[name] - attacks and pickups very low, rare cues
 // (level up, wave won) loud. See SOUND in config.js.
@@ -37,6 +40,7 @@ import collectUrl from "../../gfx/Sounds/CollectItem.ogg";
 import levelUpUrl from "../../gfx/Sounds/LevelUp.ogg";
 import waveWonUrl from "../../gfx/Sounds/WaveWon.ogg";
 import gameOverUrl from "../../gfx/Sounds/GameOver.ogg";
+import musicUrl from "../../gfx/Sounds/LoopMusic.mp3";
 
 const FILES = {
   plank: plankUrl,
@@ -48,6 +52,7 @@ const FILES = {
   levelUp: levelUpUrl,
   waveWon: waveWonUrl,
   gameOver: gameOverUrl,
+  music: musicUrl,
 };
 
 const MUTE_KEY = "golem-necromancer-muted";
@@ -115,10 +120,25 @@ export function startSounds(player) {
   getTreeRoot().on("bonus-picked", () => sfx("collect"));
   player.on("levelup", () => sfx("levelUp"));
   getTreeRoot().on("wave-end", () => sfx("waveWon"));
+  // Background music: one looping handle for the whole run, never paused
+  // (KAPLAY 3001 resumes a paused loop at a wrong offset), so it keeps
+  // playing on the level up / shop screens. Faded out when the run is lost.
+  const music = play("sfx-music", { loop: true, volume: SOUND.volume.music });
+
   let over = false;
   getTreeRoot().on("run-over", () => {
     over = true;
     sfx("gameOver");
+    const from = music.volume;
+    const t0 = performance.now();
+    const fade = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / 1000 / SOUND.musicFadeOut);
+      music.volume = from * (1 - k);
+      if (k >= 1) {
+        clearInterval(fade);
+        music.stop();
+      }
+    }, 30);
   });
 
   // Axe whoosh: replayed every SOUND.axeEvery s while axes fly, as one-shots
