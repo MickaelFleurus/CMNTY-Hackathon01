@@ -321,6 +321,21 @@ export const CFG = {
     tileScale: 3, // 16px art -> 48px on screen
     gridW: 30, // tiles across the visible band
     gridH: 18, // tiles down the visible band
+    // Decor from row 1 of Tiles_Grass (flowers, rock, mushroom; the green
+    // blob is never used). Picked per world tile, so a spot never changes.
+    decor: {
+      flowerChance: 0.015, // sporadic lone flowers, per tile
+      rockChance: 0.012,
+      mushroomChance: 0.008,
+      // Circular flower clusters: the world is cut into cells of clusterCell
+      // tiles; each holds a cluster with clusterChance, radius in tiles
+      // between clusterRadius[0] and [1]. Flower density falls from
+      // clusterDensity[0] at the center to [1] at the edge.
+      clusterCell: 12,
+      clusterChance: 0.4,
+      clusterRadius: [1.6, 3.4],
+      clusterDensity: [0.9, 0.35],
+    },
   },
 
   joystick: {
