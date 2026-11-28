@@ -11,6 +11,7 @@
 // Interaction mirrors the level-up screen (upgrades.js): paused root, fixed()
 // UI, manual hit-testing (hover/click don't fire while paused), keys 1-3.
 import { GOLEM_STYLES } from "../config.js";
+import { isFocusClick } from "../util/focusClick.js";
 
 const STYLES = [
   {
@@ -121,6 +122,7 @@ export function startGolemStyles() {
       });
     });
     const clickH = onMousePress(() => {
+      if (isFocusClick()) return; // the click that refocused the window
       const c = cardAt(mousePos());
       if (c) pick(c.s.id);
     });
