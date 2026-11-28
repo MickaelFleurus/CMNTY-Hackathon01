@@ -14,6 +14,7 @@
 import { hudState } from "./hud.js";
 import { xpState } from "./xp.js";
 import { loadStats } from "./run-stats.js";
+import { isFocusClick } from "../util/focusClick.js";
 
 let stats = null;
 
@@ -78,7 +79,8 @@ function open({ reason, at, wave, kills, coins }) {
   const restart = () => location.reload();
   onKeyPress("space", restart);
   onKeyPress("enter", restart);
-  onClick(() => !statsPage && restart());
+  // not the click that refocused the window: that would restart unseen
+  onClick(() => !statsPage && !isFocusClick() && restart());
   onKeyPress("s", toggleStats);
   onKeyPress("escape", () => statsPage && toggleStats());
   onKeyPress("c", () => statsPage && copyStats(statsPage));

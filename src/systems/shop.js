@@ -31,6 +31,7 @@
 //     when it hears "shop-close".
 import { SHOP } from "../config.js";
 import { getCoins, addCoins } from "./base.js";
+import { isFocusClick } from "../util/focusClick.js";
 
 let spritesLoaded = false;
 
@@ -232,6 +233,7 @@ export function makeShop() {
         hover = inSkip(p) ? "skip" : branchAt(p) ?? null;
       }),
       onMousePress(() => {
+        if (isFocusClick()) return; // the click that refocused the window
         const p = mousePos();
         if (inSkip(p)) return close();
         const b = branchAt(p);

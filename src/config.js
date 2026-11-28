@@ -315,8 +315,24 @@ export const ENEMY_DROPS = [
 // ---------------------------------------------------------------------------
 // Player + weapon + map (owner: Akram - src/systems/{player,weapons,map}.js)
 // ---------------------------------------------------------------------------
+
+// Design resolution. Desktop keeps the widescreen 1280x720 letterbox; phones
+// held upright get a 720x1280 swap so the game fills the tall screen instead
+// of letterboxing a tiny widescreen strip. Read once before kaplay() init
+// (src/main.js) - it must stay fixed for the whole run, kaplay sizes its
+// canvas from it at boot.
+function pickViewport() {
+  const portrait =
+    typeof window !== "undefined" &&
+    window.innerWidth < window.innerHeight &&
+    window.innerWidth < 900; // narrow enough to be phone-like
+  return portrait
+    ? { width: 720, height: 1280, portrait: true }
+    : { width: 1280, height: 720, portrait: false };
+}
+
 export const CFG = {
-  viewport: { width: 1280, height: 720 },
+  viewport: pickViewport(),
 
   player: {
     speed: 220, // px/s

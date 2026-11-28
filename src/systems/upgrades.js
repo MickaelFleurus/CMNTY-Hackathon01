@@ -13,6 +13,7 @@
 // "magnet" is applied here since pickup radius belongs to xp.js.
 import { xpState } from "./xp.js";
 import { UPGRADE } from "../config.js";
+import { isFocusClick } from "../util/focusClick.js";
 
 // Upgrade data shape: { id, name, description, icon, maxLevel, tint?, levels? }
 // tint: optional [r, g, b] on the card icon (placeholder art, e.g. the Plank)
@@ -221,6 +222,7 @@ function openMenu() {
       cards.forEach((c) => { c.card.outline.color = c === hit ? hoverOutline : idleOutline; });
     }),
     onMousePress(() => {
+      if (isFocusClick()) return; // the click that refocused the window: look first
       const hit = cardAt(mousePos());
       if (hit) close(hit.upgrade);
     }),
