@@ -448,6 +448,38 @@ you're away.
 Tuning (chest count, distance → loot curve, open/dig times, loot tables,
 treasure count) goes in `src/config.js` (`CHESTS`, `TREASURES`).
 
+## Rare bonus drops
+
+Any enemy can, **very rarely**, drop a bonus instead of its normal drop
+(the "one drop per kill" rule stays: a bonus replaces XP / heart / coins).
+The bonus takes effect when the player walks over it.
+
+| Bonus | Effect | Look (pickup · effect) |
+|---|---|---|
+| **Bomb** | **Kills every enemy on screen.** Bosses only lose **25% of their max HP**. Kills still drop XP and coins. | `Pickup_Bomb` · `FX_Explosion` on every enemy |
+| **Freeze** | **Freezes every enemy** for a few seconds (e.g. 4 s): they don't move or attack, and are tinted icy blue. They can still be hit. The wave timer keeps running. | `Pickup_Clock` · blue tint |
+| **Rage** | For a few seconds (e.g. 8 s): player damage **×5**, and the cooldown between attacks drops to a **very low fixed value** (e.g. 0.1 s) for every weapon. The player glows red, and the HUD shows a countdown. | `Icon_Might` with a red tint (no pickup sprite in the pack) · red glow |
+| **Golem heal** | Heals the golem (e.g. **25% of its max HP**), wherever the player is. Only drops once the golem is awake (from wave 2). | `Pickup_Meat` · `FX_Heal` on the golem |
+| **Magnet** | Every XP gem and coin on the map **flies to the player**. Animated: the pickups lift off a little, then speed up toward the player and get collected one after another. Nothing is lost on the way. | `Pickup_Magnet_fixed` · pickups streaming in |
+
+Rules:
+
+- **Very rare**: around **0.5% per kill** for all bonuses together, so a
+  wave gives about one or two. Each bonus has its own weight (Bomb and Rage
+  rarer than Magnet). **Luck** raises the chance.
+- Bonuses **glow and bob** on the ground so they stand out in the horde.
+  They last longer than normal drops (e.g. 20 s), blinking during the last
+  5 s.
+- Picking up a timed bonus (Freeze, Rage) while it's already active
+  **resets its timer**; it doesn't stack.
+- The **Magnet bonus** is different from the Magnet stat upgrade: the stat
+  only grows the pickup radius, the bonus pulls in the whole map once.
+- Bomb damage to bosses goes through the normal damage path, so damage
+  numbers show it.
+
+Tuning (chance, weights, durations, Rage multipliers, golem heal %, boss %)
+goes in `src/config.js` (`BONUS_DROPS`).
+
 ## Boss + gimmick sketch (needs iteration)
 
 - Boss waves are announced a wave ahead (HUD warning) so the player can shop
@@ -503,7 +535,8 @@ treasure count) goes in `src/config.js` (`CHESTS`, `TREASURES`).
     shared upgrade counter in the between-waves shop.
 16. **Chests & hidden treasures** - chests per wave (farther = better),
     buried treasures with a sparkle hint.
-17. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
+17. **Rare bonus drops** - Bomb, Freeze, Rage, Golem heal, Magnet.
+18. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
 
