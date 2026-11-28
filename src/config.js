@@ -520,6 +520,17 @@ export const TOWER = {
   powerDownTime: 1.4,
 };
 
+// Guide arrow (guide-arrow.js): during the break, points at the nearest of
+// the golem (shop) and the portal when it's off-screen.
+export const GUIDE_ARROW = {
+  onScreenMargin: 40, // px: a target this far inside the screen counts as visible
+  edgeMargin: 80, // px from the screen edge where the arrow sits (clear of the HUD)
+  size: 28, // px, arrow head size
+  labelSize: 18, // px
+  shopColor: [255, 214, 120], // same gold as the shop circle (CYCLE.shopCircleColor)
+  portalColor: [190, 140, 255],
+};
+
 // Golem self-defense (docs/game-design-v2.md → "The golem awakening flow"):
 // once awake, the golem sends shock waves that fling nearby enemies away,
 // whatever the shop picks (golem-shockwave.js). It starts once minContact
