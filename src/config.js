@@ -572,6 +572,36 @@ export const GOLEM_SHOCKWAVE = {
   color: [150, 220, 255], // ring color (the golem's crystal blue)
 };
 
+// Berserker golem style (docs/game-design-v2.md → "The golem awakening
+// flow" → Berserker: offense-centered, "fights mobs itself - swipes,
+// charges, kills for you"). Picked via the "golem-style-pick" event, run
+// by golem-berserker.js: a damaging AOE swipe around the golem and a ranged
+// charge strike at the nearest pack, both through the enemies.js
+// "enemy-knockback" contract (damage + knockback). The built-in
+// self-defense shock wave (GOLEM_SHOCKWAVE) still runs on top of it.
+export const GOLEM_BERSERKER = {
+  // Swipe: damaging knockback wave centered on the golem.
+  swipeInterval: 2.5, // s between swipes (fire only when an enemy is in reach)
+  swipeRadius: 190, // px from the golem's center (a bit past GOLEM_SHOCKWAVE.radius)
+  swipeForce: 900, // px/s initial push (less than the pure-defense shock wave)
+  swipeDamage: 10, // damage per swipe at wave 1 (scales with swipeDamageGrowth)
+  swipeColor: [255, 120, 90], // ring color (berserker red)
+  // Charge: strike at the nearest enemy up to chargeRange px away - the
+  // knockback lands at the strike point, so distant packs get hit too.
+  chargeInterval: 5, // s between charge strikes
+  chargeRange: 420, // px, how far the golem will look for a strike target
+  chargeReach: 240, // px, the strike point at most this far from the golem
+  chargeRadius: 110, // px, AOE radius around the strike point
+  chargeForce: 1100, // px/s initial push
+  chargeDamage: 16, // damage per strike at wave 1
+  chargeColor: [255, 180, 60], // streak + ring color (berserker amber)
+  // Damage scaling: like the enemy side (ENEMY_LEVEL.hpGrowth with 2 levels
+  // per wave), the golem's output has to keep pace with enemy HP or the
+  // style falls off. damage = base x (1 + damageGrowth x (wave - 1)).
+  damageGrowth: 0.35,
+  ringTime: 0.45, // s, ring/streak animation length (as GOLEM_SHOCKWAVE)
+};
+
 // Smart enemy targeting (docs/game-design-v2.md → "Enemy targeting").
 // Enemies pick between the player and the base/tower:
 //   1. focus the clearly weaker one (lower hp / maxHp by at least focusMargin)
