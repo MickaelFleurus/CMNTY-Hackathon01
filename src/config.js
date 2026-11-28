@@ -874,6 +874,16 @@ export const BASE_ALERT = {
   bar: { width: 260, height: 14, y: 96, textSize: 12 }, // HUD golem HP bar, top center
 };
 
+// Boss warning (src/systems/boss-warning.js): announced one wave ahead.
+export const BOSS_WARNING = {
+  bannerTime: 4, // s, "BOSS NEXT WAVE" banner when the wave before a boss wave ends
+  startBannerTime: 2.5, // s, "BOSS WAVE" banner when the boss wave starts
+  bannerY: 220, // px from the top (below the golem HP bar and "BASE UNDER ATTACK!")
+  bannerWidth: 560, // px
+  reminderY: 178, // px: small "BOSS NEXT WAVE: <name>" pill during the break
+  reminderHz: 1, // reminder outline pulses per second
+};
+
 // --- Golem style pick screen (src/systems/golem-styles.js, owner Akram) ---
 export const GOLEM_STYLES = {
   openDelay: 1.2, // s after "golem-awake" before the pick screen appears
