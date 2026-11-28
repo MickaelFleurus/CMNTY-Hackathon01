@@ -1022,9 +1022,14 @@ export const SOUND = {
     waveWon: 0.4,
     gameOver: 0.15, // the run is lost
     // background
+    // the player (faint)
+    hurt: 0.12, // each hit taken (at most one per hurtGap)
+    dead: 0.15, // the player falls
+    respawn: 0.12, // back from the respawn countdown
     music: 0.30, // LoopMusic.mp3, looped all run: quiet, under the effects
   },
   musicFadeOut: 1.5, // s: the music fades out when the run is lost
+  hurtGap: 0.25, // s: at most one hurt sound per gap (a crowd hits many times a second)
   killGap: 0.06, // s: at most one kill sound per gap (bombs, big sweeps)
   collectGap: 0.05, // s: same for pickups (magnet bursts)
   // Footsteps follow the real walking speed: one step every `stride` px the
