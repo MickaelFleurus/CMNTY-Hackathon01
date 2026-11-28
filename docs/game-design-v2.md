@@ -158,7 +158,7 @@ How each one targets is its identity, and no two play the same:
 | **Magic Bolt** | **Hits the nearest enemy**: homing bolt | `Proj_Magic_Bolt` · `Icon_Magic_Bolt` | +1 bolt → +damage → **rebound** 1 → +1 bolt |
 | **Knife** | **Throws several**: a fan of knives in the facing direction | `Proj_Knife` · `Icon_Knife` | every level: +1 knife per volley **and** **pierce** +1 (PR #41) |
 | **Axe** | **Goes through enemies**: thrown up in an arc, falls through the horde, high pierce | `Proj_Axe` · `Icon_Axe` | +damage → pierce +3 → +1 axe → +area |
-| **Boomerang** | **Goes through enemies** twice: flies out to the nearest enemy and comes back | `Proj_Boomerang` · `Icon_Boomerang` | pierce +2 → +1 boomerang → +speed → **rebound** off the screen edge |
+| **Boomerang** | **Goes through enemies** twice: flies out to the nearest enemy and comes back | `Proj_Boomerang` · `Icon_Boomerang` | pierce +2 → +1 boomerang → +speed → +damage (built; the screen-edge **rebound** idea is parked) |
 | **Fireball** | **Explodes**: flies to the nearest enemy, blows up on impact (area damage) | `Proj_Fireball` + `FX_Explosion` · `Icon_Fireball` | +blast area → +damage → +1 fireball → leaves a short burn |
 | **Lightning** | **Happens randomly on the screen**: strikes random enemies on screen | `Proj_Lightning` + `FX_Hit_Spark` · `Icon_Lightning` | +1 strike → +damage → **chains** to 1 nearby enemy → +1 strike |
 | **Holy Water** | **Happens randomly on the screen**: flasks land at random spots near the player and leave a burning puddle | `Proj_Holy_Water_Flask` → `Proj_Holy_Water_Flames` · `Icon_Holy_Water` | +duration → +1 flask → +area → +damage |
@@ -194,10 +194,14 @@ How each one targets is its identity, and no two play the same:
 | **Growth** | +10% XP gained | `Icon_Growth` | 5 |
 | **Luck** | better drops (hearts, coins) and more rare cards | `Icon_Luck` | 5 |
 
-Status in code: the level-up screen (`src/systems/upgrades.js`, PR #25)
-offers Max HP, Move Speed, Might, Cooldown, Magnet and Knife. On `main` only
-Magnet is applied. **PR #41** (chippe, in review) applies the other cards and
-adds the Knife (`src/systems/knife.js`). The current auto-attack "pistol"
+Status in code: the level-up screen (`src/systems/upgrades.js`) offers Max
+HP, Move Speed, Might, Cooldown, Magnet and the weapons **Knife**
+(`knife.js`), **Plank** (`plank.js`), **Axe** (`axe.js`) and **Boomerang**
+(`boomerang.js`), each a card that unlocks then levels it (tuning in
+`src/config.js`: `KNIFE`, `PLANK`, `AXE`, `BOOMERANG`). The Plank has **no
+art yet**: it's drawn as the knife sprite tinted bright pink and scaled up
+(see `docs/assets.md` → "Placeholder art to replace"). The Plank is a card
+for now; it isn't the starter weapon yet. The current auto-attack "pistol"
 (`weapons.js`) behaves like Magic Bolt (nearest enemy) using the knife
 sprite.
 

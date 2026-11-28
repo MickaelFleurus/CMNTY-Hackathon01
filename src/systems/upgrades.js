@@ -14,7 +14,8 @@
 import { xpState } from "./xp.js";
 import { UPGRADE } from "../config.js";
 
-// Upgrade data shape: { id, name, description, icon, maxLevel }
+// Upgrade data shape: { id, name, description, icon, maxLevel, tint? }
+// tint: optional [r, g, b] on the card icon (placeholder art, e.g. the Plank)
 export const UPGRADES = [
   { id: "max-hp", name: "Max HP", description: "+20 max health", icon: "Icon_Max_HP", maxLevel: 5 },
   { id: "move-speed", name: "Move Speed", description: "+10% movement speed", icon: "Icon_Move_Speed", maxLevel: 5 },
@@ -22,6 +23,10 @@ export const UPGRADES = [
   { id: "cooldown", name: "Cooldown", description: "Weapons fire 10% faster", icon: "Icon_Cooldown", maxLevel: 5 },
   { id: "magnet", name: "Magnet", description: "Pick up XP from further away", icon: "Icon_Magnet", maxLevel: 3 },
   { id: "weapon-knife", name: "Knife", description: "New weapon: throws knives", icon: "Icon_Knife", maxLevel: 5 },
+  // PLACEHOLDER icon: pink knife until a plank icon exists (docs/assets.md)
+  { id: "weapon-plank", name: "Plank", description: "New weapon: pokes what's in front of you", icon: "Icon_Knife", tint: [255, 70, 200], maxLevel: 5 },
+  { id: "weapon-axe", name: "Axe", description: "New weapon: thrown up, falls through the horde", icon: "Icon_Axe", maxLevel: 5 },
+  { id: "weapon-boomerang", name: "Boomerang", description: "New weapon: flies out and comes back", icon: "Icon_Boomerang", maxLevel: 5 },
 ];
 
 // id -> current level
@@ -155,7 +160,7 @@ function openMenu() {
       color(40, 36, 60),
       outline(3, idleOutline),
     ]);
-    card.add([sprite(u.icon), anchor("center"), pos(0, -80), scale(5)]);
+    card.add([sprite(u.icon), anchor("center"), pos(0, -80), scale(5), ...(u.tint ? [color(...u.tint)] : [])]);
     card.add([text(u.name, { size: 26 }), anchor("center"), pos(0, 10)]);
     card.add([
       text(level === 1 ? "NEW" : `Level ${level}`, { size: 16 }),

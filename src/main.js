@@ -10,6 +10,9 @@ import { loadUpgradeAssets, initUpgrades } from "./systems/upgrades.js";
 import { initHud } from "./systems/hud.js";
 import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
+import { initPlank, loadPlankAssets } from "./systems/plank.js";
+import { initAxe } from "./systems/axe.js";
+import { initBoomerang } from "./systems/boomerang.js";
 import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
@@ -64,6 +67,15 @@ loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_
   sliceX: 4,
   anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
 });
+loadPlankAssets(); // placeholder pink shader (no plank sprite yet)
+loadSprite("proj-axe", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Axe.png", {
+  sliceX: 4,
+  anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
+});
+loadSprite("proj-boomerang", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Boomerang.png", {
+  sliceX: 4,
+  anims: { spin: { from: 0, to: 3, loop: true, speed: 14 } },
+});
 loadEnemySprites();
 loadXpAssets();
 loadUpgradeAssets();
@@ -81,6 +93,9 @@ initUpgrades();
 initHud();
 initUpgradeEffects(player);
 initKnife(player);
+initPlank(player);
+initAxe(player);
+initBoomerang(player);
 const enemyDirector = startEnemyDirector();
 startAuras();
 startRegen();
