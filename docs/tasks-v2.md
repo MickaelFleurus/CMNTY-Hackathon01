@@ -255,8 +255,9 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
 - Tags it reads: `"plank"` + `"fx"` (one per poke), `"bullet"` (pistol, set in
   `weapons.js`), `"axe"` (loop while any exist). Events: `killed`,
   `pickup-collected`, `bonus-picked`, player `levelup`, `wave-end`.
-- Loops pause whenever the game doesn't run (level-up screen, shop,
-  pause, frozen / down player). **M** toggles mute (saved in the browser).
+- The axe loop pauses whenever the game doesn't run (level-up screen,
+  shop, pause, frozen / down player). Footsteps aren't a loop: one per
+  `SOUND.stride` px actually walked (teleports ignored). **M** toggles mute (saved in the browser).
 
 ## Run stats (`run-stats.js`)
 

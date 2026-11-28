@@ -49,7 +49,8 @@ that folder's `README.txt`; this doc is the quick index for agents.
 ## Sounds (`gfx/Sounds/`)
 
 Played by `src/systems/sounds.js` (volumes in `src/config.js` → `SOUND`,
-**M** mutes). The files are imported, so Vite bundles them in the build.
+**M** mutes). Mix: what you hear = `SOUND.master` × `SOUND.volume[sound]`;
+attacks and pickups are kept very low, level up / wave won loud. The files are imported, so Vite bundles them in the build.
 The `.ogg` files come from Kenney's "Impact Sounds" and "Music Jingles"
 packs, **CC0** (free for any use; crediting Kenney / kenney.nl is
 appreciated, not required): see `gfx/Sounds/License*.txt`. `AxeLoop.wav`
@@ -60,7 +61,7 @@ and `PlankAttack.wav` were added by the team.
 | `PlankAttack.wav` | each Plank poke (chained pokes too) |
 | `GunSound.ogg` | each Pistol bullet |
 | `AxeLoop.wav` | loops while at least one axe is in the air |
-| `Walking.ogg` | loops while the player walks |
+| `Walking.ogg` (a single step) | one footstep per 55 px walked (`SOUND.stride`), so the rhythm follows the walking speed |
 | `EnemyKilled.ogg` | each kill (rate-limited) |
 | `CollectItem.ogg` | XP gems, hearts, coins, bonus drops picked up (rate-limited) |
 | `LevelUp.ogg` | player level up |
