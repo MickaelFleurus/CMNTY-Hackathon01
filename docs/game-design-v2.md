@@ -306,6 +306,14 @@ game stops behind it (dimmed), and the screen shows:
     Passive defense ×1"), so the player sees which build they played.
 - **Best run** for comparison (waves survived), stored in the browser.
   "New best!" if this run beat it.
+- **Stats page** (S on the game-over screen): **Latest run** next to **All
+  runs**: waves reached / survived, how many times wave 5, 10, 20, 50 and
+  100 were reached, time, level, kills (total and per enemy type), bosses,
+  deaths, coins, damage dealt / taken, golem repairs, and how many times each
+  level-up card, shop pick, ground pickup and bonus drop was picked. Saved in
+  the browser as one plain JSON object (`src/systems/run-stats.js`): C copies
+  it, D downloads it, and `gameStats.import(json)` in the console loads it
+  on another machine.
 - **Restart** button (also Space / Enter, and tap on mobile): starts a fresh
   run from wave 1 with a plank, no reload needed.
 

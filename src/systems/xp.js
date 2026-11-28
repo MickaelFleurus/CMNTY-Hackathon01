@@ -97,6 +97,7 @@ function homeAll() {
 function collect(p, pickup) {
   const { kind, value } = pickup;
   pickup.destroy();
+  getTreeRoot().trigger("pickup-collected", { kind, value }); // run-stats.js
   if (kind.startsWith("xp-")) {
     addXp(value);
   } else if (kind === "heart") {

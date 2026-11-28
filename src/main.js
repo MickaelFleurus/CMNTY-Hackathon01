@@ -7,6 +7,7 @@ import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 import { loadXpAssets, initXp } from "./systems/xp.js";
 import { loadUpgradeAssets, initUpgrades, grantUpgrade } from "./systems/upgrades.js";
+import { startRunStats } from "./systems/run-stats.js";
 import { initHud } from "./systems/hud.js";
 import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
@@ -100,6 +101,7 @@ initPlank(player);
 initAxe(player);
 initBoomerang(player);
 grantUpgrade("weapon-plank"); // the starter weapon (Plank Lv1)
+startRunStats(player); // after the starter grant: it isn't a "picked" card
 startEnemyDirector();
 startAuras();
 startRegen();

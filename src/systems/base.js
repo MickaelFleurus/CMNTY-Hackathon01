@@ -80,13 +80,6 @@ export function makeBase() {
     "base",
   ]);
 
-  base.add([
-    text("BASE", { size: 12 }),
-    anchor("bot"),
-    pos(0, 2),
-    opacity(0.8),
-  ]);
-
   return base;
 }
 
@@ -116,6 +109,7 @@ function spawnCoin(at, value = SHOP.coins.perKill) {
       coin.pos = coin.pos.add(step.len() > 1 ? step.unit().scale(SHOP.coins.flySpeed * dt()) : step);
       if (d < SHOP.coins.collectRadius) {
         addCoins(coin.value);
+        getTreeRoot().trigger("pickup-collected", { kind: "coin", value: coin.value }); // run-stats.js
         destroy(coin);
       }
     }
