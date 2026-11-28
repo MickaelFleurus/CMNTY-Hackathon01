@@ -96,5 +96,5 @@ export function startRespawn(player) {
 /** Respawn point: just below the base (its anchor is "bot"). */
 function parkAtBase(player) {
   const base = get("base")[0];
-  if (base) player.pos = base.pos.add(0, 40);
+  if (base) player.pos = base.pos.add(0, RESPAWN.belowBase);
 }

@@ -33,14 +33,19 @@ PR.
 - **Waves** (for the cycle director: field wave → portal → shop → next wave).
   Nothing spawns until a wave starts. Root events, no import needed:
   - `getTreeRoot().trigger("enemy-start-wave", n)` starts wave `n` (omit
-    `n` for the next one). Enemy level = `1 + 2*(n-1)`. Each enemy type
-    spawns a per-wave budget and unlocks by wave (`ENEMY_TYPES` in
-    `src/config.js`).
+    `n` for the next one). Enemy level = `1 + 2*(n-1)`. There is **no
+    per-wave enemy count**: each unlocked type (`ENEMY_TYPES` in
+    `src/config.js`) sends groups at its spawn interval until the wave timer
+    runs out. The interval shrinks during a wave and is multiplied by
+    `ENEMY_WAVES.rate` (`perWave^(n-1)`, floor `minMult`), so every wave
+    spawns faster than the last.
   - `getTreeRoot().trigger("enemy-clear")` despawns every enemy (no drops),
     e.g. when the player ports home.
   - `getTreeRoot().on("wave-start", (n) => …)` and
     `getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)`, where
-    `reason` is `"cleared"` or `"timeout"`. Any leftovers die on the spot
+    `reason` is `"cleared"`: the wave was survived (timer ran out, or the
+    boss died on a boss wave). Killing everything does not end a wave
+    early. Any leftovers die on the spot
     when the wave ends: death animation, **no drops, no `"killed"` event**
     (`ENEMY_WAVES.killOnEnd`).
   - `src/main.js` currently chains waves itself (TEMP, 3 s gap) until the

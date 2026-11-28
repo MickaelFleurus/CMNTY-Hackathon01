@@ -57,12 +57,14 @@ export const ENEMY = {
 //   speed       px/s chase speed
 //   tierMinHp   optional per-type HP thresholds for ENEMY_TIERS colors
 //   drops       optional per-type drop table (defaults to ENEMY_DROPS)
-//   spawn:
-//     count       { base, perWave }: how many this type spawns in total in a
-//                 wave (its budget) = base + floor(perWave * (wave - 1))
+//   spawn:      no per-wave budget: a type keeps sending groups at its rate
+//               until the wave timer runs out (ENEMY_WAVES.rate)
 //     startInterval / minInterval / intervalDecayPerSec
 //                 seconds between GROUP spawns within a wave; the ramp restarts
-//                 each wave, from when the type becomes active
+//                 each wave, from when the type becomes active. The result is
+//                 then multiplied by the wave multiplier (ENEMY_WAVES.rate), so
+//                 every wave spawns faster than the last.
+//     once        spawn a single group per wave (the boss), as soon as active
 //   sheet       optional "boss": 32 px cells, rows Move/Attack/Hit/Death (default:
 //               16 px enemy sheet, rows Move/Hit/Death)
 //   sprites     optional list of sheets to rotate through (one per boss wave)
@@ -105,9 +107,8 @@ export const ENEMY_TYPES = [
     baseDamage: 5,
     speed: 70,
     spawn: {
-      count: { base: 40, perWave: 15 },
-      startInterval: 5,
-      minInterval: 1.8,
+      startInterval: 6,
+      minInterval: 2,
       intervalDecayPerSec: 0.03,
       // groups of 3-6, fairly spaced out
       group: { min: 3, max: 6, radius: 90, spacing: 40 },
@@ -132,7 +133,6 @@ export const ENEMY_TYPES = [
       { kind: "coin", base: 0.2, perLevel: 0, max: 0.2, value: 0 },
     ],
     spawn: {
-      count: { base: 15, perWave: 8 },
       startInterval: 9,
       minInterval: 4,
       intervalDecayPerSec: 0.02,
@@ -168,7 +168,6 @@ export const ENEMY_TYPES = [
       { kind: "coin", base: 0.25, perLevel: 0, max: 0.25, value: 0 },
     ],
     spawn: {
-      count: { base: 2, perWave: 1 },
       startInterval: 12,
       minInterval: 5,
       intervalDecayPerSec: 0.02,
@@ -202,10 +201,7 @@ export const ENEMY_TYPES = [
     drops: [{ kind: "xp-purple", base: 1, perLevel: 0, max: 1, value: 25 }],
     rewardCoins: 15, // extra coin drops on death
     spawn: {
-      count: { base: 1, perWave: 0 },
-      startInterval: 0, // right at the start of the wave
-      minInterval: 999,
-      intervalDecayPerSec: 0,
+      once: true, // one boss, right at the start of the wave
       group: { min: 1, max: 1, radius: 0, spacing: 0 },
       maxAlive: 1,
       at: "base",
@@ -215,19 +211,25 @@ export const ENEMY_TYPES = [
   },
 ];
 
-// Waves: each wave spawns every active type's budget (ENEMY_TYPES[].spawn.count)
-// and ends when it's cleared (all spawned + all killed) or its timer runs out.
+// Waves: every active type spawns groups at its rate until the wave timer runs
+// out (the wave is then survived: "wave-end" reason "cleared"). No budget, so
+// killing everything doesn't end a wave early.
 export const ENEMY_WAVES = {
   baseDuration: 60, // s, wave 1 timer
   durationPerWave: 10, // s added per wave
   maxDuration: 150, // s
-  minClearTime: 3, // s, a wave can't count as cleared before this
+
+  // Spawn rate ramp across waves: every type's spawn interval is multiplied
+  // by perWave^(wave-1), never below minMult. 0.88 → wave 2 spawns ~14%
+  // faster than wave 1, wave 5 ~1.7x, wave 9 ~2.8x, wave 12+ 4x (the floor).
+  // Per-type maxAlive caps (and ENEMY_SPAWN.maxAlive) still apply on top.
+  rate: { perWave: 0.88, minMult: 0.25 },
 
   // Every `every`-th wave is a boss wave: ENEMY_TYPES with when { bossWave }
-  // spawn, the other types bring minionBudgetMult of their usual count, and
+  // spawn, the other types spawn at minionRateMult of their usual rate, and
   // there's no timer: the wave ends when the boss is defeated (leftover
   // minions die with it).
-  boss: { every: 3, minionBudgetMult: 0.5 },
+  boss: { every: 3, minionRateMult: 0.5 },
   // When a wave ends, remaining enemies die immediately (death anim, no drops,
   // not counted as kills). false = they keep chasing until "enemy-clear".
   killOnEnd: true,
@@ -483,6 +485,9 @@ export const ENEMY_TARGETING = {
 // each wave cleared / boss defeated moves one step down (never below 0).
 export const RESPAWN = {
   steps: [3, 5, 8, 12, 18], // s
+  // Where the player appears: px below the golem's anchor (its feet), clear
+  // of its solid body. Used for the run start (player.js) and every respawn.
+  belowBase: 40,
 };
 
 // ---------------------------------------------------------------------------
