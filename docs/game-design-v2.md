@@ -196,7 +196,7 @@ each row). Built so far: Plank, Pistol, Knife, Axe, Boomerang (tuning in
 | **Area** | +10% size of every hitbox / blast | `Icon_Area` | 5 |
 | **Armor** | −1 damage per hit taken | `Icon_Armor` | 5 |
 | **Regen** | heal 0.5 HP/s | `Icon_Regen` | 5 |
-| **Magnet** | pick up XP from further away | `Icon_Magnet` | 3 |
+| **Magnet** | pick up XP and coins from further away (the start radius is tiny: you walk onto pickups until you take Magnet) | `Icon_Magnet` | 3 |
 | **Recall** | Lv1 unlocks a recall ability: teleport to the golem (~1 s cast), cooldown 60 s. Each level after that: −10 s cooldown | none in the pack (placeholder) | 4 |
 | **Growth** | +10% XP gained | `Icon_Growth` | 5 |
 | **Luck** | better drops (hearts, coins) and more rare cards | `Icon_Luck` | 5 |
