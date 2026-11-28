@@ -159,7 +159,7 @@ each row). Built so far: Plank, Pistol, Knife, Axe, Boomerang (tuning in
 
 | Weapon | Targeting / behaviour | Look (projectile · icon) | Level path (Lv2 → Lv5) |
 |---|---|---|---|
-| **Plank** (starter) | **Hits in front of the player**: long poke in the facing direction, hits along its whole length | placeholder: pink stretched knife (no sprite in the pack yet) · pink `Icon_Knife` | alternates **+length** ↔ **a chained poke the other way**: Lv2 +length → Lv3 chains a 2nd poke behind → Lv4 +length → Lv5 chains a 3rd poke in front (front, back, front) |
+| **Plank** (starter) | **Hits in front of the player**: long sweep in the facing direction, hits along its whole length | spectral scythe (procedural) · `Icon_Ghoul_Plank` | alternates **+length** ↔ **a chained sweep the other way**: Lv2 +length → Lv3 chains a 2nd sweep behind → Lv4 +length → Lv5 chains a 3rd sweep in front (front, back, front) |
 | **Whip** | **Hits in front of the player**: wide horizontal slash in the facing direction | `Proj_Whip` · `Icon_Whip` | +area → also slashes behind → +damage → +area |
 | **Magic Bolt** | **Hits the nearest enemy**: homing bolt | `Proj_Magic_Bolt` · `Icon_Magic_Bolt` | +1 bolt → +damage → **rebound** 1 → +1 bolt |
 | **Pistol** (built, the old starter) | **Hits the nearest enemy**: straight shot | knife sprite · `Icon_Magic_Bolt` | alternates **+1 bullet** (fan) ↔ **fires faster**: Lv2 +1 bullet → Lv3 faster → Lv4 +1 bullet → Lv5 faster |
@@ -209,9 +209,9 @@ HP, Move Speed, Might, Cooldown, Magnet and the weapons **Knife**
 starter weapon**: every run begins with it at Lv1 (`main.js` →
 `grantUpgrade`), so its card offers Lv2+. It's slow at first (one poke every
 1.5 s) and the run opens with a **"3, 2, 1, GO!" countdown** under the
-player before its first poke (`PLANK.startCountdown`). It has **no art yet**: it's drawn
-as the knife sprite recolored bright pink and stretched to its length (see
-`docs/assets.md` → "Placeholder art to replace"). The old auto-attack
+player before its first sweep (`PLANK.startCountdown`). It is drawn as a
+procedural translucent violet **spectral scythe** (see `PLANK.visual` and
+`docs/assets.md`). The old auto-attack
 "pistol" (`weapons.js`, nearest enemy, like Magic Bolt) is now the one-level
 **Pistol** card.
 

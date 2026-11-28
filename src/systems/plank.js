@@ -5,34 +5,14 @@
 // the other way → Lv4 +length → Lv5 another chained poke (the other way again:
 // front, back, front).
 //
-// ART PLACEHOLDER: there's no plank sprite in the pack yet, so the poke is
-// the knife sprite recolored bright pink (a small shader) and stretched to
-// the plank's length (PLANK.tint / length / thickness).
-// Replace it when real art exists - listed in docs/assets.md →
-// "Placeholder art to replace".
+// The look is a procedural spectral scythe: one curved violet crescent with a
+// bright core and soft glow, so nothing is stretched into blur.
 //
 // Damage goes through the shared projectile contract (enemies.js reads
 // `damage`, `pierce`, `hitRadius`): a row of invisible hit circles along the
 // plank, sharing ONE `hitEnemies` set, so a poke hits every enemy along its
 // length exactly once.
 import { PLANK } from "../config.js";
-
-// PLACEHOLDER recolor: paints the (grey) knife bright pink while keeping its
-// shading. A plain color() multiplies and would turn it dark magenta.
-const PINK_SHADER = "plank-placeholder-pink";
-const PINK_FRAG = `
-uniform vec3 u_tint; // 0..255
-vec4 frag(vec2 pos, vec2 uv, vec4 color, sampler2D tex) {
-  vec4 c = def_frag();
-  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-  return vec4(clamp(u_tint / 255.0 * (0.55 + 0.75 * l), 0.0, 1.0), c.a);
-}
-`;
-let pinkUniform = null;
-
-export function loadPlankAssets() {
-  loadShader(PINK_SHADER, null, PINK_FRAG);
-}
 
 export function initPlank(player) {
   let level = 0;
@@ -115,8 +95,6 @@ function startCountdown(player, secs) {
   });
 }
 
-const KNIFE_ART_PX = 14; // drawn length of the knife art inside its 16 px frame
-
 /**
  * One poke: a plank `length` px long, starting just off the player, slides
  * out by PLANK.thrust and back, following the player.
@@ -124,20 +102,21 @@ const KNIFE_ART_PX = 14; // drawn length of the knife art inside its 16 px frame
 function poke(player, side, length, damage) {
   let t = 0;
   const dir = vec2(side, 0);
+  // Put the hero into the extended-arm strike pose for the whole hit. The
+  // player's normal idle/walk switcher respects this timer (player.js).
+  player.attackPoseFor = Math.max(player.attackPoseFor ?? 0, PLANK.attackPoseTime);
   const placeAt = (out) => player.pos.add(dir.scale(14 + PLANK.thrust * out)); // plank's near end
 
-  // the look (no hits): the stretched pink knife
+  // the look (no hits): a translucent spectral scythe
   const look = add([
-    sprite("proj-knife", { frame: 0 }), // PLACEHOLDER art (pink knife)
-    shader(PINK_SHADER, (pinkUniform ??= { u_tint: rgb(...PLANK.tint) })),
-    scale(length / KNIFE_ART_PX, PLANK.thickness),
     pos(placeAt(0).add(dir.scale(length / 2))),
-    anchor("center"),
     rotate(dir.angle()),
     z(6),
     "plank",
     "fx", // cleared with the projectiles when the run is over (runstate.js)
   ]);
+
+  look.onDraw(() => drawScythe(length, t, side));
 
   // the hits: circles along the plank, one shared hit list per poke
   const hitEnemies = new Set();
@@ -157,10 +136,56 @@ function poke(player, side, length, damage) {
     const k = Math.min(1, t / PLANK.pokeTime);
     const near = placeAt(Math.sin(k * Math.PI)); // 0 → 1 → 0: thrust out and pull back
     look.pos = near.add(dir.scale(length / 2));
-    parts.forEach((p, i) => (p.pos = near.add(dir.scale(((i + 0.5) / n) * length))));
+    parts.forEach((p, i) => {
+      const u = (i + 0.5) / n;
+      const localY = scytheLocalY(length, u, side);
+      p.pos = near.add(dir.scale(u * length)).add(vec2(-dir.y, dir.x).scale(localY));
+    });
     if (k >= 1) {
       parts.forEach((p) => p.exists() && destroy(p));
       destroy(look);
     }
   });
+}
+
+/** Local y of the scythe curve at u (0 = grip, 1 = tip). +x is the thrust. */
+function scytheLocalY(length, u, side) {
+  return -side * length * PLANK.visual.curveLiftRatio * Math.sin(Math.PI * u);
+}
+
+/** Draw the spectral scythe in the look object's local space (+x = thrust). */
+function drawScythe(length, t, side) {
+  const v = PLANK.visual;
+  const half = length / 2;
+  const pulse = 0.88 + 0.12 * Math.sin(t * 42);
+  const glow = rgb(...v.color);
+  const core = rgb(...v.coreColor);
+
+  // One continuous crescent: no straight shaft. Sample the same curve the
+  // hit circles use, so the sweep and the damage line stay together.
+  const points = [];
+  const steps = 24;
+  for (let i = 0; i <= steps; i++) {
+    const u = i / steps;
+    points.push(vec2(-half + u * length, scytheLocalY(length, u, side)));
+  }
+
+  // Broad aura, blade body, then a crisp cutting core.
+  drawLines({ pts: points, width: v.glowWidth, color: glow, opacity: v.glowOpacity * pulse, join: "round", cap: "round" });
+  drawLines({ pts: points, width: v.bladeWidth, color: glow, opacity: v.bladeOpacity * pulse, join: "round", cap: "round" });
+  drawLines({ pts: points, width: v.coreWidth, color: core, opacity: v.coreOpacity * pulse, join: "round", cap: "round" });
+
+  // No fake hand/grip: the scythe is summoned spectral energy, so it fades
+  // out of a soft flare at the player's side instead of being "held".
+  drawCircle({ pos: points[0], radius: v.originRadius, color: glow, opacity: 0.32 * pulse });
+  drawCircle({ pos: points[0], radius: v.originRadius * 0.45, color: core, opacity: 0.55 * pulse });
+
+  // Bright tip and a few motes sliding along the crescent.
+  drawCircle({ pos: points[steps], radius: 3, color: core, opacity: 0.8 * pulse });
+  for (let i = 0; i < 4; i++) {
+    const u = (t * 0.75 + i / 4) % 1;
+    const at = vec2(-half + u * length, scytheLocalY(length, u, side) - side * 7);
+    const fade = Math.sin(Math.PI * u) * 0.6;
+    drawCircle({ pos: at, radius: 1.4 + fade, color: core, opacity: fade });
+  }
 }
