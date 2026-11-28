@@ -913,6 +913,20 @@ export const BASE_ALERT = {
   bar: { width: 260, height: 14, y: 96, textSize: 12 }, // HUD golem HP bar, top center
 };
 
+// Screen vignette (src/systems/vignette.js): darker corners, deeper and red
+// when the player's HP is low. Drawn under the HUD.
+export const VIGNETTE = {
+  strength: 0.35, // 0..1 darkness at the very corners
+  inner: 0.45, // 0..1 (center → corner) where the shading starts
+  color: [8, 6, 16], // near black, slightly blue
+  lowHp: {
+    below: 0.35, // HP fraction where the low-HP look starts (full at 0 HP)
+    strength: 0.6,
+    inner: 0.3,
+    color: [90, 8, 12], // dark red
+  },
+};
+
 // Boss warning (src/systems/boss-warning.js): announced one wave ahead.
 // Name colors in banners (boss-warning.js, base-alert.js): each boss and the
 // golem get their own color so their names stand out. Bosses by display name
