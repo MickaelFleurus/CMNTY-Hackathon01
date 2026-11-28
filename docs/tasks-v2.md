@@ -289,7 +289,10 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   while the game runs (not on the level-up screen, in the shop, paused,
   frozen / down player). It's one-shots, not a KAPLAY loop: in 3001 a
   paused-then-resumed loop restarts at a wrong offset (often silent).
-  `run-over` plays the game over sound and fades the background music out
+  `run-frozen` (the game-over screen opening) plays the game over sound;
+  `run-over` fades the background music out. Player: `damage-taken` (kind
+  player, rate limited) → hurt, `player-down` / `run-over` "player-died" →
+  dead, `player-respawn` → respawn
   (`LoopMusic.mp3`, one loop for the whole run, never paused). Footsteps aren't a loop: one per
   `SOUND.stride` px actually walked (teleports ignored). **M** toggles mute (saved in the browser).
 

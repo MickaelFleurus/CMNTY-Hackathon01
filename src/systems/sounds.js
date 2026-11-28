@@ -15,7 +15,12 @@
 //                (bonus.js) - rate limited too
 //   LevelUp      player "levelup" (xp.js)
 //   WaveWon      root "wave-end" (a wave survived, enemies.js)
-//   GameOver     root "run-over" (the run is lost; the axe loop stops)
+//   GameOver     root "run-frozen" (the game-over screen opens; the axe loop
+//                stops on "run-over")
+//   playerhurt   root "damage-taken" kind player (rate limited)
+//   playerDead   root "player-down" (respawn countdown) or "run-over"
+//                reason "player-died" (wave 1: the run ends)
+//   respawn      root "player-respawn"
 //   LoopMusic    background music, looped from the start of the run, kept
 //                quiet (SOUND.volume.music); fades out on "run-over" so the
 //                game over sound stands out
@@ -41,6 +46,9 @@ import levelUpUrl from "../../gfx/Sounds/LevelUp.ogg";
 import waveWonUrl from "../../gfx/Sounds/WaveWon.ogg";
 import gameOverUrl from "../../gfx/Sounds/GameOver.ogg";
 import musicUrl from "../../gfx/Sounds/LoopMusic.mp3";
+import hurtUrl from "../../gfx/Sounds/playerhurt.wav";
+import deadUrl from "../../gfx/Sounds/playerDead.wav";
+import respawnUrl from "../../gfx/Sounds/respawn.wav";
 
 const FILES = {
   plank: plankUrl,
@@ -53,6 +61,9 @@ const FILES = {
   waveWon: waveWonUrl,
   gameOver: gameOverUrl,
   music: musicUrl,
+  hurt: hurtUrl,
+  dead: deadUrl,
+  respawn: respawnUrl,
 };
 
 const MUTE_KEY = "golem-necromancer-muted";
@@ -120,15 +131,24 @@ export function startSounds(player) {
   getTreeRoot().on("bonus-picked", () => sfx("collect"));
   player.on("levelup", () => sfx("levelUp"));
   getTreeRoot().on("wave-end", () => sfx("waveWon"));
+  // the player: hurt (rate limited, a crowd hits many times a second),
+  // dies (respawn countdown, or the run's end in wave 1), comes back
+  getTreeRoot().on("damage-taken", ({ kind } = {}) => kind === "player" && sfx("hurt", { gap: SOUND.hurtGap, vary: 80 }));
+  getTreeRoot().on("player-down", () => sfx("dead"));
+  getTreeRoot().on("run-over", ({ reason } = {}) => reason === "player-died" && sfx("dead"));
+  getTreeRoot().on("player-respawn", () => sfx("respawn"));
   // Background music: one looping handle for the whole run, never paused
   // (KAPLAY 3001 resumes a paused loop at a wrong offset), so it keeps
   // playing on the level up / shop screens. Faded out when the run is lost.
   const music = play("sfx-music", { loop: true, volume: SOUND.volume.music });
 
+  // game over sound when the game-over screen opens ("run-frozen": after the
+  // player's death animation, runstate.js), so it doesn't cover "dead"
+  getTreeRoot().on("run-frozen", () => sfx("gameOver"));
+
   let over = false;
   getTreeRoot().on("run-over", () => {
     over = true;
-    sfx("gameOver");
     const from = music.volume;
     const t0 = performance.now();
     const fade = setInterval(() => {
