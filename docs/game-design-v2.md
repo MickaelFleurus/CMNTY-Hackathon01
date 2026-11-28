@@ -153,7 +153,7 @@ How each one targets is its identity, and no two play the same:
 
 | Weapon | Targeting / behaviour | Look (projectile · icon) | Level path (Lv2 → Lv5) |
 |---|---|---|---|
-| **Plank** (starter) | **Hits in front of the player**: short poke in the facing direction | placeholder (no sprite in the pack yet) · `Icon_Axe` | +damage → +reach → hits behind too → +damage |
+| **Plank** (starter) | **Hits in front of the player**: long poke in the facing direction, hits along its whole length | placeholder: pink stretched knife (no sprite in the pack yet) · pink `Icon_Knife` | +damage → +length → hits behind too → +damage |
 | **Whip** | **Hits in front of the player**: wide horizontal slash in the facing direction | `Proj_Whip` · `Icon_Whip` | +area → also slashes behind → +damage → +area |
 | **Magic Bolt** | **Hits the nearest enemy**: homing bolt | `Proj_Magic_Bolt` · `Icon_Magic_Bolt` | +1 bolt → +damage → **rebound** 1 → +1 bolt |
 | **Knife** | **Throws several**: a fan of knives in the facing direction | `Proj_Knife` · `Icon_Knife` | every level: +1 knife per volley **and** **pierce** +1 (PR #41) |
@@ -198,12 +198,15 @@ Status in code: the level-up screen (`src/systems/upgrades.js`) offers Max
 HP, Move Speed, Might, Cooldown, Magnet and the weapons **Knife**
 (`knife.js`), **Plank** (`plank.js`), **Axe** (`axe.js`) and **Boomerang**
 (`boomerang.js`), each a card that unlocks then levels it (tuning in
-`src/config.js`: `KNIFE`, `PLANK`, `AXE`, `BOOMERANG`). The Plank has **no
-art yet**: it's drawn as the knife sprite tinted bright pink and scaled up
-(see `docs/assets.md` → "Placeholder art to replace"). The Plank is a card
-for now; it isn't the starter weapon yet. The current auto-attack "pistol"
-(`weapons.js`) behaves like Magic Bolt (nearest enemy) using the knife
-sprite.
+`src/config.js`: `KNIFE`, `PLANK`, `AXE`, `BOOMERANG`). **The Plank is the
+starter weapon**: every run begins with it at Lv1 (`main.js` →
+`grantUpgrade`), so its card offers Lv2+. It's slow at first (one poke every
+1.5 s) and the run opens with a **"3, 2, 1, GO!" countdown** under the
+player before its first poke (`PLANK.startCountdown`). It has **no art yet**: it's drawn
+as the knife sprite recolored bright pink and stretched to its length (see
+`docs/assets.md` → "Placeholder art to replace"). The old auto-attack
+"pistol" (`weapons.js`, nearest enemy, like Magic Bolt) is now the one-level
+**Pistol** card.
 
 ## UI we need
 

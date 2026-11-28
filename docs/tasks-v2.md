@@ -203,6 +203,12 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   `upgrade-effects.js`, so weapons need nothing new. Magnet fires
   `"magnet-all"` (xp.js) and sets `coin.homing`. `"bonus-picked" { kind }` on
   pickup. A drop with `{ kind: "bonus", bonus: "bomb" }` forces one (chests).
+- **Base under attack UI** (chippe, `base-alert.js`): golem HP bar in the HUD
+  (flashes on hit, respawn countdown next to it while dead), "BASE UNDER
+  ATTACK!" banner (again only after `BASE_ALERT.bannerQuiet` s of quiet),
+  red off-screen arrow while it is hit (not during the break) and a red edge
+  pulse below `BASE_ALERT.dangerRatio`. Fires
+  `getTreeRoot().trigger("base-under-attack", { hp, maxHP })` with each banner.
 - **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
   `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
   It is separate from `player.buffs` (auras, rewritten every frame), so both

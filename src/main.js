@@ -6,7 +6,7 @@ import { makePlayer } from "./systems/player.js";
 import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 import { loadXpAssets, initXp } from "./systems/xp.js";
-import { loadUpgradeAssets, initUpgrades } from "./systems/upgrades.js";
+import { loadUpgradeAssets, initUpgrades, grantUpgrade } from "./systems/upgrades.js";
 import { initHud } from "./systems/hud.js";
 import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
@@ -26,6 +26,7 @@ import { startDamageNumbers } from "./systems/damage-numbers.js";
 import { startGolemShockwave } from "./systems/golem-shockwave.js";
 import { startGuideArrow } from "./systems/guide-arrow.js";
 import { loadBonusAssets, startBonusDrops } from "./systems/bonus.js";
+import { startBaseAlert } from "./systems/base-alert.js";
 import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
@@ -98,6 +99,7 @@ initKnife(player);
 initPlank(player);
 initAxe(player);
 initBoomerang(player);
+grantUpgrade("weapon-plank"); // the starter weapon (Plank Lv1)
 const enemyDirector = startEnemyDirector();
 startAuras();
 startRegen();
@@ -112,6 +114,7 @@ startDamageNumbers();
 startGolemShockwave();
 startGuideArrow();
 startBonusDrops(player);
+startBaseAlert();
 startDevTools(player);
 
 // TEMP until the shop UI lands: keys 1-4 fire a shop pick (level +1 each time).
@@ -146,7 +149,7 @@ getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
 });
 
 add([
-  text("Wave 1 - WASD/arrows to move\n(pistol auto-fires at zombies)", {
+  text("Wave 1 - WASD/arrows to move\n(your plank pokes on its own)", {
     size: 20,
   }),
   pos(16, 16),

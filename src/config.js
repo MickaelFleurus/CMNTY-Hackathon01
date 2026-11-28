@@ -635,20 +635,23 @@ export const KNIFE = {
   // per knife level: knives per volley = level, pierce = 1 + level
 };
 
-// Plank (src/systems/plank.js, card "weapon-plank"): short poke in front of
-// the player. ART PLACEHOLDER: drawn as the knife sprite, tinted bright pink
-// and scaled up, until a real plank sprite exists (see docs/assets.md →
-// "Placeholder art to replace").
-// Level path: Lv2 +damage → Lv3 +reach → Lv4 also pokes behind → Lv5 +damage
+// Plank (src/systems/plank.js): the STARTER weapon (every run begins with it
+// at level 1; its card "weapon-plank" levels it up). A long poke in front of
+// the player that hits along its whole length. ART PLACEHOLDER: drawn as the
+// knife sprite, recolored bright pink and stretched, until a real plank
+// sprite exists (see docs/assets.md → "Placeholder art to replace").
+// Level path: Lv2 +damage → Lv3 +length → Lv4 also pokes behind → Lv5 +damage
 export const PLANK = {
-  interval: 0.9, // s between pokes
+  interval: 1.5, // s between pokes (slow starter; the Cooldown card speeds it up)
+  startCountdown: 3, // s: "3, 2, 1, GO!" above the player before the run's first poke
   damage: 12,
   damagePerLevel: 6, // added at Lv2 and Lv5
-  reach: 56, // px from the player's center to where the poke ends
-  reachBonus: 32, // Lv3+: px added to the reach
-  pokeTime: 0.18, // s the poke stays out
-  hitRadius: 24, // px
-  scale: 3.5, // the knife sprite, rescaled
+  length: 110, // px, the plank itself
+  lengthBonus: 45, // Lv3+: px added to the length
+  thrust: 26, // px it slides out and back during a poke
+  pokeTime: 0.2, // s the poke stays out
+  hitRadius: 16, // px, hit circles spaced along the plank
+  thickness: 3, // y scale of the stretched knife sprite
   tint: [255, 70, 200], // bright pink = placeholder art
 };
 
@@ -768,4 +771,23 @@ export const BONUS_DROPS = {
   recallKey: "r",
   recallCast: 1, // s, taking damage doesn't cancel it
   recallGap: 50, // px below the golem's body where recall lands (like CYCLE.arrivalGap)
+};
+
+// ---------------------------------------------------------------------------
+// Base under attack UI (owner: chippe — src/systems/base-alert.js)
+// ---------------------------------------------------------------------------
+export const BASE_ALERT = {
+  attackedFor: 1.5, // s after the last HP loss the golem still counts as "under attack"
+  bannerQuiet: 5, // s the golem must be left alone before the banner shows again
+  bannerTime: 2.5, // s the "BASE UNDER ATTACK!" banner stays up
+  flashTime: 0.3, // s, the HUD bar's white hit flash fades over this
+  dangerRatio: 0.25, // golem HP fraction below which the danger state is on
+  dangerHz: 1.2, // red edge pulses per second
+  dangerEdge: 60, // px, how far the red edge glow reaches inward
+  dangerOpacity: 0.35, // edge glow opacity at the peak of a pulse
+  onScreenMargin: 40, // px: the golem this far inside the screen counts as visible
+  edgeMargin: 80, // px from the screen edge where the arrow sits (like GUIDE_ARROW)
+  arrowSize: 26, // px
+  arrowHz: 1.5, // arrow pulses per second (doubled in danger)
+  bar: { width: 260, height: 14, y: 96, textSize: 12 }, // HUD golem HP bar, top center
 };
