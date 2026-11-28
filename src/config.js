@@ -379,8 +379,8 @@ export const CFG = {
     // "infinite" gray zone: tiles are repositioned around the camera each frame
     tileSize: 16, // source art is 16px; scaled by map.tileScale below
     tileScale: 3, // 16px art -> 48px on screen
-    gridW: 30, // tiles across the visible band
-    gridH: 18, // tiles down the visible band
+    gridW: 30, // (unused since map.js draws exactly the visible tiles; kept for reference)
+    gridH: 18, // (unused, see gridW)
     // Decor from row 1 of Tiles_Grass (flowers, rock, mushroom; the green
     // blob is never used). Picked per world tile, so a spot never changes.
     decor: {
