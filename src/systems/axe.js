@@ -22,7 +22,7 @@ export function initAxe(player) {
     cooldown -= dt();
     // no throwing while dead (respawn.js), after the run is over (runstate.js)
     // or with the dev playtest switch on (devtools.js, K / ?noattack)
-    if (cooldown > 0 || player.down || player.frozen || player.attackDisabled) return;
+    if (cooldown > 0 || player.down || player.frozen || player.attackDisabled || player.resting) return;
 
     const buffs = player.buffs ?? {};
     const stats = player.stats ?? {};

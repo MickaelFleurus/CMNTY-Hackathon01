@@ -138,7 +138,10 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   start (`wave-end` is not fired), and enemies, projectiles, coins and the
   portal are paused in place. `player.frozen = true` stops movement,
   weapons and regen, so **any new player-driven system must check
-  `player.frozen` as well as `player.down`**. Input is NOT blocked (the
+  `player.frozen` as well as `player.down`**. Weapons also stop between
+  waves: `cycle.js` sets **`player.resting`** for every phase except
+  `"wave"` (aftermath, break, shop, starting), and every weapon checks it
+  next to `player.attackDisabled` (`check-contracts.mjs` enforces it). Input is NOT blocked (the
   scene isn't paused), so the game-over screen's Restart works. It opens on
   `"run-frozen"`: right after `"run-over"`, except when the player died
   (`reason: "player-died"`): the hero's death animation plays on the frozen

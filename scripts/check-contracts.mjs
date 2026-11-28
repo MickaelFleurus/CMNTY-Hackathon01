@@ -77,6 +77,18 @@ for (const file of files) {
   }
 }
 
+// Weapons stop between waves: anything gated on the dev switch
+// player.attackDisabled must also check player.resting (cycle.js sets it
+// for the aftermath / break / shop / starting phases).
+for (const file of files) {
+  const src = stripComments(readFileSync(file, "utf8"));
+  const m = src.match(/\|\|\s*player\.attackDisabled/); // an attack gate (not devtools' toggle)
+  if (m && !/player\.resting/.test(src)) {
+    report(file, lineOf(src, m.index),
+      "checks player.attackDisabled but not player.resting: the player must not attack between waves (cycle.js)");
+  }
+}
+
 if (problems.length) {
   console.error(`✗ contract check failed (${problems.length}):\n  ` + problems.join("\n  "));
   process.exit(1);

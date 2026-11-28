@@ -568,6 +568,7 @@ export const RUN_OVER = {
 };
 
 export const TOWER = {
+  showHpBar: false, // HP bar above the golem (off: the HUD bar at the top shows it)
   // Solid body = the golem's VISIBLE pixels (measured on its idle frames:
   // x 1-30, y 3-31 of the 32 px cell), in art px; scaled with the sprite.
   // Enemies and the player can't overlap it; the HP bar sits just above it.
@@ -916,6 +917,7 @@ export const BASE_ALERT = {
   arrowSize: 26, // px
   arrowHz: 1.5, // arrow pulses per second (doubled in danger)
   bar: { width: 260, height: 14, y: 96, textSize: 12 }, // HUD golem HP bar, top center
+  barFadeIn: 1, // s: the HUD golem bar fades in once the golem is powered on
 };
 
 // Screen vignette (src/systems/vignette.js): darker corners, deeper and red

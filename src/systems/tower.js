@@ -302,6 +302,9 @@ export function startTower() {
       z(50),
       {
         draw() {
+          // hidden: the golem's HP is shown at the top of the screen
+          // (base-alert.js); set TOWER.showHpBar to bring this one back
+          if (!TOWER.showHpBar) return;
           if (!base.exists() || !base.awake) return; // no HP bar on the statue
           const r = base.solidRect(); // sits just above the golem's head
           const w = Math.max(60, (r.x1 - r.x0) * 0.8);

@@ -43,10 +43,13 @@ export function startBaseAlert() {
   let bannerUntil = -Infinity;
   let bannered = false; // the banner already showed for the current attack
   let flash = 0; // 1 right after a hit, fades to 0
+  let barAlpha = 0; // HUD golem bar fade-in once the golem is powered
 
   const golem = () => {
     const b = get("base")[0];
-    return b?.exists() && b.awake && typeof b.hp === "function" ? b : null;
+    // only once the golem is powered on (out of its grey statue look,
+    // tower.js) - the HP bar then fades in over BASE_ALERT.barFadeIn s
+    return b?.exists() && b.awake && b.powered && typeof b.hp === "function" ? b : null;
   };
   const attacked = () => clock - lastHitAt < CFG.attackedFor;
   const playerFar = (b) => {
@@ -62,6 +65,7 @@ export function startBaseAlert() {
     clock += d;
     flash = Math.max(0, flash - d / CFG.flashTime);
     const b = golem();
+    barAlpha = b ? Math.min(1, barAlpha + d / CFG.barFadeIn) : 0;
     if (!b || over) {
       lastHp = b ? b.hp() : null;
       return;
@@ -103,7 +107,7 @@ export function startBaseAlert() {
       draw() {
         const b = golem();
         if (!b || over) return;
-        drawGolemBar(b, flash, get("player")[0]);
+        if (barAlpha > 0) drawGolemBar(b, flash, get("player")[0], barAlpha);
         if (clock < bannerUntil) drawBanner(clock, bannerUntil);
       },
     },
@@ -131,21 +135,22 @@ export function startBaseAlert() {
 }
 
 /** Golem HP bar, top center: green → amber → red, dark gray empty part. */
-function drawGolemBar(b, flash, p) {
+function drawGolemBar(b, flash, p, alpha = 1) {
   const { width: w, height: h, y } = CFG.bar;
   const x = width() / 2 - w / 2;
   const ratio = Math.max(0, Math.min(1, b.hp() / b.maxHP()));
-  drawRect({ pos: vec2(x - 2, y - 2), width: w + 4, height: h + 4, radius: 4, color: rgb(20, 14, 28), opacity: 0.85 });
-  drawRect({ pos: vec2(x, y), width: w, height: h, radius: 3, color: rgb(60, 60, 70) });
-  if (ratio > 0) drawRect({ pos: vec2(x, y), width: w * ratio, height: h, radius: 3, color: barColor(ratio) });
+  drawRect({ pos: vec2(x - 2, y - 2), width: w + 4, height: h + 4, radius: 4, color: rgb(20, 14, 28), opacity: 0.85 * alpha });
+  drawRect({ pos: vec2(x, y), width: w, height: h, radius: 3, color: rgb(60, 60, 70), opacity: alpha });
+  if (ratio > 0) drawRect({ pos: vec2(x, y), width: w * ratio, height: h, radius: 3, color: barColor(ratio), opacity: alpha });
   // hit flash: white over the bar, fading out
-  if (flash > 0) drawRect({ pos: vec2(x, y), width: w, height: h, radius: 3, color: rgb(255, 255, 255), opacity: 0.6 * flash });
+  if (flash > 0) drawRect({ pos: vec2(x, y), width: w, height: h, radius: 3, color: rgb(255, 255, 255), opacity: 0.6 * flash * alpha });
   drawText({
     text: `GOLEM ${Math.ceil(b.hp())}/${b.maxHP()}`,
     size: CFG.bar.textSize,
     pos: vec2(width() / 2, y + h / 2),
     anchor: "center",
     color: rgb(255, 255, 255),
+    opacity: alpha,
   });
   // while dead: watch whether the golem holds until you're back
   if (p?.down) {
@@ -155,6 +160,7 @@ function drawGolemBar(b, flash, p) {
       pos: vec2(x + w + 12, y + h / 2),
       anchor: "left",
       color: rgb(255, 140, 130),
+      opacity: alpha,
     });
   }
 }
