@@ -6,7 +6,7 @@ import { makePlayer } from "./systems/player.js";
 import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 import { loadXpAssets, initXp } from "./systems/xp.js";
-import { loadUpgradeAssets, initUpgrades } from "./systems/upgrades.js";
+import { loadUpgradeAssets, initUpgrades, grantUpgrade } from "./systems/upgrades.js";
 import { initHud } from "./systems/hud.js";
 import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
@@ -97,6 +97,7 @@ initKnife(player);
 initPlank(player);
 initAxe(player);
 initBoomerang(player);
+grantUpgrade("weapon-plank"); // the starter weapon (Plank Lv1)
 const enemyDirector = startEnemyDirector();
 startAuras();
 startRegen();
@@ -145,7 +146,7 @@ getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
 });
 
 add([
-  text("Wave 1 - WASD/arrows to move\n(pistol auto-fires at zombies)", {
+  text("Wave 1 - WASD/arrows to move\n(your plank pokes on its own)", {
     size: 20,
   }),
   pos(16, 16),

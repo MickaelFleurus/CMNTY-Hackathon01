@@ -1,12 +1,18 @@
-// Auto-attack weapons: the "laser pistol" MVP - fires every CFG.weapon.fireInterval
-// seconds at the nearest enemy within range. Enemies just need the "enemy" tag
-// and a pos (Mickael's system); no import coupling.
+// Pistol: the old MVP auto-attack - fires every CFG.weapon.fireInterval
+// seconds at the nearest enemy within range. No longer the starter (the Plank
+// is, see plank.js): it's unlocked by the "weapon-pistol" level up card.
+// Enemies just need the "enemy" tag and a pos; no import coupling.
 import { CFG } from "../config.js";
 
 export function makeWeapon(player) {
   let cooldown = 0;
+  let owned = false;
+  player.on("upgrade", ({ id }) => {
+    if (id === "weapon-pistol") owned = true;
+  });
 
   onUpdate(() => {
+    if (!owned) return;
     cooldown -= dt();
     // no firing while dead (respawn.js) or after the run is over (runstate.js)
     // attackDisabled: dev playtest switch (devtools.js, K / ?noattack)

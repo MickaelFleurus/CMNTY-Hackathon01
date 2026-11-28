@@ -34,7 +34,7 @@ see `src/systems/devtools.js`:
 
 - **K** toggles the player's attack on/off. `?noattack` in the URL starts with
   it off. Useful to playtest enemies, the base/tower and auras without the
-  pistol clearing everything.
+  player's weapons clearing everything.
 
 ## Testing / verification
 

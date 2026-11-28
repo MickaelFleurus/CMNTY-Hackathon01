@@ -620,20 +620,23 @@ export const KNIFE = {
   // per knife level: knives per volley = level, pierce = 1 + level
 };
 
-// Plank (src/systems/plank.js, card "weapon-plank"): short poke in front of
-// the player. ART PLACEHOLDER: drawn as the knife sprite, tinted bright pink
-// and scaled up, until a real plank sprite exists (see docs/assets.md →
-// "Placeholder art to replace").
-// Level path: Lv2 +damage → Lv3 +reach → Lv4 also pokes behind → Lv5 +damage
+// Plank (src/systems/plank.js): the STARTER weapon (every run begins with it
+// at level 1; its card "weapon-plank" levels it up). A long poke in front of
+// the player that hits along its whole length. ART PLACEHOLDER: drawn as the
+// knife sprite, recolored bright pink and stretched, until a real plank
+// sprite exists (see docs/assets.md → "Placeholder art to replace").
+// Level path: Lv2 +damage → Lv3 +length → Lv4 also pokes behind → Lv5 +damage
 export const PLANK = {
-  interval: 0.9, // s between pokes
+  interval: 1.5, // s between pokes (slow starter; the Cooldown card speeds it up)
+  startCountdown: 3, // s: "3, 2, 1, GO!" above the player before the run's first poke
   damage: 12,
   damagePerLevel: 6, // added at Lv2 and Lv5
-  reach: 56, // px from the player's center to where the poke ends
-  reachBonus: 32, // Lv3+: px added to the reach
-  pokeTime: 0.18, // s the poke stays out
-  hitRadius: 24, // px
-  scale: 3.5, // the knife sprite, rescaled
+  length: 110, // px, the plank itself
+  lengthBonus: 45, // Lv3+: px added to the length
+  thrust: 26, // px it slides out and back during a poke
+  pokeTime: 0.2, // s the poke stays out
+  hitRadius: 16, // px, hit circles spaced along the plank
+  thickness: 3, // y scale of the stretched knife sprite
   tint: [255, 70, 200], // bright pink = placeholder art
 };
 

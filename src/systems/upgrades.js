@@ -23,8 +23,11 @@ export const UPGRADES = [
   { id: "cooldown", name: "Cooldown", description: "Weapons fire 10% faster", icon: "Icon_Cooldown", maxLevel: 5 },
   { id: "magnet", name: "Magnet", description: "Pick up XP from further away", icon: "Icon_Magnet", maxLevel: 3 },
   { id: "weapon-knife", name: "Knife", description: "New weapon: throws knives", icon: "Icon_Knife", maxLevel: 5 },
+  // the old starter auto-attack (weapons.js), now a card: shoots the nearest enemy
+  { id: "weapon-pistol", name: "Pistol", description: "New weapon: shoots the nearest enemy", icon: "Icon_Magic_Bolt", maxLevel: 1 },
+  // STARTER weapon: granted at level 1 when the run starts (main.js → grantUpgrade)
   // PLACEHOLDER icon: pink knife until a plank icon exists (docs/assets.md)
-  { id: "weapon-plank", name: "Plank", description: "New weapon: pokes what's in front of you", icon: "Icon_Knife", tint: [255, 70, 200], maxLevel: 5 },
+  { id: "weapon-plank", name: "Plank", description: "Pokes what's in front of you", icon: "Icon_Knife", tint: [255, 70, 200], maxLevel: 5 },
   { id: "weapon-axe", name: "Axe", description: "New weapon: thrown up, falls through the horde", icon: "Icon_Axe", maxLevel: 5 },
   { id: "weapon-boomerang", name: "Boomerang", description: "New weapon: flies out and comes back", icon: "Icon_Boomerang", maxLevel: 5 },
 ];
@@ -50,6 +53,12 @@ function shuffle(list) {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
+}
+
+/** Give an upgrade without the level up screen (e.g. the starter weapon). */
+export function grantUpgrade(id) {
+  const upgrade = UPGRADES.find((u) => u.id === id);
+  if (upgrade && (ownedUpgrades[id] ?? 0) < upgrade.maxLevel) applyUpgrade(upgrade);
 }
 
 function applyUpgrade(upgrade) {
