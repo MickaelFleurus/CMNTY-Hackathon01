@@ -14,6 +14,7 @@
 import { xpState } from "./xp.js";
 import { UPGRADE } from "../config.js";
 import { isFocusClick } from "../util/focusClick.js";
+import { iconScale } from "../util/iconScale.js";
 
 // Upgrade data shape: { id, name, description, icon, maxLevel, tint?, iconPath?, levels? }
 // tint: optional [r, g, b] on the card icon (placeholder art, e.g. the Plank)
@@ -194,7 +195,8 @@ function openMenu() {
       color(40, 36, 60),
       outline(3, idleOutline),
     ]);
-    card.add([sprite(u.icon), anchor("center"), pos(0, -80), scale(5), ...(u.tint ? [color(...u.tint)] : [])]);
+    // icon at 80 px whatever the file size (16 px pack icons, 64 px ghoul art)
+    card.add([sprite(u.icon), anchor("center"), pos(0, -80), scale(iconScale(u.icon, 80)), ...(u.tint ? [color(...u.tint)] : [])]);
     card.add([text(u.name, { size: 26 }), anchor("center"), pos(0, 10)]);
     card.add([
       text(level === 1 ? "NEW" : `Level ${level}`, { size: 16 }),

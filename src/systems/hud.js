@@ -31,6 +31,7 @@ import { xpState } from "./xp.js";
 import { UPGRADES, ownedUpgrades } from "./upgrades.js";
 import { HUD } from "../config.js";
 import { hpColor, HP_EMPTY } from "../util/hpColor.js";
+import { iconScale } from "../util/iconScale.js";
 
 export const hudState = {
   wave: 0,
@@ -247,13 +248,14 @@ function owned(filter) {
     .filter((o) => o.upgrade);
 }
 
+/** size = the scale a 16 px pack icon gets (2 -> 32 px); bigger art is fitted to that. */
 function drawIcon(upgrade, at, size) {
   if (!getSprite(upgrade.icon)) return;
   drawSprite({
     sprite: upgrade.icon,
     pos: at,
     anchor: "center",
-    scale: size,
+    scale: iconScale(upgrade.icon, 16 * size),
     color: upgrade.tint ? rgb(...upgrade.tint) : undefined,
   });
 }
