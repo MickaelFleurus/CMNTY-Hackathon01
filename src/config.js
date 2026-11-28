@@ -964,3 +964,57 @@ export const GOLEM_WARDEN = {
   color: [150, 210, 180], // gray-green: it holds, it doesn't hurt
   pulseColor: [120, 230, 190], // ring color of a pulse
 };
+
+// ---------------------------------------------------------------------------
+// Chests & hidden treasures (owner: chippe — src/systems/chests.js)
+// docs/game-design-v2.md → "Chests & hidden treasures"
+// ---------------------------------------------------------------------------
+export const CHESTS = {
+  perWave: { min: 1, max: 3 }, // visible chests spawned at each wave start
+  minDist: 450, // px from the golem: never too close
+  maxDist: 1500, // px: the farther, the better the loot (q = 0..1)
+  scale: 3,
+  openRadius: 44, // px: stand this close to open
+  openTime: 1, // s standing next to it (damage doesn't cancel, walking away does)
+  guardedChance: 0.35, // chance a chest has a pack around it
+  guardRadius: 320, // px: the pack spawns the first time you get this close
+  guards: { min: 3, max: 5 },
+  // one roll per chest; weight + perQ x q (golem-* only once the golem is awake)
+  loot: {
+    coins: { weight: 5 },
+    card: { weight: 2, perQ: 2 }, // a free level-up card (pick 1 of 3)
+    heal: { weight: 2 }, // full player heal
+    "golem-repair": { weight: 0.3, perQ: 0.7 },
+    "golem-upgrade": { weight: 0.2, perQ: 0.6 }, // free, doesn't raise upgradesOwned
+  },
+  coins: { base: 8, perWave: 3, farBonus: 1.5 }, // (base + perWave x (wave-1)) x (1 + farBonus x q)
+  repairPct: 0.3, // free golem repair: this fraction of its max HP
+};
+
+export const GOLEM_CHEST = {
+  firstWave: 2, // first one (the golem wakes at the end of wave 1)
+  every: { min: 2, max: 3 }, // waves between two golem chests
+  minDist: 1100, // px from the golem: always far
+  maxDist: 1600,
+  scale: 3.6,
+  tint: [255, 215, 140], // stone/gold look (+ a glow)
+  guards: { min: 5, max: 7 }, // always guarded
+  maxHpPerLevel: 60, // Golem Max HP
+  armorPerLevel: 0.12, // Golem Armor: -12% golem damage taken per level
+  armorMin: 0.4, // never below 40% damage taken
+  swipeRadiusPerLevel: 0.15, // Swipe: shock wave radius +15% per level
+  swipeForcePerLevel: 0.2, // and push +20% per level
+};
+
+export const TREASURES = {
+  base: 2, // hidden treasures in wave 1
+  perWave: 0.5, // + this many per wave after (floored)
+  max: 6,
+  minDist: 400,
+  maxDist: 1700,
+  hintRadius: 110, // px: a faint sparkle shows this close (never on the minimap)
+  digRadius: 30, // px: stand on it
+  digTime: 2, // s; walking away cancels
+  coinMult: 2.5, // bigger than a chest's coin bag
+  rareChance: 0.25, // sometimes a rare item from the chest list instead
+};
