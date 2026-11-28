@@ -301,6 +301,10 @@ export const ENEMY_SPAWN = {
   // the first type to fill up starves the ones that unlock later.
   maxAlive: 300,
   edgeMargin: 48, // px beyond the screen edge to spawn at
+  // s: spawns also stay outside where the camera will be this long from now
+  // (its velocity extrapolated), so walking toward an edge doesn't reveal
+  // enemies as they appear
+  leadTime: 1,
 };
 
 // Default drop table (types can override with `drops`), rolled once per kill.
