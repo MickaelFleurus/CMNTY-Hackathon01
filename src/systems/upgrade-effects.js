@@ -8,7 +8,7 @@
 //   speed    = base * stats.speedMult
 // "magnet" is handled in upgrades.js; weapon cards in their own files:
 // "weapon-knife" knife.js, "weapon-plank" plank.js, "weapon-axe" axe.js,
-// "weapon-boomerang" boomerang.js.
+// "weapon-boomerang" boom-stick.js.
 //
 // Rage (rare bonus drop, bonus.js): while player.rage = { damageMult,
 // attackSpeedMult } is set, it multiplies on top of the card stats. bonus.js
