@@ -929,3 +929,22 @@ export const SOUND = {
   // turn of the axe, AXE.spin 720°/s).
   axeEvery: 0.25,
 };
+
+// ---------------------------------------------------------------------------
+// Golem styles (owner: Akram - src/systems/golem-warden.js)
+// ---------------------------------------------------------------------------
+// Warden (docs/game-design-v2.md → "The golem awakening flow" → pick 1 of 3
+// golem styles): the crowd-control identity. A slow-field aura around the
+// golem holds the horde back (same "aura" mechanism as the guardian), plus a
+// periodic pulse that slows enemies inside much harder for a moment. Picked
+// with the root event "golem-style-pick" { style: "warden", level?, params? }.
+export const GOLEM_WARDEN = {
+  radius: { base: 260, perLevel: 35 }, // px, slow field around the golem
+  enemySlow: { base: 0.6, perLevel: -0.05, min: 0.4 }, // enemy speed x inside
+  pulseInterval: 4, // s between pulses (fires only with an enemy inside)
+  pulseDuration: 1.5, // s the hard slow lasts
+  pulseSlow: 0.15, // enemy speed x inside while the pulse holds
+  ringTime: 0.45, // s, ring animation length (as GOLEM_SHOCKWAVE)
+  color: [150, 210, 180], // gray-green: it holds, it doesn't hurt
+  pulseColor: [120, 230, 190], // ring color of a pulse
+};
