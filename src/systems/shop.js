@@ -260,10 +260,16 @@ export function makeShop() {
         color: hot ? rgb(84, 74, 110) : rgb(60, 52, 80),
         outline: { width: 2, color: rgb(150, 140, 180) },
       });
-      const keys = SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ");
       // Both hint lines sit INSIDE the button (full opacity, nothing bleeds
       // below its edge - the +22 offset used to poke out of the 44px rect).
-      drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + 20), anchor: "center" });
+      // Line 1 changes once a node was bought this break: Enter is no longer
+      // "skip", it confirms the pending upgrade.
+      if (upgradesOwned > 0) {
+        drawText({ text: "ENTER: upgrade", size: 15, pos: vec2(width() / 2, skipRect.y + 20), anchor: "center", color: [255, 216, 90] });
+      } else {
+        const keys = SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ");
+        drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + 20), anchor: "center" });
+      }
       drawText({ text: "ENTER: continue", size: 15, pos: vec2(width() / 2, skipRect.y + 42), anchor: "center", color: [255, 216, 90] });
     }
 
@@ -343,8 +349,9 @@ export function makeShop() {
     getTreeRoot().trigger("golem-upgraded-free", { id: opt.id, name: opt.name, level: levels[opt.id] });
   });
 
-  // Skip without buying: SHOP.skipKeys or the Skip button. Enter confirms
-  // the picks already made (the user-requested "Enter confirms" path).
+  // Skip without buying: SHOP.skipKeys or the Skip button (skipKeys still
+  // close after a buy - same close, just described as "skip" only when
+  // nothing was bought). Enter confirms the picks already made.
   // The cycle director starts the next wave on shop-close, as after a pick.
   onKeyPress(SHOP.skipKeys, () => ui && close());
   onKeyPress("enter", () => ui && close());
