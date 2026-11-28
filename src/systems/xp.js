@@ -9,6 +9,8 @@
 //   - Writes to the player object so others can read it without imports:
 //       player.level   current level (enemies.js spawn conditions read this)
 //   - On level up: player.trigger("levelup", level)
+//   - getTreeRoot().on("magnet-all"): every xp gem / heart on the map flies
+//     to the player, nearest first (Magnet bonus drop, bonus.js)
 import { XP, PICKUP_SPRITES } from "../config.js";
 
 // Shared xp state, read by hud.js and upgrades.js
@@ -58,11 +60,38 @@ export function spawnPickup(position, kind, value) {
     const dist = pickup.pos.dist(p.pos);
     if (dist < XP.collectRadius) {
       collect(p, pickup);
+    } else if (pickup.homing) {
+      flyHome(pickup, p);
     } else if (dist < xpState.pickupRadius) {
       pickup.moveTo(p.pos, XP.magnetSpeed);
     }
   });
   return pickup;
+}
+
+// Magnet bonus (bonus.js fires "magnet-all"): every pickup on the map waits
+// its turn, lifts off a little, then speeds up toward the player.
+function flyHome(pickup, p) {
+  const h = pickup.homing;
+  h.t += dt();
+  if (h.t < h.delay) return;
+  if (h.t < h.delay + XP.homingLift) {
+    pickup.pos.y -= XP.homingLiftSpeed * dt();
+    return;
+  }
+  h.speed = Math.min(XP.homingMaxSpeed, h.speed + XP.homingAccel * dt());
+  pickup.moveTo(p.pos, h.speed);
+}
+
+function homeAll() {
+  const p = player();
+  if (!p) return;
+  // nearest first, so they arrive one after another
+  const all = [...get("xp-gem"), ...get("pickup").filter((o) => !o.is("bonus"))];
+  all.sort((a, b) => a.pos.dist(p.pos) - b.pos.dist(p.pos));
+  all.forEach((o, i) => {
+    o.homing = { t: 0, delay: Math.min(i * XP.homingStagger, XP.homingMaxDelay), speed: 0 };
+  });
 }
 
 function collect(p, pickup) {
@@ -105,4 +134,6 @@ export function initXp() {
   on("drop", "enemy", (_enemy, { kind, pos: dropPos, value }) => {
     spawnPickup(dropPos.clone(), kind, value);
   });
+  // Magnet bonus drop (bonus.js): pull every gem / heart on the map
+  getTreeRoot().on("magnet-all", homeAll);
 }

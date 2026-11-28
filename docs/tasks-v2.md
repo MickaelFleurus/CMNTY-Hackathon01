@@ -196,6 +196,13 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   When only one target is available, everyone goes for it.
 - **Base**: effects center on the first object tagged `"base"` (`base.js`).
   TEMP keys 1–4 in `main.js` still fire shop picks for testing.
+- **Rare bonus drops** (chippe, `bonus.js`): a `"bonus"` row at the top of the
+  drop tables (0.5%, replaces the normal drop). Bomb, Freeze, Rage, Golem heal,
+  Magnet, Recall (R). Rage sets `player.rage = { damageMult, attackSpeedMult }`
+  + `player.trigger("rage-changed")`, folded into `player.stats` by
+  `upgrade-effects.js`, so weapons need nothing new. Magnet fires
+  `"magnet-all"` (xp.js) and sets `coin.homing`. `"bonus-picked" { kind }` on
+  pickup. A drop with `{ kind: "bonus", bonus: "bomb" }` forces one (chests).
 - **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
   `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
   It is separate from `player.buffs` (auras, rewritten every frame), so both
