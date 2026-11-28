@@ -6,7 +6,7 @@
 //
 // where style is "guardian" | "berserker" | "warden". Guardian/Berserker
 // behaviors live in their own systems (golem-guardian.js / golem-berserker.js);
-// they listen for this event. Warden is a placeholder (locked card).
+// they listen for this event.
 //
 // Interaction mirrors the level-up screen (upgrades.js): paused root, fixed()
 // UI, manual hit-testing (hover/click don't fire while paused), keys 1-3.
@@ -29,9 +29,8 @@ const STYLES = [
   {
     id: "warden",
     name: "Warden",
-    desc: "Crowd control: slows and holds the horde. (Coming soon - locked for now.)",
+    desc: "Crowd control: slows and holds the horde.",
     key: "3",
-    locked: true,
   },
 ];
 
