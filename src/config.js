@@ -620,6 +620,63 @@ export const KNIFE = {
   // per knife level: knives per volley = level, pierce = 1 + level
 };
 
+// Plank (src/systems/plank.js, card "weapon-plank"): short poke in front of
+// the player. ART PLACEHOLDER: drawn as the knife sprite, tinted bright pink
+// and scaled up, until a real plank sprite exists (see docs/assets.md →
+// "Placeholder art to replace").
+// Level path: Lv2 +damage → Lv3 +reach → Lv4 also pokes behind → Lv5 +damage
+export const PLANK = {
+  interval: 0.9, // s between pokes
+  damage: 12,
+  damagePerLevel: 6, // added at Lv2 and Lv5
+  reach: 56, // px from the player's center to where the poke ends
+  reachBonus: 32, // Lv3+: px added to the reach
+  pokeTime: 0.18, // s the poke stays out
+  hitRadius: 24, // px
+  scale: 3.5, // the knife sprite, rescaled
+  tint: [255, 70, 200], // bright pink = placeholder art
+};
+
+// Axe (src/systems/axe.js, card "weapon-axe"): thrown up in an arc, falls
+// through the horde. Level path: Lv2 +damage → Lv3 pierce +3 → Lv4 +1 axe →
+// Lv5 +area
+export const AXE = {
+  interval: 2.2, // s between throws
+  damage: 14,
+  damageBonus: 7, // Lv2+
+  pierce: 5, // enemies hit before it's spent
+  pierceBonus: 3, // Lv3+
+  launchUp: 560, // px/s initial upward speed
+  launchSide: 170, // px/s sideways (toward the facing side, ± random)
+  gravity: 1150, // px/s²
+  lifetime: 1.5, // s
+  spin: 720, // deg/s
+  hitRadius: 14, // px
+  scale: 2.5,
+  areaMult: 1.4, // Lv5: hit radius + sprite size
+};
+
+// Boomerang (src/systems/boomerang.js, card "weapon-boomerang"): flies out to
+// the nearest enemy (or the facing side), slows down, comes back to the
+// player; it can hit the same enemies again on the way back.
+// Level path: Lv2 pierce +2 → Lv3 +1 boomerang → Lv4 +speed → Lv5 +damage
+export const BOOMERANG = {
+  interval: 1.8, // s between throws
+  damage: 9,
+  damageBonus: 5, // Lv5
+  pierce: 3, // hits per pass (out, then back)
+  pierceBonus: 2, // Lv2+
+  range: 280, // px it flies out
+  aimRange: 420, // px: aims at the nearest enemy within this, else the facing side
+  outTime: 0.55, // s to reach full range (eases out)
+  returnSpeed: 520, // px/s on the way back
+  speedMult: 1.3, // Lv4: faster out and back
+  spread: 0.5, // radians between boomerangs (Lv3+)
+  maxLifetime: 4, // s safety cap
+  hitRadius: 13, // px
+  scale: 2.5,
+};
+
 export const HUD = {
   margin: 16,
   textSize: 22,

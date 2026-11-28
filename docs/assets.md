@@ -46,5 +46,15 @@ that folder's `README.txt`; this doc is the quick index for agents.
 7. **Don't modify or rename files inside the pack** - it's vendored third-
    party art; if you need a variant, add your own file next to it.
 
+## Placeholder art to replace
+
+Things drawn with stand-in art because the pack has nothing for them yet.
+**When real art exists, swap it in and remove the line here.**
+
+| What | Placeholder now | Where to change it |
+|---|---|---|
+| **Plank** weapon (poke) | knife sprite (`Proj_Knife`, frame 0), recolored bright pink by a small shader (`PLANK.tint`), scaled ×3.5 (`PLANK.scale`) | `src/systems/plank.js` (`poke()` + the pink shader, which can go once real art exists), `src/config.js` → `PLANK` |
+| **Plank** level-up card icon | `Icon_Knife` tinted the same pink | `src/systems/upgrades.js` → the `weapon-plank` entry (`icon`, `tint`) |
+
 Owners per `docs/tasks.md`: Akram wires the hero + projectile + tile map,
 Mickael the enemies, chippe the pickups/icons for the level-up UI.
