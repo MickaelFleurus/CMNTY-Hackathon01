@@ -328,11 +328,17 @@ export const CFG = {
     z: 40,
   },
 
+  // Pistol (src/systems/weapons.js, card "weapon-pistol"): shoots the nearest
+  // enemy. Every level: +damagePerLevel. Path: Lv2 +1 bullet → Lv3 faster
+  // fire → Lv4 +1 bullet → Lv5 faster fire.
   weapon: {
     fireInterval: 1.0, // seconds between pistol shots
     projectileSpeed: 480, // px/s
     damage: 10,
+    damagePerLevel: 3,
     range: 360, // px - acquire nearest enemy within this distance
+    spread: 0.2, // radians between bullets of one shot (Lv2+)
+    fasterFire: 0.8, // fire interval x this at Lv3 and again at Lv5
   },
 
   map: {
@@ -626,13 +632,15 @@ export const UPGRADE = {
 };
 
 // Knife weapon unlocked by the "weapon-knife" upgrade (src/systems/knife.js)
+// Every level: +damagePerLevel. Path alternates: Lv2 +1 knife → Lv3 +1
+// pierce → Lv4 +1 knife → Lv5 +1 pierce (Lv1: 1 knife, pierce 1).
 export const KNIFE = {
   interval: 1.2, // s between volleys
   damage: 8,
+  damagePerLevel: 3,
   speed: 560, // px/s
   lifetime: 0.9, // s
   spread: 0.18, // radians between knives in one volley
-  // per knife level: knives per volley = level, pierce = 1 + level
 };
 
 // Plank (src/systems/plank.js): the STARTER weapon (every run begins with it
@@ -640,14 +648,17 @@ export const KNIFE = {
 // the player that hits along its whole length. ART PLACEHOLDER: drawn as the
 // knife sprite, recolored bright pink and stretched, until a real plank
 // sprite exists (see docs/assets.md → "Placeholder art to replace").
-// Level path: Lv2 +damage → Lv3 +length → Lv4 also pokes behind → Lv5 +damage
+// Every level: +damagePerLevel. Path alternates: Lv2 +length → Lv3 a chained
+// poke the other way → Lv4 +length → Lv5 another chained poke (the other way
+// again).
 export const PLANK = {
-  interval: 1.5, // s between pokes (slow starter; the Cooldown card speeds it up)
-  startCountdown: 3, // s: "3, 2, 1, GO!" above the player before the run's first poke
+  interval: 1.5, // s between attacks (slow starter; the Cooldown card speeds it up)
+  startCountdown: 3, // s: "3, 2, 1, GO!" under the player before the run's first poke
   damage: 12,
-  damagePerLevel: 6, // added at Lv2 and Lv5
+  damagePerLevel: 4,
   length: 110, // px, the plank itself
-  lengthBonus: 45, // Lv3+: px added to the length
+  lengthBonus: 40, // px added at Lv2 and again at Lv4
+  chainDelay: 0.16, // s between the chained pokes of one attack
   thrust: 26, // px it slides out and back during a poke
   pokeTime: 0.2, // s the poke stays out
   hitRadius: 16, // px, hit circles spaced along the plank
@@ -656,40 +667,38 @@ export const PLANK = {
 };
 
 // Axe (src/systems/axe.js, card "weapon-axe"): thrown up in an arc, falls
-// through the horde. Level path: Lv2 +damage → Lv3 pierce +3 → Lv4 +1 axe →
-// Lv5 +area
+// through the horde. Every level: +damagePerLevel. Path: Lv2 +1 axe → Lv3
+// thrown to both sides → Lv4 +1 axe → Lv5 +1 axe.
 export const AXE = {
   interval: 2.2, // s between throws
   damage: 14,
-  damageBonus: 7, // Lv2+
+  damagePerLevel: 4,
   pierce: 5, // enemies hit before it's spent
-  pierceBonus: 3, // Lv3+
   launchUp: 560, // px/s initial upward speed
-  launchSide: 170, // px/s sideways (toward the facing side, ± random)
+  launchSide: 170, // px/s sideways (toward its side; axes on one side fan out)
   gravity: 1150, // px/s²
   lifetime: 1.5, // s
   spin: 720, // deg/s
   hitRadius: 14, // px
   scale: 2.5,
-  areaMult: 1.4, // Lv5: hit radius + sprite size
 };
 
 // Boomerang (src/systems/boomerang.js, card "weapon-boomerang"): flies out to
 // the nearest enemy (or the facing side), slows down, comes back to the
 // player; it can hit the same enemies again on the way back.
-// Level path: Lv2 pierce +2 → Lv3 +1 boomerang → Lv4 +speed → Lv5 +damage
+// Every level: +damagePerLevel. Path alternates: Lv2 +1 boomerang → Lv3
+// +range → Lv4 +1 boomerang → Lv5 +range.
 export const BOOMERANG = {
   interval: 1.8, // s between throws
   damage: 9,
-  damageBonus: 5, // Lv5
+  damagePerLevel: 3,
   pierce: 3, // hits per pass (out, then back)
-  pierceBonus: 2, // Lv2+
   range: 280, // px it flies out
+  rangeBonus: 90, // px added at Lv3 and again at Lv5
   aimRange: 420, // px: aims at the nearest enemy within this, else the facing side
   outTime: 0.55, // s to reach full range (eases out)
   returnSpeed: 520, // px/s on the way back
-  speedMult: 1.3, // Lv4: faster out and back
-  spread: 0.5, // radians between boomerangs (Lv3+)
+  spread: 0.5, // radians between boomerangs (Lv2+)
   maxLifetime: 4, // s safety cap
   hitRadius: 13, // px
   scale: 2.5,

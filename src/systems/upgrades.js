@@ -14,22 +14,29 @@
 import { xpState } from "./xp.js";
 import { UPGRADE } from "../config.js";
 
-// Upgrade data shape: { id, name, description, icon, maxLevel, tint? }
+// Upgrade data shape: { id, name, description, icon, maxLevel, tint?, levels? }
 // tint: optional [r, g, b] on the card icon (placeholder art, e.g. the Plank)
+// levels: optional card text for Lv2, Lv3… (weapons: what that level adds,
+//         docs/game-design-v2.md → "Weapons"); description is the Lv1 text
 export const UPGRADES = [
   { id: "max-hp", name: "Max HP", description: "+20 max health", icon: "Icon_Max_HP", maxLevel: 5 },
   { id: "move-speed", name: "Move Speed", description: "+10% movement speed", icon: "Icon_Move_Speed", maxLevel: 5 },
   { id: "might", name: "Might", description: "+15% weapon damage", icon: "Icon_Might", maxLevel: 5 },
   { id: "cooldown", name: "Cooldown", description: "Weapons fire 10% faster", icon: "Icon_Cooldown", maxLevel: 5 },
   { id: "magnet", name: "Magnet", description: "Pick up XP from further away", icon: "Icon_Magnet", maxLevel: 3 },
-  { id: "weapon-knife", name: "Knife", description: "New weapon: throws knives", icon: "Icon_Knife", maxLevel: 5 },
+  { id: "weapon-knife", name: "Knife", description: "New weapon: throws knives", icon: "Icon_Knife", maxLevel: 5,
+    levels: ["+1 knife, +damage", "Knives go through 1 more enemy, +damage", "+1 knife, +damage", "Knives go through 1 more enemy, +damage"] },
   // the old starter auto-attack (weapons.js), now a card: shoots the nearest enemy
-  { id: "weapon-pistol", name: "Pistol", description: "New weapon: shoots the nearest enemy", icon: "Icon_Magic_Bolt", maxLevel: 1 },
+  { id: "weapon-pistol", name: "Pistol", description: "New weapon: shoots the nearest enemy", icon: "Icon_Magic_Bolt", maxLevel: 5,
+    levels: ["+1 bullet, +damage", "Fires faster, +damage", "+1 bullet, +damage", "Fires faster, +damage"] },
   // STARTER weapon: granted at level 1 when the run starts (main.js → grantUpgrade)
   // PLACEHOLDER icon: pink knife until a plank icon exists (docs/assets.md)
-  { id: "weapon-plank", name: "Plank", description: "Pokes what's in front of you", icon: "Icon_Knife", tint: [255, 70, 200], maxLevel: 5 },
-  { id: "weapon-axe", name: "Axe", description: "New weapon: thrown up, falls through the horde", icon: "Icon_Axe", maxLevel: 5 },
-  { id: "weapon-boomerang", name: "Boomerang", description: "New weapon: flies out and comes back", icon: "Icon_Boomerang", maxLevel: 5 },
+  { id: "weapon-plank", name: "Plank", description: "Pokes what's in front of you", icon: "Icon_Knife", tint: [255, 70, 200], maxLevel: 5,
+    levels: ["Longer plank, +damage", "Chains a 2nd poke behind you, +damage", "Longer plank, +damage", "Chains a 3rd poke in front, +damage"] },
+  { id: "weapon-axe", name: "Axe", description: "New weapon: thrown up, falls through the horde", icon: "Icon_Axe", maxLevel: 5,
+    levels: ["+1 axe, +damage", "Axes thrown to both sides, +damage", "+1 axe, +damage", "+1 axe, +damage"] },
+  { id: "weapon-boomerang", name: "Boomerang", description: "New weapon: flies out and comes back", icon: "Icon_Boomerang", maxLevel: 5,
+    levels: ["+1 boomerang, +damage", "Flies further, +damage", "+1 boomerang, +damage", "Flies further, +damage"] },
 ];
 
 // id -> current level
@@ -178,7 +185,7 @@ function openMenu() {
       color(255, 220, 90),
     ]);
     card.add([
-      text(u.description, { size: 16, width: cardW - 30, align: "center" }),
+      text((level > 1 && u.levels?.[level - 2]) || u.description, { size: 16, width: cardW - 30, align: "center" }),
       anchor("center"),
       pos(0, 90),
       color(200, 200, 220),

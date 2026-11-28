@@ -1,7 +1,9 @@
 // Plank: the STARTER melee weapon (main.js grants it at level 1 when the run
 // starts; the "weapon-plank" level up card levels it up). A long poke in the
 // direction the player faces (docs/game-design-v2.md → Weapons).
-// Level path: Lv2 +damage → Lv3 +length → Lv4 also pokes behind → Lv5 +damage.
+// Every level: +damage. The path alternates: Lv2 +length → Lv3 a chained poke
+// the other way → Lv4 +length → Lv5 another chained poke (the other way again:
+// front, back, front).
 //
 // ART PLACEHOLDER: there's no plank sprite in the pack yet, so the poke is
 // the knife sprite recolored bright pink (a small shader) and stretched to
@@ -42,23 +44,36 @@ export function initPlank(player) {
     if (id === "weapon-plank") level = lvl;
   });
 
+  // chained pokes still to come in the current attack: { in: s, side, length, damage }
+  let chain = [];
+
   onUpdate(() => {
     if (level === 0) return;
     cooldown -= dt();
     // no attacking while dead (respawn.js), after the run is over (runstate.js)
     // or with the dev playtest switch on (devtools.js, K / ?noattack)
-    if (cooldown > 0 || player.down || player.frozen || player.attackDisabled) return;
+    const blocked = player.down || player.frozen || player.attackDisabled;
+    if (blocked) chain = [];
+    for (const c of chain) c.in -= dt();
+    for (const c of chain.filter((c) => c.in <= 0)) poke(player, c.side, c.length, c.damage);
+    chain = chain.filter((c) => c.in > 0);
+    if (cooldown > 0 || blocked) return;
 
     const buffs = player.buffs ?? {};
     const stats = player.stats ?? {};
     cooldown = PLANK.interval / (buffs.attackSpeedMult ?? 1) / (stats.attackSpeedMult ?? 1);
-    const base = PLANK.damage + (level >= 2 ? PLANK.damagePerLevel : 0) + (level >= 5 ? PLANK.damagePerLevel : 0);
+    const base = PLANK.damage + PLANK.damagePerLevel * (level - 1);
     const damage = base * (buffs.damageMult ?? 1) * (stats.damageMult ?? 1);
-    const length = PLANK.length + (level >= 3 ? PLANK.lengthBonus : 0);
+    const length = PLANK.length + PLANK.lengthBonus * Math.floor(level / 2); // +length at Lv2, Lv4
+    const pokes = 1 + Math.floor((level - 1) / 2); // +1 chained poke at Lv3, Lv5
 
+    // front first, then each chained poke flips side: front, back, front
     const facing = player.flipX ? -1 : 1;
-    poke(player, facing, length, damage);
-    if (level >= 4) poke(player, -facing, length, damage); // Lv4: behind too
+    for (let i = 0; i < pokes; i++) {
+      const side = i % 2 === 0 ? facing : -facing;
+      if (i === 0) poke(player, side, length, damage);
+      else chain.push({ in: i * PLANK.chainDelay, side, length, damage });
+    }
   });
 }
 

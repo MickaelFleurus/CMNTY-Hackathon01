@@ -1,7 +1,9 @@
 // Axe: weapon unlocked by the "weapon-axe" level up card. Thrown up in an arc
 // toward the facing side, it spins and falls back down through the horde,
 // hitting everything on its way (high pierce). docs/game-design-v2.md → Weapons.
-// Level path: Lv2 +damage → Lv3 pierce +3 → Lv4 +1 axe → Lv5 +area.
+// Every level: +damage. Path: Lv2 +1 axe → Lv3 thrown to both sides →
+// Lv4 +1 axe → Lv5 +1 axe. Axes on the same side fan out (different throw
+// strengths) so they land apart.
 //
 // Damage goes through the shared projectile contract (enemies.js reads
 // `damage`, `pierce`, `hitRadius`).
@@ -25,25 +27,28 @@ export function initAxe(player) {
     const buffs = player.buffs ?? {};
     const stats = player.stats ?? {};
     cooldown = AXE.interval / (buffs.attackSpeedMult ?? 1) / (stats.attackSpeedMult ?? 1);
-    const damage = (AXE.damage + (level >= 2 ? AXE.damageBonus : 0)) * (buffs.damageMult ?? 1) * (stats.damageMult ?? 1);
-    const pierce = AXE.pierce + (level >= 3 ? AXE.pierceBonus : 0);
-    const area = level >= 5 ? AXE.areaMult : 1;
-    const count = level >= 4 ? 2 : 1;
+    const damage = (AXE.damage + AXE.damagePerLevel * (level - 1)) * (buffs.damageMult ?? 1) * (stats.damageMult ?? 1);
+    const count = 1 + (level >= 2) + (level >= 4) + (level >= 5); // +1 axe at Lv2, Lv4, Lv5
+    const bothSides = level >= 3;
 
     const facing = player.flipX ? -1 : 1;
-    for (let i = 0; i < count; i++) {
-      // the second axe goes the other way, so the pair covers both sides
-      const side = i === 0 ? facing : -facing;
-      throwAxe(player.pos, side, damage, pierce, area);
+    const sides = Array.from({ length: count }, (_, i) => (bothSides && i % 2 === 1 ? -facing : facing));
+    for (const side of [facing, -facing]) {
+      const mine = sides.filter((s) => s === side).length;
+      // fan out: the k-th of `mine` axes on this side is thrown a bit further
+      for (let k = 0; k < mine; k++) {
+        const reach = mine === 1 ? 1 : 0.55 + (0.9 * k) / (mine - 1);
+        throwAxe(player.pos, side, reach, damage, AXE.pierce);
+      }
     }
   });
 }
 
-function throwAxe(from, side, damage, pierce, area) {
-  let vel = vec2(side * AXE.launchSide * rand(0.6, 1.2), -AXE.launchUp * rand(0.9, 1.1));
+function throwAxe(from, side, reach, damage, pierce) {
+  let vel = vec2(side * AXE.launchSide * reach * rand(0.9, 1.1), -AXE.launchUp * rand(0.92, 1.08));
   const axe = add([
     sprite("proj-axe", { anim: "spin" }),
-    scale(AXE.scale * area),
+    scale(AXE.scale),
     pos(from),
     anchor("center"),
     rotate(0),
@@ -52,7 +57,7 @@ function throwAxe(from, side, damage, pierce, area) {
     z(7), // over walkers: it flies above them
     "projectile",
     "axe",
-    { damage, pierce, hitRadius: AXE.hitRadius * area },
+    { damage, pierce, hitRadius: AXE.hitRadius },
   ]);
   axe.onUpdate(() => {
     vel = vel.add(0, AXE.gravity * dt());
