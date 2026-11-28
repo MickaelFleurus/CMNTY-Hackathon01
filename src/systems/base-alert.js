@@ -27,7 +27,7 @@
 //   - fires getTreeRoot().trigger("base-under-attack", { hp, maxHP }) each time
 //     the banner shows, for anything else that wants to react (sound later).
 // Timers run on dt(), so pausing (level up, shop, pause.js) stops them.
-import { BASE_ALERT as CFG } from "../config.js";
+import { BASE_ALERT as CFG, NAME_COLORS } from "../config.js";
 import { hpColor } from "../util/hpColor.js";
 
 export function startBaseAlert() {
@@ -178,12 +178,13 @@ function drawBanner(clock, until) {
     opacity: 0.85 * alpha,
   });
   drawText({
-    text: "THE GOLEM IS UNDER ATTACK!",
+    text: "THE [golem]GOLEM[/golem] IS UNDER ATTACK!",
     size: 26,
     pos: vec2(width() / 2, y),
     anchor: "center",
     color: rgb(255, 230 * pulse, 220 * pulse),
     opacity: alpha,
+    styles: { golem: { color: rgb(...NAME_COLORS.golem) } }, // the golem's own color
   });
 }
 

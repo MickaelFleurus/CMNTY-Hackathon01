@@ -554,6 +554,15 @@ export const REGEN = {
 // active-offense pick makes it shoot; each further pick levels it up.
 // HP uses the tower level = picks + 1 (unpicked base: 200 hp, 1 pick: 275…);
 // shooting stats use the pick level (no shooting before the first pick).
+// End of run (runstate.js, gameover.js).
+export const RUN_OVER = {
+  // player death (wave 1): the world freezes, the hero plays its death
+  // animation, then this many s of stillness before the game-over screen
+  deathAnimTime: 0.5, // s: Hero_Knight "death" = 6 frames at 12 fps
+  afterDeathPause: 1,
+  overlayOpacity: 0.88, // game-over screen backdrop: the frozen game shows through, faintly
+};
+
 export const TOWER = {
   // Solid body = the golem's VISIBLE pixels (measured on its idle frames:
   // x 1-30, y 3-31 of the 32 px cell), in art px; scaled with the sprite.
@@ -901,6 +910,19 @@ export const BASE_ALERT = {
 };
 
 // Boss warning (src/systems/boss-warning.js): announced one wave ahead.
+// Name colors in banners (boss-warning.js, base-alert.js): each boss and the
+// golem get their own color so their names stand out. Bosses by display name
+// (sprite file without "Boss_", underscores → spaces).
+export const NAME_COLORS = {
+  golem: [110, 220, 255], // the golem's glowing cyan eyes
+  "Slime King": [120, 240, 110],
+  "Vampire Lord": [255, 70, 95],
+  Reaper: [195, 165, 255],
+  "Demon Lord": [255, 135, 40],
+  Treant: [215, 185, 100],
+  "Stone Golem": [190, 190, 200],
+};
+
 export const BOSS_WARNING = {
   bannerTime: 4, // s, "BOSS NEXT WAVE" banner when the wave before a boss wave ends
   startBannerTime: 2.5, // s, "BOSS WAVE" banner when the boss wave starts

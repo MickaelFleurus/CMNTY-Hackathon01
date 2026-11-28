@@ -15,7 +15,12 @@
 //   - the enemy/wave director freezes itself on "run-over" (enemies.js), and
 //     the camera stops following (camera.js) so the view doesn't drift.
 //   - getTreeRoot().on("run-frozen", () => …) fires once everything is frozen:
-//     the game-over screen can open on it (or on "run-over" directly).
+//     the game-over screen opens on it. When the PLAYER died (reason
+//     "player-died"), the world freezes at once but the hero first plays its
+//     death animation, then RUN_OVER.afterDeathPause s of stillness, and only
+//     then "run-frozen" (so the game-over screen comes after the death).
+
+import { RUN_OVER } from "../config.js";
 
 // Objects that move or animate on their own: paused in place with the run.
 // (The camera stops itself on "run-over" in camera.js.)
@@ -37,12 +42,18 @@ export function startRunState(player) {
     if (player.curAnim?.() === "walk") player.play("idle");
   });
 
-  getTreeRoot().on("run-over", () => {
+  getTreeRoot().on("run-over", ({ reason } = {}) => {
     if (over) return;
     over = true;
     player.frozen = true;
-    if (player.curAnim?.() === "walk") player.play("idle");
-    player.paused = true; // stop its animation too
+    const died = reason === "player-died";
+    if (died) {
+      player.hidden = false;
+      player.play("death"); // not looping: stays on its last frame
+    } else {
+      if (player.curAnim?.() === "walk") player.play("idle");
+      player.paused = true; // stop its animation too
+    }
 
     for (const tag of FROZEN_TAGS) for (const o of get(tag)) o.paused = true;
     for (const tag of CLEARED_TAGS) for (const o of get(tag)) destroy(o);
@@ -50,6 +61,14 @@ export function startRunState(player) {
     for (const tag of FROZEN_TAGS) onAdd(tag, (o) => (o.paused = true));
     for (const tag of CLEARED_TAGS) onAdd(tag, (o) => destroy(o));
 
-    getTreeRoot().trigger("run-frozen");
+    if (!died) {
+      getTreeRoot().trigger("run-frozen");
+      return;
+    }
+    // death animation, a short silence, then the game-over screen
+    wait(RUN_OVER.deathAnimTime + RUN_OVER.afterDeathPause, () => {
+      player.paused = true;
+      getTreeRoot().trigger("run-frozen");
+    });
   });
 }

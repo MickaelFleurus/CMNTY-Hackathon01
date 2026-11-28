@@ -26,6 +26,7 @@ export function startPause() {
   // counting), a screen that holds the game itself, or the run is over.
   const blocked = () =>
     get("player")[0]?.down === true ||
+    get("player")[0]?.frozen === true || // run ending (death / golem falling sequences)
     get("shop-ui").length > 0 ||
     get("levelup-ui").length > 0 ||
     get("gameover").length > 0;
