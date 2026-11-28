@@ -911,10 +911,10 @@ export const SOUND = {
     // regular
     step: 0.3, // one footstep per stride
     kill: 0.3,
-    // rare, important cues: loud
-    levelUp: 0.6,
+    // rare, important cues: a bit above the rest
+    levelUp: 0.25,
     waveWon: 0.7,
-    gameOver: 0.7, // the run is lost
+    gameOver: 0.3, // the run is lost
     // background
     music: 0.2, // LoopMusic.mp3, looped all run: quiet, under the effects
   },
