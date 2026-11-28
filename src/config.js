@@ -112,6 +112,11 @@ export const ENEMY = {
 //       { playerStat: "level", min, max }       reads player.level or player.level()
 //       { trigger: "name" }                     set by an external event, see enemies.js
 //       { all: [...] } / { any: [...] } / { not: cond }
+// Rare bonus drop (docs/game-design-v2.md → "Rare bonus drops", bonus.js):
+// checked FIRST in each drop table below, so when it hits it REPLACES the
+// normal drop (still one drop per kill). Which bonus it is: BONUS_DROPS.
+const BONUS_DROP_ROW = { kind: "bonus", base: 0.005, perLevel: 0, max: 0.005, value: 0 };
+
 export const ENEMY_TYPES = [
   {
     id: "zombie",
@@ -145,6 +150,7 @@ export const ENEMY_TYPES = [
     // Swarms sweep across the screen and come back; they don't target anyone.
     behavior: { kind: "sweep", returnDelay: 3, aimSpread: 160, exitMargin: 60 },
     drops: [
+      BONUS_DROP_ROW,
       { kind: "xp-blue", base: 0.25, perLevel: 0, max: 0.25, value: 1 },
       { kind: "xp-green", base: 0.03, perLevel: 0.005, max: 0.1, value: 3 },
       { kind: "coin", base: 0.2, perLevel: 0, max: 0.2, value: 0 },
@@ -181,6 +187,7 @@ export const ENEMY_TYPES = [
     // HP 45 → 108 (wave 3) → 202 (wave 6) → 344 (wave 10) → 501 (wave 15)
     tierMinHp: [0, 120, 210, 330, 480],
     drops: [
+      BONUS_DROP_ROW,
       { kind: "xp-green", base: 0.5, perLevel: 0, max: 0.5, value: 3 },
       { kind: "xp-red", base: 0.15, perLevel: 0.005, max: 0.3, value: 10 },
       { kind: "heart", base: 0.05, perLevel: 0, max: 0.05, value: 0 },
@@ -297,6 +304,7 @@ export const ENEMY_SPAWN = {
 // left over means "no drop". chance(level) = min(max, base + perLevel*(level-1)).
 // Listeners get { kind, pos, level, tier, type, value } via on("drop", "enemy", ...).
 export const ENEMY_DROPS = [
+  BONUS_DROP_ROW,
   { kind: "xp-blue", base: 0.45, perLevel: -0.01, max: 0.45, value: 1 },
   { kind: "xp-green", base: 0.08, perLevel: 0.01, max: 0.25, value: 3 },
   { kind: "xp-red", base: 0.0, perLevel: 0.005, max: 0.1, value: 10 },
@@ -588,6 +596,13 @@ export const XP = {
   pickupScale: 3, // sprite scale (16px art)
   pickupLifetime: 60, // s before an uncollected pickup despawns
   heartHeal: 20, // hp restored by a "heart" drop
+  // Magnet bonus ("magnet-all"): every pickup flies in, nearest first
+  homingStagger: 0.03, // s between two pickups starting
+  homingMaxDelay: 1.2, // s, the last ones start no later than this
+  homingLift: 0.15, // s of lift-off before flying
+  homingLiftSpeed: 120, // px/s upward during the lift
+  homingAccel: 1600, // px/s² once flying
+  homingMaxSpeed: 1400, // px/s
 };
 
 // Drop kind (from enemies.js "drop" event) -> pickup sprite file
@@ -731,6 +746,31 @@ export const DAMAGE_NUMBERS = {
   lift: 12, // px spawned above the hit point
   jitter: 8, // px of horizontal scatter so stacked hits stay readable
   maxPerFrame: 12, // cap: hordes hitting at once must not spawn 100 texts
+};
+
+// ---------------------------------------------------------------------------
+// Rare bonus drops (owner: chippe — src/systems/bonus.js)
+// docs/game-design-v2.md → "Rare bonus drops". The chance per kill is
+// BONUS_DROP_ROW (0.5%, top of this file); these are which bonus and its effect.
+// ---------------------------------------------------------------------------
+export const BONUS_DROPS = {
+  // relative weights (Bomb and Rage rarer than Magnet)
+  weights: { bomb: 1, freeze: 2, rage: 1, "golem-heal": 2, magnet: 3, recall: 2 },
+  lifetime: 20, // s on the ground
+  blinkLast: 5, // s: blinks during the end of its lifetime
+  collectRadius: 26, // px
+  scale: 3,
+  bobHeight: 4, // px
+  bobHz: 1.5,
+  bombBossDamage: 0.25, // bosses lose this fraction of their max HP to a Bomb
+  freezeTime: 4, // s
+  rageTime: 8, // s
+  rageDamageMult: 5,
+  rageAttackSpeedMult: 8, // ≈ every weapon down to ~0.1-0.15 s between attacks
+  golemHeal: 0.25, // fraction of the golem's max HP
+  recallKey: "r",
+  recallCast: 1, // s, taking damage doesn't cancel it
+  recallGap: 50, // px below the golem's body where recall lands (like CYCLE.arrivalGap)
 };
 
 // ---------------------------------------------------------------------------
