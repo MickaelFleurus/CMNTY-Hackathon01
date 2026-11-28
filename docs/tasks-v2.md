@@ -219,8 +219,9 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   tint, maxLevel) from `upgrades.js`, so a new weapon card shows up by itself.
   HP colors (green → amber → red, dark gray empty) in `src/util/hpColor.js`.
 - **Base under attack UI** (chippe, `base-alert.js`): golem HP bar in the HUD
-  (flashes on hit, respawn countdown next to it while dead), "BASE UNDER
-  ATTACK!" banner (again only after `BASE_ALERT.bannerQuiet` s of quiet),
+  (flashes on hit, respawn countdown next to it while dead), "THE GOLEM IS
+  UNDER ATTACK!" banner (only when the player is `BASE_ALERT.bannerMinDistance`
+  px or more away; once per attack, again after `BASE_ALERT.bannerQuiet` s of quiet),
   red off-screen arrow while it is hit (not during the break) and a red edge
   pulse below `BASE_ALERT.dangerRatio`. Fires
   `getTreeRoot().trigger("base-under-attack", { hp, maxHP })` with each banner.
