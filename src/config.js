@@ -102,6 +102,8 @@ export const ENEMY = {
 //                 members. The group keeps its formation while travelling,
 //                 closes up near its target (ENEMY.formationHoldDistance), and
 //                 shares one target (player or tower).
+//     edgeMargin  optional extra px off-screen the group spawns at (on top of
+//                 ENEMY_SPAWN.edgeMargin), e.g. bat swarms fly in from far away
 //     maxAlive    per-type cap (the global ENEMY_SPAWN.maxAlive still applies)
 //     at          optional "base": spawn `distance` px from the base instead of
 //                 at the screen edge
@@ -148,7 +150,9 @@ export const ENEMY_TYPES = [
     speed: 135,
     tierMinHp: [0, 2, 4, 7, 10],
     // Swarms sweep across the screen and come back; they don't target anyone.
-    behavior: { kind: "sweep", returnDelay: 3, aimSpread: 160, exitMargin: 60 },
+    // exitMargin: px past the screen edge they fly before turning back, so
+    // the next pass also comes from far away
+    behavior: { kind: "sweep", returnDelay: 3, aimSpread: 160, exitMargin: 250 },
     drops: [
       BONUS_DROP_ROW,
       { kind: "xp-blue", base: 0.25, perLevel: 0, max: 0.25, value: 1 },
@@ -161,6 +165,9 @@ export const ENEMY_TYPES = [
       intervalDecayPerSec: 0.02,
       // one big, tightly packed swarm of 9-14
       group: { min: 9, max: 14, radius: 30, spacing: 10 },
+      // px beyond ENEMY_SPAWN.edgeMargin: swarms start far off-screen and fly
+      // in (~3.5 s at 135 px/s before reaching the screen center)
+      edgeMargin: 400,
       maxAlive: 100,
       // From wave 2, or as soon as the player reaches level 3, or when another
       // system fires the "bat-swarm" trigger (e.g. a night event).
