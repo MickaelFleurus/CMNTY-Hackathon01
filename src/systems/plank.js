@@ -5,8 +5,8 @@
 // the other way → Lv4 +length → Lv5 another chained poke (the other way again:
 // front, back, front).
 //
-// The look is a procedural spectral scythe: a translucent violet shaft with a
-// curved blade, bright core and soft glow, so nothing is stretched into blur.
+// The look is a procedural spectral scythe: one curved violet crescent with a
+// bright core and soft glow, so nothing is stretched into blur.
 //
 // Damage goes through the shared projectile contract (enemies.js reads
 // `damage`, `pierce`, `hitRadius`): a row of invisible hit circles along the
@@ -113,7 +113,7 @@ function poke(player, side, length, damage) {
     "fx", // cleared with the projectiles when the run is over (runstate.js)
   ]);
 
-  look.onDraw(() => drawScythe(length, t));
+  look.onDraw(() => drawScythe(length, t, side));
 
   // the hits: circles along the plank, one shared hit list per poke
   const hitEnemies = new Set();
@@ -133,7 +133,11 @@ function poke(player, side, length, damage) {
     const k = Math.min(1, t / PLANK.pokeTime);
     const near = placeAt(Math.sin(k * Math.PI)); // 0 → 1 → 0: thrust out and pull back
     look.pos = near.add(dir.scale(length / 2));
-    parts.forEach((p, i) => (p.pos = near.add(dir.scale(((i + 0.5) / n) * length))));
+    parts.forEach((p, i) => {
+      const u = (i + 0.5) / n;
+      const localY = scytheLocalY(length, u, side);
+      p.pos = near.add(dir.scale(u * length)).add(vec2(-dir.y, dir.x).scale(localY));
+    });
     if (k >= 1) {
       parts.forEach((p) => p.exists() && destroy(p));
       destroy(look);
@@ -141,57 +145,44 @@ function poke(player, side, length, damage) {
   });
 }
 
+/** Local y of the scythe curve at u (0 = grip, 1 = tip). +x is the thrust. */
+function scytheLocalY(length, u, side) {
+  return -side * length * PLANK.visual.curveLiftRatio * Math.sin(Math.PI * u);
+}
+
 /** Draw the spectral scythe in the look object's local space (+x = thrust). */
-function drawScythe(length, t) {
+function drawScythe(length, t, side) {
   const v = PLANK.visual;
   const half = length / 2;
-  const headBase = half - v.headLength;
-  const tip = half;
   const pulse = 0.88 + 0.12 * Math.sin(t * 42);
   const glow = rgb(...v.color);
   const core = rgb(...v.coreColor);
-  const sway = Math.sin(t * 26) * 2.5;
 
-  // Wispy tail: strokes that taper into nothing behind the grip.
-  drawLine({ p1: vec2(-half - 10, sway * 1.5), p2: vec2(-half + 18, 0), width: 5, color: glow, opacity: 0.2 * pulse });
-  drawLine({ p1: vec2(-half - 4, -sway), p2: vec2(-half + 22, 0), width: 2, color: core, opacity: 0.28 * pulse });
+  // One continuous crescent: no straight shaft. Sample the same curve the
+  // hit circles use, so the sweep and the damage line stay together.
+  const points = [];
+  const steps = 24;
+  for (let i = 0; i <= steps; i++) {
+    const u = i / steps;
+    points.push(vec2(-half + u * length, scytheLocalY(length, u, side)));
+  }
 
-  // Broad translucent aura, a tapered shaft body, and a bright core.
-  drawLine({ p1: vec2(-half, 0), p2: vec2(headBase, 0), width: v.glowWidth, color: glow, opacity: v.glowOpacity * pulse });
-  drawLine({ p1: vec2(-half, 0), p2: vec2(headBase, 0), width: v.shaftWidth, color: glow, opacity: v.shaftOpacity * pulse });
-  drawLine({ p1: vec2(-half + 4, 0), p2: vec2(headBase, 0), width: v.coreWidth, color: core, opacity: v.coreOpacity * pulse });
+  // Broad aura, blade body, then a crisp cutting core.
+  drawLines({ pts: points, width: v.glowWidth, color: glow, opacity: v.glowOpacity * pulse, join: "round", cap: "round" });
+  drawLines({ pts: points, width: v.bladeWidth, color: glow, opacity: v.bladeOpacity * pulse, join: "round", cap: "round" });
+  drawLines({ pts: points, width: v.coreWidth, color: core, opacity: v.coreOpacity * pulse, join: "round", cap: "round" });
 
-  // Crescent blade made from layered Bezier strokes (a polygon here
-  // triangulates into a blob because the crescent is concave).
-  const blade = {
-    pt1: vec2(headBase, 0),
-    pt2: vec2(headBase + v.headLength * 0.35, -v.headWidth * 1.25),
-    pt3: vec2(tip - 1, -v.headWidth * 0.85),
-    pt4: vec2(tip, 0),
-    segments: 18,
-  };
-  drawBezier({ ...blade, width: 9, color: glow, opacity: 0.28 * pulse });
-  drawBezier({ ...blade, width: 4.5, color: glow, opacity: 0.62 * pulse });
-  drawBezier({ ...blade, width: 1.6, color: core, opacity: 0.95 * pulse });
+  // A short dark grip anchors the blade to the player's hand.
+  const grip = vec2(-half - 8, 4);
+  drawLine({ p1: grip, p2: points[0], width: v.gripWidth, color: rgb(...v.gripColor), opacity: 0.9 });
+  drawCircle({ pos: grip, radius: 3.5, color: glow, opacity: 0.45 * pulse });
 
-  // A shorter inner arc gives the blade a visible cutting edge.
-  drawBezier({
-    pt1: vec2(headBase + 4, -1),
-    pt2: vec2(headBase + v.headLength * 0.45, -v.headWidth * 0.55),
-    pt3: vec2(tip - 4, -v.headWidth * 0.4),
-    pt4: vec2(tip - 2, -1),
-    width: 1.4,
-    color: core,
-    opacity: 0.65 * pulse,
-    segments: 14,
-  });
-
-  // Energy flare at the grip and motes drifting around the blade.
-  drawCircle({ pos: vec2(-half, 0), radius: 5, color: glow, opacity: 0.45 * pulse });
-  for (let i = 0; i < 3; i++) {
-    const k = (t * 1.8 + i / 3) % 1;
-    const x = headBase - 18 + k * (v.headLength + 26);
-    const y = Math.sin(k * Math.PI) * (v.headWidth * 0.8 + i * 2) + sway * (i - 1) * 0.4;
-    drawCircle({ pos: vec2(x, -y), radius: 1.6 + (1 - k) * 1.2, color: core, opacity: 0.55 * (1 - k) });
+  // Bright tip and a few motes sliding along the crescent.
+  drawCircle({ pos: points[steps], radius: 3, color: core, opacity: 0.8 * pulse });
+  for (let i = 0; i < 4; i++) {
+    const u = (t * 0.75 + i / 4) % 1;
+    const at = vec2(-half + u * length, scytheLocalY(length, u, side) - side * 7);
+    const fade = Math.sin(Math.PI * u) * 0.6;
+    drawCircle({ pos: at, radius: 1.4 + fade, color: core, opacity: fade });
   }
 }

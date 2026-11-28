@@ -735,14 +735,15 @@ export const PLANK = {
   visual: {
     color: [168, 118, 255],
     coreColor: [235, 220, 255],
-    glowWidth: 18,
-    shaftWidth: 7,
-    coreWidth: 2.5,
-    glowOpacity: 0.22,
-    shaftOpacity: 0.5,
+    curveLiftRatio: 0.24, // blade bow as a fraction of its length
+    glowWidth: 22,
+    bladeWidth: 9,
+    coreWidth: 2.2,
+    glowOpacity: 0.2,
+    bladeOpacity: 0.52,
     coreOpacity: 0.95,
-    headLength: 24,
-    headWidth: 14,
+    gripWidth: 5,
+    gripColor: [62, 44, 86],
   },
 };
 
