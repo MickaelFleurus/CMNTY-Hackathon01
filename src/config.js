@@ -406,6 +406,13 @@ export const SHOP = {
   // Skip the shop without buying (the next wave starts as after a pick).
   skipKeys: ["e", "escape"],
 
+  // Golem upgrade price (docs/game-design-v2.md → "Upgrade cost"): ONE shared
+  // counter for every branch, cost = baseCost × costGrowth ^ upgradesOwned.
+  // (The per-option baseCost / costGrowth below are no longer used.)
+  upgradeCost: { baseCost: 10, costGrowth: 1.5 },
+  // Skill tree screen layout (shop.js), screen px
+  tree: { colWidth: 250, colGap: 26, headerY: 124, nodesTop: 260, nodesBottom: 580, nodeRadius: 16, skipY: 650 },
+
   options: [
     {
       id: "armor-aura",

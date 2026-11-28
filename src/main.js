@@ -140,7 +140,8 @@ const TEMP_PICK_KEYS = {
 };
 // Global key handlers still fire while the level up screen pauses the game
 // (upgrades.js uses keys 1-3), so the TEMP debug keys skip while paused.
-const gamePaused = () => getTreeRoot().paused;
+// ...and while the golem upgrade tree (shop.js) is open, where 1-4 buy nodes.
+const gamePaused = () => getTreeRoot().paused || get("shop-ui").length > 0;
 const tempPickLevels = {};
 for (const [key, quadrant] of Object.entries(TEMP_PICK_KEYS)) {
   onKeyPress(key, () => {
