@@ -26,6 +26,7 @@
 //     the banner shows, for anything else that wants to react (sound later).
 // Timers run on dt(), so pausing (level up, shop, pause.js) stops them.
 import { BASE_ALERT as CFG } from "../config.js";
+import { hpColor } from "../util/hpColor.js";
 
 export function startBaseAlert() {
   let over = false;
@@ -146,11 +147,7 @@ function drawGolemBar(b, flash, p) {
   }
 }
 
-export function barColor(ratio) {
-  if (ratio > 0.5) return rgb(90, 210, 110); // green
-  if (ratio > CFG.dangerRatio) return rgb(240, 180, 60); // amber
-  return rgb(235, 70, 60); // red
-}
+const barColor = (ratio) => hpColor(ratio, CFG.dangerRatio);
 
 function drawBanner(clock, until) {
   const left = until - clock;

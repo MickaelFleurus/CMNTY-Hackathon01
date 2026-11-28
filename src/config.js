@@ -391,7 +391,9 @@ export const SHOP = {
   coins: {
     perKill: 1, // coins granted per enemy kill
     perLevelBonus: 0.25, // extra coins per enemy level (floored)
-    magnetRadius: 110, // px at which coins fly to the player
+    // px at which coins fly to the player: barely more than collectRadius at
+    // the start (you walk onto them); each Magnet card adds UPGRADE.magnetBonus
+    magnetRadius: 32,
     collectRadius: 24, // px at which a coin is collected
     flySpeed: 420, // px/s while flying to the player
     lifetime: 30, // s before an uncollected coin vanishes
@@ -639,7 +641,9 @@ export const RESPAWN = {
 export const XP = {
   firstLevel: 5, // xp needed to reach level 2
   levelStep: 5, // extra xp needed per level after that
-  pickupRadius: 90, // px; pickups inside this fly to the player
+  // px; pickups inside this fly to the player. Barely more than
+  // collectRadius at the start; each Magnet card adds UPGRADE.magnetBonus
+  pickupRadius: 30,
   collectRadius: 20, // px; pickups this close are collected
   magnetSpeed: 420, // px/s when a pickup flies to the player
   pickupScale: 3, // sprite scale (16px art)
@@ -667,7 +671,7 @@ export const PICKUP_SPRITES = {
 
 export const UPGRADE = {
   choices: 3, // cards shown per level up
-  magnetBonus: 40, // pickup radius added per Magnet level
+  magnetBonus: 40, // px added per Magnet level to the XP AND coin magnet radius
   maxHpPerLevel: 20, // max hp added (and healed) per Max HP level
   moveSpeedPerLevel: 0.1, // +10% move speed per level
   mightPerLevel: 0.15, // +15% weapon damage per level
@@ -754,6 +758,9 @@ export const HUD = {
   hpBarWidth: 40, // px, drawn under the player
   hpBarHeight: 5,
   hpBarOffset: 22, // px below the player's center
+  orb: { x: 70, y: 70, r: 46 }, // HP orb: center x from the left, y from the BOTTOM, radius
+  slot: { size: 48, gap: 8, weaponSlots: 4, statSize: 26 }, // weapon slots + stat icons next to the orb
+  counters: { y: 60 }, // coins / kills, top right (below the dev switch label)
 };
 
 // ---------------------------------------------------------------------------
@@ -853,6 +860,19 @@ export const GOLEM_STYLES = {
 };
 
 // ---------------------------------------------------------------------------
+// Minimap (owner: chippe — src/systems/minimap.js), top-left corner
+// ---------------------------------------------------------------------------
+export const MINIMAP = {
+  x: 16, // px, top-left corner of the map on screen
+  y: 16,
+  size: 150, // px, the map is a square
+  range: 1000, // world px from the player to the map's edge
+  golemSize: 7, // px, half-diagonal of the golem diamond
+  attackedFor: 1.5, // s after the golem's last HP loss it pulses red
+  pulseHz: 2, // red pulses per second while under attack
+};
+
+// ---------------------------------------------------------------------------
 // Golem styles (owner: Akram - src/systems/golem-guardian.js)
 // ---------------------------------------------------------------------------
 // Guardian (docs/game-design-v2.md → "The golem awakening flow" → pick 1 of 3
@@ -866,4 +886,22 @@ export const GOLEM_GUARDIAN = {
   shield: { base: 15, perLevel: 5 }, // hp absorbed while inside (refreshed)
   shieldDuration: 6, // s the shield holds after leaving the aura
   color: [200, 212, 230], // white/gray: defense paths (game-design-v2.md)
+};
+
+// Sound effects (src/systems/sounds.js, files in gfx/Sounds/).
+export const SOUND = {
+  master: 0.8, // global volume (0 when muted)
+  muteKey: "m", // toggles mute, remembered in the browser
+  volume: {
+    plank: 0.45,
+    gun: 0.35,
+    axe: 0.3, // loop while axes are in the air
+    walk: 0.35, // loop while walking
+    kill: 0.35,
+    collect: 0.4,
+    levelUp: 0.6,
+    waveWon: 0.7,
+  },
+  killGap: 0.06, // s: at most one kill sound per gap (bombs, big sweeps)
+  collectGap: 0.05, // s: same for pickups (magnet bursts)
 };

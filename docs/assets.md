@@ -46,6 +46,29 @@ that folder's `README.txt`; this doc is the quick index for agents.
 7. **Don't modify or rename files inside the pack** - it's vendored third-
    party art; if you need a variant, add your own file next to it.
 
+## Sounds (`gfx/Sounds/`)
+
+Played by `src/systems/sounds.js` (volumes in `src/config.js` → `SOUND`,
+**M** mutes). The files are imported, so Vite bundles them in the build.
+The `.ogg` files come from Kenney's "Impact Sounds" and "Music Jingles"
+packs, **CC0** (free for any use; crediting Kenney / kenney.nl is
+appreciated, not required): see `gfx/Sounds/License*.txt`. `AxeLoop.wav`
+and `PlankAttack.wav` were added by the team.
+
+| File | When it plays |
+|---|---|
+| `PlankAttack.wav` | each Plank poke (chained pokes too) |
+| `GunSound.ogg` | each Pistol bullet |
+| `AxeLoop.wav` | loops while at least one axe is in the air |
+| `Walking.ogg` | loops while the player walks |
+| `EnemyKilled.ogg` | each kill (rate-limited) |
+| `CollectItem.ogg` | XP gems, hearts, coins, bonus drops picked up (rate-limited) |
+| `LevelUp.ogg` | player level up |
+| `WaveWon.ogg` | a wave survived |
+
+No sound yet for: Knife, Axe throw (only the loop), Boomerang, golem shock
+wave / hits, boss, game over, shop.
+
 ## Placeholder art to replace
 
 Things drawn with stand-in art because the pack has nothing for them yet.

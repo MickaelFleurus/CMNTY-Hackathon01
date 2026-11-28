@@ -9,7 +9,7 @@
 //   - Kills MAY pay out coins: listens on("drop","enemy") for kind "coin"
 //     (enemies.js rolls ONE drop per kill: XP, heart, coin or nothing) and
 //     spawns a coin pickup at the enemy's death position; coins fly to the player inside
-//     SHOP.coins.magnetRadius and are collected on contact. Coin count lives
+//     SHOP.coins.magnetRadius (+ player.magnetBonus from Magnet cards) and are collected on contact. Coin count lives
 //     on root event state - read it via the exported getCoins()/addCoins()
 //     helpers or listen for the "coins-changed" root event.
 //   - getTreeRoot().on("coins-changed", (coins) => …)   every coin change
@@ -103,7 +103,8 @@ function spawnCoin(at, value = SHOP.coins.perKill) {
     const p = get("player")[0];
     if (!p) return;
     const d = p.pos.dist(coin.pos);
-    if (coin.homing || d < SHOP.coins.magnetRadius) {
+    // Magnet level up cards widen it too (player.magnetBonus, upgrades.js)
+    if (coin.homing || d < SHOP.coins.magnetRadius + (p.magnetBonus ?? 0)) {
       coin.homing = true;
       const step = p.pos.sub(coin.pos);
       coin.pos = coin.pos.add(step.len() > 1 ? step.unit().scale(SHOP.coins.flySpeed * dt()) : step);
