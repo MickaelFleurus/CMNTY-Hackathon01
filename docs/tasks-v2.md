@@ -204,6 +204,11 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   `upgrade-effects.js`, so weapons need nothing new. Magnet fires
   `"magnet-all"` (xp.js) and sets `coin.homing`. `"bonus-picked" { kind }` on
   pickup. A drop with `{ kind: "bonus", bonus: "bomb" }` forces one (chests).
+- **HUD** (chippe, `hud.js`): HP orb + level badge + weapon slots (icon, level
+  pips) + stat icons + XP underline, bottom left; coins / kills with icons top
+  right; wave + timer top center. Reads `ownedUpgrades` / `UPGRADES` (icon,
+  tint, maxLevel) from `upgrades.js`, so a new weapon card shows up by itself.
+  HP colors (green → amber → red, dark gray empty) in `src/util/hpColor.js`.
 - **Base under attack UI** (chippe, `base-alert.js`): golem HP bar in the HUD
   (flashes on hit, respawn countdown next to it while dead), "BASE UNDER
   ATTACK!" banner (again only after `BASE_ALERT.bannerQuiet` s of quiet),
@@ -235,6 +240,17 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
 - All new tuning numbers in `src/config.js` under new sections
   (`SHOP`, `CYCLE`, `AURA`, `REGEN`, `TOWER`, `BOSS`); expect config
   conflicts, rebase before PR.
+
+## Sounds (`sounds.js`)
+
+- Every sound is triggered from events or tags other systems already
+  produce; no gameplay file calls `play()`. To give something a sound, fire
+  an event (or tag the object) and hook it in `sounds.js`.
+- Tags it reads: `"plank"` + `"fx"` (one per poke), `"bullet"` (pistol, set in
+  `weapons.js`), `"axe"` (loop while any exist). Events: `killed`,
+  `pickup-collected`, `bonus-picked`, player `levelup`, `wave-end`.
+- Loops pause whenever the game doesn't run (level-up screen, shop,
+  pause, frozen / down player). **M** toggles mute (saved in the browser).
 
 ## Run stats (`run-stats.js`)
 

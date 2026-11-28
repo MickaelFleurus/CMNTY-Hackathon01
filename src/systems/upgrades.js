@@ -23,7 +23,7 @@ export const UPGRADES = [
   { id: "move-speed", name: "Move Speed", description: "+10% movement speed", icon: "Icon_Move_Speed", maxLevel: 5 },
   { id: "might", name: "Might", description: "+15% weapon damage", icon: "Icon_Might", maxLevel: 5 },
   { id: "cooldown", name: "Cooldown", description: "Weapons fire 10% faster", icon: "Icon_Cooldown", maxLevel: 5 },
-  { id: "magnet", name: "Magnet", description: "Pick up XP from further away", icon: "Icon_Magnet", maxLevel: 3 },
+  { id: "magnet", name: "Magnet", description: "Pick up XP and coins from further away", icon: "Icon_Magnet", maxLevel: 3 },
   { id: "weapon-knife", name: "Knife", description: "New weapon: throws knives", icon: "Icon_Knife", maxLevel: 5,
     levels: ["+1 knife, +damage", "Knives go through 1 more enemy, +damage", "+1 knife, +damage", "Knives go through 1 more enemy, +damage"] },
   // the old starter auto-attack (weapons.js), now a card: shoots the nearest enemy
@@ -71,8 +71,12 @@ export function grantUpgrade(id) {
 function applyUpgrade(upgrade) {
   const level = (ownedUpgrades[upgrade.id] ?? 0) + 1;
   ownedUpgrades[upgrade.id] = level;
-  if (upgrade.id === "magnet") xpState.pickupRadius += UPGRADE.magnetBonus;
   const player = get("player")[0];
+  if (upgrade.id === "magnet") {
+    xpState.pickupRadius += UPGRADE.magnetBonus;
+    // coins (base.js) read the same bonus off the player
+    if (player) player.magnetBonus = UPGRADE.magnetBonus * level;
+  }
   if (player) player.trigger("upgrade", { id: upgrade.id, level });
 }
 
