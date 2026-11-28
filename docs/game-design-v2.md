@@ -101,6 +101,14 @@ Enemies don't all run at the nearest thing. They pick between the two
 targets, **the player** and **the tower**, so the player can't just stand
 in one place:
 
+0. **Distance comes first: the horde follows the player.** Only enemies
+   within `golemAggroRange` of the golem consider attacking it. Enemies
+   farther away chase the player, except a small trickle (e.g. 10%) that
+   heads for the golem and takes time to get there. Enemies spawn at the
+   screen edge around the player, so when the player explores, most of
+   the pressure goes with them and away from the golem. How far the player
+   goes is how much risk they take. Rules 1-2 below only apply to enemies
+   in range of the golem.
 1. **Focus the weaker target.** If one of the two is clearly closer to dying
    (lower HP *as a fraction of its max HP*), enemies prefer it and try to
    finish it off. This rule wins over rule 2.
@@ -115,8 +123,9 @@ in one place:
    don't switch target constantly. A little stickiness keeps their movement
    readable and stops them from jittering between the two targets.
 
-Tuning values (how much weaker a target must be before enemies focus it,
-how many attackers count as "enough", re-evaluation interval) go in
+Tuning values (`golemAggroRange`, the far-away trickle share, how much
+weaker a target must be before enemies focus it, how many attackers count
+as "enough", re-evaluation interval) go in
 `src/config.js`.
 
 ## Weapons & upgrades catalog (level-up pool)
@@ -180,6 +189,7 @@ How each one targets is its identity, and no two play the same:
 | **Armor** | −1 damage per hit taken | `Icon_Armor` | 5 |
 | **Regen** | heal 0.5 HP/s | `Icon_Regen` | 5 |
 | **Magnet** | pick up XP from further away | `Icon_Magnet` | 3 |
+| **Recall** | Lv1 unlocks a recall ability: teleport to the golem (~1 s cast), cooldown 60 s. Each level after that: −10 s cooldown | none in the pack (placeholder) | 4 |
 | **Growth** | +10% XP gained | `Icon_Growth` | 5 |
 | **Luck** | better drops (hearts, coins) and more rare cards | `Icon_Luck` | 5 |
 
@@ -342,6 +352,13 @@ survivors mode. This changes the early game and adds a golem identity pick:
     **Summoner**: spawns helpers). To iterate with playtests.
 - The style **can't be changed until you die** (new run = new pick), so
   the choice shapes the whole run like the shop quadrants do.
+- **Styles decide how far you can roam.** Exploring has no single right
+  answer; it depends on the golem you picked:
+  - **Berserker** fights for itself and holds well alone: the **explorer
+    build**. Leave it and go after chests.
+  - **Guardian** is weak alone, but protects you while you stay near it:
+    the **stay-home build**. Exploring is riskier.
+  - The third style should sit somewhere in between.
 - **Golem self-defense (all styles, built in):** a Minecraft-golem-style
   **AOE knockback swipe** - anything that hits the golem gets flung far
   away (optionally a small amount of damage). Reason: without it the
@@ -442,6 +459,29 @@ you're away.
   - rare: a free **golem repair** or a free **golem upgrade** (doesn't
     raise `upgradesOwned`).
 - Unopened chests **vanish at the end of the wave**.
+- Exploring pays for defense: coins buy golem repairs, and some chests
+  give a free repair or upgrade. Loot should *visibly* help the golem, so
+  going out feels like part of defending.
+
+### Golem chests (special)
+
+A rarer chest that holds **golem stat upgrades**:
+
+- About **one every 2-3 waves**, always **far from the golem** and always
+  **guarded**. Different look from a normal chest: `Pickup_Chest` with a
+  stone/gold tint and a glow, plus its own minimap icon.
+- **Opening** works like a normal chest. It shows **1 of 3 golem stat
+  upgrades** to pick, like a level-up card:
+  - **Golem Max HP**: +max HP (and heals that amount);
+  - **Golem Armor**: less HP lost per hit and less drain while surrounded;
+  - **Swipe**: bigger knockback radius / stronger knockback;
+  - **Golem Attack**: more damage from the golem's own attacks
+    (Berserker swipes, active-offense shots);
+  - **Golem Aura**: bigger aura radius (passive auras, Guardian).
+- These upgrades last for the whole run and are **free**: they don't raise
+  `upgradesOwned`, so they don't make the shop more expensive.
+- They're the main reward for exploring: the further you're willing to go,
+  the stronger your golem gets.
 
 ### Hidden treasures (buried)
 
@@ -470,6 +510,7 @@ The bonus takes effect when the player walks over it.
 | **Rage** | For a few seconds (e.g. 8 s): player damage **×5**, and the cooldown between attacks drops to a **very low fixed value** (e.g. 0.1 s) for every weapon. The player glows red, and the HUD shows a countdown. | `Icon_Might` with a red tint (no pickup sprite in the pack) · red glow |
 | **Golem heal** | Heals the golem (e.g. **25% of its max HP**), wherever the player is. Only drops once the golem is awake (from wave 2). | `Pickup_Meat` · `FX_Heal` on the golem |
 | **Magnet** | Every XP gem and coin on the map **flies to the player**. Animated: the pickups lift off a little, then speed up toward the player and get collected one after another. Nothing is lost on the way. | `Pickup_Magnet_fixed` · pickups streaming in |
+| **Recall** | Stored as **one charge** (shown in the HUD). Press the recall key to **teleport to the golem**. A short cast (~1 s) that taking damage doesn't cancel. One charge at a time; picking up another while holding one does nothing. | portal sprite (as used by `portal.js`), small · portal flash |
 
 Rules:
 
@@ -524,8 +565,9 @@ goes in `src/config.js` (`BONUS_DROPS`).
    death = run death.
 6. **Player respawn ladder** - player death = timer instead of game over;
    step up per death, step down per wave cleared / boss defeated.
-7. **Smart enemy targeting** - focus the weaker target, else split between
-   player and tower (see "Enemy targeting").
+7. **Smart enemy targeting** - distance first (far enemies chase the
+   player), then focus the weaker target, else split between player and
+   tower (see "Enemy targeting").
 8. **Base-under-attack UI** - tower HP bar, hit flash, off-screen arrow,
    banner, danger state (see "UI we need").
 9. **Game over screen + stats + restart** - listens to `"run-over"`.
@@ -543,8 +585,10 @@ goes in `src/config.js` (`BONUS_DROPS`).
 15. **Golem repair + upgrade costs** - paid repair (damage × wave) and one
     shared upgrade counter in the between-waves shop.
 16. **Chests & hidden treasures** - chests per wave (farther = better),
-    buried treasures with a sparkle hint.
-17. **Rare bonus drops** - Bomb, Freeze, Rage, Golem heal, Magnet.
+    buried treasures with a sparkle hint, golem chests with golem stat
+    upgrades.
+17. **Rare bonus drops** - Bomb, Freeze, Rage, Golem heal, Magnet, Recall.
+    The Recall stat upgrade goes with the weapons & upgrades work.
 18. **Boss wave + gimmick** - last; keep one boss, one gimmick for MVP.
 
 ## Open questions (brainstorm residue)
