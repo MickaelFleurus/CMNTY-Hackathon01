@@ -321,6 +321,12 @@ export const CFG = {
   player: {
     speed: 220, // px/s
     maxHp: 60, // was 100: more fragile, so positioning matters
+    // After an enemy hit the player can't be hit again for this long, and
+    // blinks (src/systems/invuln.js). Stops a crowd from landing every hit
+    // in the same instant.
+    invulnTime: 1.0, // s
+    respawnInvulnTime: 2.0, // s of protection right after a respawn
+    invulnBlinkHz: 10, // blinks per second while invulnerable
     scale: 2, // sprite scale (16px art -> 32px on screen)
     // Draw layer: above every world object (ground -10, auras -5, enemies 0,
     // coins 4, base 5, portal/projectiles 6) so the player is never hidden,
@@ -713,7 +719,7 @@ export const AXE = {
   scale: 2.5,
 };
 
-// Boomerang (src/systems/boomerang.js, card "weapon-boomerang"): flies out to
+// Boomerang (src/systems/boom-stick.js, card "weapon-boomerang"): flies out to
 // the nearest enemy (or the facing side), slows down, comes back to the
 // player; it can hit the same enemies again on the way back.
 // Every level: +damagePerLevel. Path alternates: Lv2 +1 boomerang → Lv3

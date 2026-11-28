@@ -12,11 +12,12 @@ import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
 import { initPlank, loadPlankAssets } from "./systems/plank.js";
 import { initAxe } from "./systems/axe.js";
-import { initBoomerang } from "./systems/boomerang.js";
+import { initBoomerang } from "./systems/boom-stick.js";
 import { startAuras } from "./systems/auras.js";
 import { startRegen } from "./systems/regen.js";
 import { loadTowerSprites, startTower } from "./systems/tower.js";
 import { startRespawn } from "./systems/respawn.js";
+import { startInvuln } from "./systems/invuln.js";
 import { startRunState } from "./systems/runstate.js";
 import { startDevTools } from "./systems/devtools.js";
 import { startCycle } from "./systems/cycle.js";
@@ -108,6 +109,7 @@ startAuras();
 startRegen();
 startTower();
 startRespawn(player);
+startInvuln(player);
 // game-over listens for run-over BEFORE startRunState: runstate fires
 // "run-frozen" synchronously, so the stats snapshot must exist by then.
 startGameOver();
