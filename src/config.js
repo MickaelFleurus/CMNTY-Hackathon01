@@ -808,3 +808,19 @@ export const GOLEM_STYLES = {
   cardH: 300,
   titleColor: [255, 220, 90],
 };
+
+// ---------------------------------------------------------------------------
+// Golem styles (owner: Akram - src/systems/golem-guardian.js)
+// ---------------------------------------------------------------------------
+// Guardian (docs/game-design-v2.md → "The golem awakening flow" → pick 1 of 3
+// golem styles): the defensive, stay-home identity. A protective aura around
+// the golem slows enemies inside, and a shield refreshes while the player
+// roams near it and holds a while after they leave. Picked with the root
+// event "golem-style-pick" { style: "guardian", level?, params? }.
+export const GOLEM_GUARDIAN = {
+  radius: { base: 220, perLevel: 40 }, // px, aura around the golem
+  enemySlow: { base: 0.75, perLevel: -0.05, min: 0.5 }, // enemy speed x inside
+  shield: { base: 15, perLevel: 5 }, // hp absorbed while inside (refreshed)
+  shieldDuration: 6, // s the shield holds after leaving the aura
+  color: [200, 212, 230], // white/gray: defense paths (game-design-v2.md)
+};
