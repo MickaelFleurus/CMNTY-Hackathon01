@@ -32,7 +32,11 @@ export const UPGRADES = [
   { id: "weapon-pistol", name: "Pistol", description: "New weapon: shoots the nearest enemy", icon: "Icon_Magic_Bolt", maxLevel: 5,
     levels: ["+1 bullet, +damage", "Fires faster, +damage", "+1 bullet, +damage", "Fires faster, +damage"] },
   // STARTER weapon: granted at level 1 when the run starts (main.js → grantUpgrade)
-  { id: "weapon-plank", name: "Spectral Scythe", description: "Sweeps through enemies in a ghostly arc", icon: "Icon_Ghoul_Plank", iconPath: "gfx/ghoul/Icon_Ghoul_Plank.png", maxLevel: 5,
+  // Icon_Ghoul_Plank.png was a ghoul character sprite, not a weapon icon,
+  // so the HUD and level-up screens showed a mini hero. Knife icon stays
+  // until a real scythe icon exists (shortcut: placeholder, upgrade when
+  // codex ships one).
+  { id: "weapon-plank", name: "Spectral Scythe", description: "Sweeps through enemies in a ghostly arc", icon: "Icon_Knife", maxLevel: 5,
     levels: ["Longer reach, +damage", "Chains a 2nd sweep behind you, +damage", "Longer reach, +damage", "Chains a 3rd sweep in front, +damage"] },
   { id: "weapon-axe", name: "Axe", description: "New weapon: thrown up, falls through the horde", icon: "Icon_Axe", maxLevel: 5,
     levels: ["+1 axe, +damage", "Axes thrown to both sides, +damage", "+1 axe, +damage", "+1 axe, +damage"] },
