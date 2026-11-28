@@ -102,6 +102,8 @@ export const ENEMY = {
 //                 members. The group keeps its formation while travelling,
 //                 closes up near its target (ENEMY.formationHoldDistance), and
 //                 shares one target (player or tower).
+//     edgeMargin  optional extra px off-screen the group spawns at (on top of
+//                 ENEMY_SPAWN.edgeMargin), e.g. bat swarms fly in from far away
 //     maxAlive    per-type cap (the global ENEMY_SPAWN.maxAlive still applies)
 //     at          optional "base": spawn `distance` px from the base instead of
 //                 at the screen edge
@@ -148,7 +150,9 @@ export const ENEMY_TYPES = [
     speed: 135,
     tierMinHp: [0, 2, 4, 7, 10],
     // Swarms sweep across the screen and come back; they don't target anyone.
-    behavior: { kind: "sweep", returnDelay: 3, aimSpread: 160, exitMargin: 60 },
+    // exitMargin: px past the screen edge they fly before turning back, so
+    // the next pass also comes from far away
+    behavior: { kind: "sweep", returnDelay: 3, aimSpread: 160, exitMargin: 250 },
     drops: [
       BONUS_DROP_ROW,
       { kind: "xp-blue", base: 0.25, perLevel: 0, max: 0.25, value: 1 },
@@ -161,6 +165,9 @@ export const ENEMY_TYPES = [
       intervalDecayPerSec: 0.02,
       // one big, tightly packed swarm of 9-14
       group: { min: 9, max: 14, radius: 30, spacing: 10 },
+      // px beyond ENEMY_SPAWN.edgeMargin: swarms start far off-screen and fly
+      // in (~3.5 s at 135 px/s before reaching the screen center)
+      edgeMargin: 400,
       maxAlive: 100,
       // From wave 2, or as soon as the player reaches level 3, or when another
       // system fires the "bat-swarm" trigger (e.g. a night event).
@@ -819,9 +826,11 @@ export const CYCLE = {
   afterWaveDelay: 2.5,
   swipeTime: 0.8,
   // Shop circle (px from the golem's body center): inside it during the
-  // break → the shop opens. Drawn as a faint glowing ring.
+  // break → the shop opens. Drawn as a pulsing glowing ring + a hint under it.
   shopCircle: 130,
   shopCircleColor: [255, 214, 120],
+  shopCirclePulseHz: 1.4, // ring pulses (and inward ripples) per second
+  shopHint: ["UPGRADE THE GOLEM", "Step into the circle"], // title, subtitle under the ring
   arrivalGap: 50, // px below the golem where the portal drops the player
   nextWaveDelay: 2, // s between closing the shop and the next wave
   pauseInShop: true, // freeze the game (time scale 0) while the shop is open
@@ -872,7 +881,8 @@ export const BONUS_DROPS = {
 export const BASE_ALERT = {
   attackedFor: 1.5, // s after the last HP loss the golem still counts as "under attack"
   bannerQuiet: 5, // s the golem must be left alone before the banner shows again
-  bannerTime: 2.5, // s the "BASE UNDER ATTACK!" banner stays up
+  bannerTime: 2.5, // s the "THE GOLEM IS UNDER ATTACK!" banner stays up
+  bannerMinDistance: 450, // px: the banner only shows when the player is at least this far from the golem
   flashTime: 0.3, // s, the HUD bar's white hit flash fades over this
   dangerRatio: 0.25, // golem HP fraction below which the danger state is on
   dangerHz: 1.2, // red edge pulses per second
@@ -889,7 +899,7 @@ export const BASE_ALERT = {
 export const BOSS_WARNING = {
   bannerTime: 4, // s, "BOSS NEXT WAVE" banner when the wave before a boss wave ends
   startBannerTime: 2.5, // s, "BOSS WAVE" banner when the boss wave starts
-  bannerY: 220, // px from the top (below the golem HP bar and "BASE UNDER ATTACK!")
+  bannerY: 220, // px from the top (below the golem HP bar and "THE GOLEM IS UNDER ATTACK!")
   bannerWidth: 560, // px
   reminderY: 178, // px: small "BOSS NEXT WAVE: <name>" pill during the break
   reminderHz: 1, // reminder outline pulses per second

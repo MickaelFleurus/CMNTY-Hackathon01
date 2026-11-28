@@ -333,9 +333,10 @@ being hit and how much HP it has left:
 - **Off-screen arrow**: when the base is off-screen, an arrow at the screen
   edge points toward it. Normally it's quiet; while the base is being
   attacked it turns red and pulses.
-- **"Base under attack!" banner** at the top of the screen when the tower
-  starts taking damage. It shows again only after the tower has been left
-  alone for a few seconds, so it doesn't spam.
+- **"The golem is under attack!" banner** at the top of the screen when the
+  golem takes damage while the player is far from it (no banner when you're
+  standing next to it). Once per attack: it shows again only after the golem
+  has been left alone for a few seconds, so it doesn't spam.
 - **Danger state** when the tower drops below ~25% HP: a red pulse around
   the screen edges and a stronger arrow, so the player knows to go home now.
 - **While the player is dead**, the respawn countdown is shown next to the
