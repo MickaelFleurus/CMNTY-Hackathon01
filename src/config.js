@@ -506,9 +506,11 @@ export const TOWER = {
   // during that wave (lost 80 → +40). Never above its max HP.
   waveEndRepair: 0.5,
   // Faint red pulse while its HP drains: pulse speed follows the drain rate
-  // (minHz + hzPerHp x HP/s, capped at maxHz); at the peak of a pulse the
-  // golem's green/blue are lowered by `strength` (0-255): faint but visible.
-  drainFlash: { minHz: 1, hzPerHp: 0.12, maxHz: 6, strength: 85 },
+  // (minHz + hzPerHp x HP/s, capped at maxHz: 2 HP/s → 3 Hz, 6 → 4 Hz,
+  // 10 → 5 Hz); at the peak of a pulse the golem's green/blue are lowered by
+  // `strength` (0-255): faint but visible. When the drain stops, the current
+  // pulse finishes its fade-out before the tint goes away.
+  drainFlash: { minHz: 2.5, hzPerHp: 0.25, maxHz: 7, strength: 85 },
 
   // Golem FX (one shader on the golem sprite, see tower.js):
   statueGrey: 1, // 0..1 how grey the sleeping statue is (1 = fully desaturated)
