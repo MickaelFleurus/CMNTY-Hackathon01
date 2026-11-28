@@ -84,17 +84,31 @@ export function makeShop() {
     let hover = null; // branch under the mouse, or "skip"
     let refused = null; // { branch, until } red flash when too poor
 
+    // Layout from SHOP.tree, fitted to the screen: on a 720 px wide portrait
+    // phone (CFG.viewport.portrait) the columns shrink and go "compact"
+    // (icon above the name, price only in the title), and the whole tree is
+    // centered vertically in the taller screen.
     const L = SHOP.tree;
-    const colW = L.colWidth;
-    const startX = width() / 2 - (branches.length * colW + (branches.length - 1) * L.colGap) / 2;
-    const colX = (i) => startX + i * (colW + L.colGap);
+    const gap = width() < 900 ? 10 : L.colGap;
+    const colW = Math.min(L.colWidth, (width() - 24 - (branches.length - 1) * gap) / branches.length);
+    const compact = colW < 210;
+    const oy = Math.max(0, (height() - 720) / 2);
+    const Y = {
+      title: 30 + oy,
+      header: L.headerY + oy,
+      nodesTop: L.nodesTop + oy + (compact ? 30 : 0),
+      nodesBottom: L.nodesBottom + oy,
+      skip: L.skipY + oy,
+    };
+    const startX = width() / 2 - (branches.length * colW + (branches.length - 1) * gap) / 2;
+    const colX = (i) => startX + i * (colW + gap);
     const nodeAt = (b, lvl) => {
       // lvl 1 at the bottom, maxLevel at the top
-      const span = L.nodesBottom - L.nodesTop;
+      const span = Y.nodesBottom - Y.nodesTop;
       const step = b.opt.maxLevel > 1 ? span / (b.opt.maxLevel - 1) : 0;
-      return vec2(colX(branches.indexOf(b)) + colW / 2, L.nodesBottom - (lvl - 1) * step);
+      return vec2(colX(branches.indexOf(b)) + colW / 2, Y.nodesBottom - (lvl - 1) * step);
     };
-    const skipRect = { x: width() / 2 - 160, y: L.skipY, w: 320, h: 44 };
+    const skipRect = { x: width() / 2 - 160, y: Y.skip, w: 320, h: 44 };
 
     ui = add([
       pos(0, 0),
@@ -106,18 +120,21 @@ export function makeShop() {
           drawRect({ pos: vec2(0, 0), width: width(), height: height(), color: rgb(12, 10, 20), opacity: 0.86 });
 
           // title + coins + price
-          drawText({ text: "GOLEM UPGRADES", size: 34, pos: vec2(width() / 2, 30), anchor: "top", color: rgb(...GOLD) });
+          drawText({ text: "GOLEM UPGRADES", size: 34, pos: vec2(width() / 2, Y.title), anchor: "top", color: rgb(...GOLD) });
+          const poor = refused && clock < refused.until;
           drawText({
-            text: `Coins ${getCoins()}   ·   next upgrade costs ${costNow()}`,
+            text: poor ? `Not enough coins: ${getCoins()} / ${costNow()}` : `Coins ${getCoins()}   ·   next upgrade costs ${costNow()}`,
             size: 16,
-            pos: vec2(width() / 2, 74),
+            pos: vec2(width() / 2, Y.title + 44),
             anchor: "top",
-            color: rgb(210, 210, 225),
+            color: poor ? rgb(255, 110, 100) : rgb(210, 210, 225),
           });
           drawText({
-            text: "One upgrade per break. Press the key next to a glowing node (1-4), or click it.",
+            text: compact
+              ? "One upgrade per break. Press 1-4, or tap a glowing node."
+              : "One upgrade per break. Press the key next to a glowing node (1-4), or click it.",
             size: 13,
-            pos: vec2(width() / 2, 98),
+            pos: vec2(width() / 2, Y.title + 68),
             anchor: "top",
             color: rgb(150, 150, 170),
           });
@@ -140,32 +157,32 @@ export function makeShop() {
 
       // column card
       drawRect({
-        pos: vec2(x, L.headerY),
+        pos: vec2(x, Y.header),
         width: colW,
-        height: L.skipY - 20 - L.headerY,
+        height: Y.skip - 20 - Y.header,
         radius: 10,
         color: rgb(30, 26, 44),
         opacity: isHover ? 0.95 : 0.75,
         outline: { width: 2, color: isHover ? rgb(...GOLD) : rgb(70, 62, 96) },
       });
-      // header: icon, name, branch label, description
-      if (getSprite(b.opt.icon)) drawSprite({ sprite: b.opt.icon, pos: vec2(x + 30, L.headerY + 30), anchor: "center", scale: 2.5 });
-      drawText({ text: b.opt.name, size: 20, pos: vec2(x + 56, L.headerY + 14), color: col });
-      drawText({ text: b.label, size: 10, pos: vec2(x + 56, L.headerY + 38), color: rgb(150, 150, 170) });
-      drawText({
-        text: b.opt.desc.replace(/\n/g, " "),
-        size: 12,
-        width: colW - 24,
-        pos: vec2(x + 12, L.headerY + 62),
-        color: rgb(200, 200, 215),
-      });
-      drawText({
-        text: max ? "MAX" : `Lv ${lvl} / ${b.opt.maxLevel}`,
-        size: 12,
-        pos: vec2(x + colW - 12, L.headerY + 38),
-        anchor: "topright",
-        color: max ? rgb(...GOLD) : rgb(180, 180, 200),
-      });
+      // header: icon, name, branch label, level, description
+      const lvText = max ? "MAX" : `Lv ${lvl} / ${b.opt.maxLevel}`;
+      const lvCol = max ? rgb(...GOLD) : rgb(180, 180, 200);
+      const desc = b.opt.desc.replace(/\n/g, " ");
+      if (compact) {
+        const cx = x + colW / 2;
+        if (getSprite(b.opt.icon)) drawSprite({ sprite: b.opt.icon, pos: vec2(cx, Y.header + 24), anchor: "center", scale: 2.2 });
+        drawText({ text: b.opt.name, size: 15, pos: vec2(cx, Y.header + 46), anchor: "top", color: col });
+        drawText({ text: b.label, size: 9, pos: vec2(cx, Y.header + 66), anchor: "top", color: rgb(150, 150, 170) });
+        drawText({ text: lvText, size: 11, pos: vec2(cx, Y.header + 80), anchor: "top", color: lvCol });
+        drawText({ text: desc, size: 10, width: colW - 14, align: "center", pos: vec2(cx, Y.header + 98), anchor: "top", color: rgb(200, 200, 215) });
+      } else {
+        if (getSprite(b.opt.icon)) drawSprite({ sprite: b.opt.icon, pos: vec2(x + 30, Y.header + 30), anchor: "center", scale: 2.5 });
+        drawText({ text: b.opt.name, size: 20, pos: vec2(x + 56, Y.header + 14), color: col });
+        drawText({ text: b.label, size: 10, pos: vec2(x + 56, Y.header + 38), color: rgb(150, 150, 170) });
+        drawText({ text: desc, size: 12, width: colW - 24, pos: vec2(x + 12, Y.header + 62), color: rgb(200, 200, 215) });
+        drawText({ text: lvText, size: 12, pos: vec2(x + colW - 12, Y.header + 38), anchor: "topright", color: lvCol });
+      }
 
       // links between nodes
       for (let l = 1; l < b.opt.maxLevel; l++) {
@@ -187,6 +204,7 @@ export function makeShop() {
           const kb = at.add(-(r + 22), 0);
           drawRect({ pos: kb, width: 24, height: 24, anchor: "center", radius: 5, color: canAfford ? rgb(...GOLD) : rgb(120, 100, 100) });
           drawText({ text: b.key, size: 16, pos: kb, anchor: "center", color: rgb(...DARK) });
+          if (compact) continue; // narrow columns: the price is in the title
           drawText({
             text: `${cost} coins`,
             size: 13,
@@ -222,7 +240,7 @@ export function makeShop() {
     // input: manual hit tests (the game is time-scaled to 0 behind the shop)
     const inSkip = (p) => p.x >= skipRect.x && p.x <= skipRect.x + skipRect.w && p.y >= skipRect.y && p.y <= skipRect.y + skipRect.h;
     const branchAt = (p) =>
-      branches.find((b, i) => p.x >= colX(i) && p.x <= colX(i) + colW && p.y >= L.headerY && p.y <= L.skipY - 20);
+      branches.find((b, i) => p.x >= colX(i) && p.x <= colX(i) + colW && p.y >= Y.header && p.y <= Y.skip - 20);
 
     const handlers = [
       onUpdate(() => {
@@ -274,6 +292,18 @@ export function makeShop() {
   }
 
   getTreeRoot().on("shop-open", open);
+
+  // Free golem upgrade (a rare chest / treasure reward, chests.js): the next
+  // node of a random branch that isn't maxed, at no cost and without raising
+  // upgradesOwned (docs → "Chests (visible)").
+  getTreeRoot().on("golem-upgrade-free", () => {
+    const open = SHOP.options.filter((o) => (levels[o.id] ?? 0) < o.maxLevel);
+    if (!open.length) return;
+    const opt = choose(open);
+    levels[opt.id] = (levels[opt.id] ?? 0) + 1;
+    getTreeRoot().trigger("shop-pick", { id: opt.id, quadrant: opt.quadrant, level: levels[opt.id], params: opt.params, free: true });
+    getTreeRoot().trigger("golem-upgraded-free", { id: opt.id, name: opt.name, level: levels[opt.id] });
+  });
 
   // Skip without buying: SHOP.skipKeys or the Skip button. The cycle
   // director starts the next wave on shop-close, as after a pick.

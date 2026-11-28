@@ -225,6 +225,18 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   Golem = gold diamond (red pulse while losing HP, clamped to the edge as a
   compass when far), enemies = red dots (bosses pink, bigger), portal violet,
   bonus drops yellow. Reads tags only; tuning in `MINIMAP`.
+- **Chests & hidden treasures** (chippe, `chests.js`): spawned on `wave-start`,
+  cleared on `wave-end`. Chests (tag `"chest"`): stand next to one for
+  `CHESTS.openTime` s (walking away cancels), farther = better loot, some
+  guarded (zombies spawn on approach). Loot: coins (`spawnCoins`), a free card
+  (`"free-level-up-card"` → upgrades.js, level unchanged), full heal, golem
+  repair, free golem upgrade (`"golem-upgrade-free"` → shop.js, no
+  `upgradesOwned`). Golem chests: pick 1 of 3 golem stats (paused screen
+  `"golem-chest-ui"`): Max HP, Armor (wraps `base.hurt`), Swipe (scales
+  `GOLEM_SHOCKWAVE.radius/force`); fires `"golem-stat-pick" { stat, level }`.
+  Treasures (tag `"treasure"`, invisible): sparkle within `hintRadius`, dig
+  `digTime` s. Events: `"chest-opened"`, `"treasure-dug"`. Level up never opens
+  over another paused screen (golem style pick / golem chest).
 - **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
   `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
   It is separate from `player.buffs` (auras, rewritten every frame), so both
