@@ -68,8 +68,11 @@ must protect - it becomes your life total.
   total. Player death is **not** game over.
 - **The golem's HP drains while it's surrounded.** Enemies don't hit it one
   attack at a time: as long as enemies touch it, its HP goes down at a
-  steady rate, and every extra enemy (weighted by how strong it is) makes
-  it drain faster. No enemy on it means no drain. A faint red pulse on the
+  steady rate that **goes up one step for every 4 enemy points** on it.
+  Each enemy is worth points by power: zombies and bats start at 1, the
+  crystal golem at 4, and they gain 1 per color tier; a boss is worth 8,
+  then 12 from the second boss on. 1–3 points drain 2 HP/s, 4–7 drain 4,
+  8–11 drain 6… No enemy on it means no drain. A faint red pulse on the
   golem speeds up with the drain, so the player can read the pressure at a
   glance.
 - **The golem repairs between waves.** When a wave ends, the golem gets

@@ -29,10 +29,13 @@
 //       * The tower is SOLID for enemies: they're pushed out of its body box
 //         (tower.solidRect(), else its world-area box) by their full drawn
 //         size, so no sprite hides behind the golem.
-//       * The tower's HP DRAINS while enemies touch it (no per-hit damage):
-//         every frame tower.hurt(sum of touching enemies' damage x
-//         ENEMY.towerDrain.perDamage x dt). "damage-taken" { kind: "tower" }
-//         reports the drained total every towerDrain.reportInterval s.
+//       * The tower's HP DRAINS while enemies touch it (no per-hit damage),
+//         in steps: points = sum of the touching enemies' `pressure`
+//         (ENEMY_TYPES[].pressure, by type + color tier); step =
+//         floor(points / pointsPerStep) + 1 (0 when nobody touches it);
+//         tower.hurt(step x hpPerStep x dt) every frame (ENEMY.towerDrain).
+//         "damage-taken" { kind: "tower" } reports the drained total every
+//         towerDrain.reportInterval s.
 //       * A tower with awake === false (the wave-1 statue, tower.js) is
 //         still solid, but is NOT a target and takes no contact damage.
 //       * AURAS: objects tagged "aura" with { radius, enemySlow } slow every
@@ -226,6 +229,17 @@ export function rollDrop(level, table = ENEMY_DROPS) {
   return null;
 }
 
+/**
+ * Golem drain points of one enemy (ENEMY_TYPES[].pressure): base + perTier x
+ * color tier; bosses switch to fromSecondBoss from the second boss on.
+ */
+function pressureOf(type, tier) {
+  const p = type.pressure ?? { base: 1, perTier: 0 };
+  const bossNumber = Math.round(currentWave / (ENEMY_WAVES.boss?.every || 1));
+  if (p.fromSecondBoss != null && bossNumber >= 2) return p.fromSecondBoss;
+  return p.base + (p.perTier ?? 0) * tier;
+}
+
 /** Color-swap tier for a given max HP (highest tier whose minHp <= hp). */
 export function enemyTierForHp(hp, minHps = ENEMY_TIERS.map((t) => t.minHp)) {
   let tier = 0;
@@ -390,6 +404,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) 
       tier,
       xpMult,
       damage: stats.damage,
+      pressure: pressureOf(type, tier), // golem drain points (resolveTowerContact)
       attackTimer: 0,
       target: null, // "player" | "tower" | null (smart targeting)
       retargetIn: rand(0, ENEMY_TARGETING.retargetJitter),
@@ -847,13 +862,13 @@ function resolveTowerContact() {
   if (!T.avail || !t || typeof t.hurt !== "function") return;
   const r = T.rect;
   const reach = Math.hypot(r.x1 - r.x0, r.y1 - r.y0) / 2 + MAX_BODY_RADIUS + ENEMY.towerContactSlack;
-  // Drain rate = the weight of everything touching it (count x strength).
-  let weight = 0;
+  // Drain step from the points of everything touching it (count x power).
+  let points = 0;
   forEachEnemyNear(T.x, T.y, reach, (e) => {
     // sweepers (bats) don't target the tower but drain it while flying over it
     if (e.dead) return false;
     if (rectDistance(e.pos.x, e.pos.y, r).d > e.bodyRadius + ENEMY.towerContactSlack) return false;
-    weight += e.damage;
+    points += e.pressure ?? 1;
     if (e.attackTimer <= 0) {
       playAttack(e); // visual only: swing every attackCooldown
       e.attackTimer = ENEMY.attackCooldown;
@@ -862,7 +877,8 @@ function resolveTowerContact() {
   });
 
   const cfg = ENEMY.towerDrain;
-  const drain = weight * cfg.perDamage * dt();
+  const step = points > 0 ? Math.floor(points / cfg.pointsPerStep) + 1 : 0;
+  const drain = step * cfg.hpPerStep * dt();
   if (drain > 0) {
     towerDrainPending += drain;
     t.hurt(drain);
