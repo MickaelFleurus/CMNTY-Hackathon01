@@ -7,6 +7,9 @@
 // base starts as an inert statue during wave 1. It is still solid, but
 // enemies ignore it (no targeting, no contact damage), it has no HP bar and
 // it doesn't shoot. It wakes up at the end of wave 1 (the first "wave-end").
+// Statue look: grey (desaturated) and not animated, until its power is picked:
+// the first shop close after it woke (pick or skip) - later the golem style
+// pick. Then it gets its colours back and starts its idle animation.
 //
 // Contract (no imports between systems):
 //   - attaches to the object tagged "base" (base.js) once it exists: adds
@@ -19,6 +22,9 @@
 //     enemies.js only targets / damages a tower with awake === true.
 //   - on waking: getTreeRoot().trigger("golem-awake") (fired once, on the
 //     first "wave-end"). respawn.js listens: until then, player death = run over.
+//   - powered (look only): on the first "shop-close" after waking, the grey
+//     statue shader is removed, the idle anim starts, and
+//     getTreeRoot().trigger("golem-powered") fires (once). base.powered = true.
 //   - wave repair: on "wave-end", the golem heals TOWER.waveEndRepair (half)
 //     of the HP it lost since "wave-start" (capped at max HP), with a green
 //     "+N" above it, and fires getTreeRoot().trigger("golem-repaired", { amount }).
@@ -31,12 +37,24 @@ import { pushOutOfRect } from "../util/solid.js";
 
 const QUADRANT = "active-offense";
 const BOLT = "tower-bolt";
+const STATUE_SHADER = "golem-statue";
+
+// Grey statue: the art's own brightness (outline + shading survive), no hue.
+const STATUE_FRAG = `
+uniform float u_amount;
+vec4 frag(vec2 pos, vec2 uv, vec4 color, sampler2D tex) {
+  vec4 c = def_frag();
+  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
+  return vec4(mix(c.rgb, vec3(l), u_amount), c.a);
+}
+`;
 
 export function loadTowerSprites() {
   loadSprite(BOLT, boltUrl, {
     sliceX: 4,
     anims: { fly: { from: 0, to: 3, loop: true, speed: 12 } },
   });
+  loadShader(STATUE_SHADER, null, STATUE_FRAG);
 }
 
 export function startTower() {
@@ -47,6 +65,7 @@ export function startTower() {
   let cooldown = 0;
   let over = false;
   let awake = false; // wave 1: inert statue
+  let powered = false; // statue look (grey, still) until its power is picked
 
   const maxHpFor = (p) => Math.round(levelStat(params.hp ?? TOWER.hp, p + 1));
 
@@ -87,6 +106,17 @@ export function startTower() {
     getTreeRoot().trigger("golem-awake");
   });
 
+  // Power picked: the first shop close after waking (pick or skip).
+  // TODO: switch to the golem style pick event once that screen exists.
+  getTreeRoot().on("shop-close", () => {
+    if (!awake || powered || over || !tower?.exists()) return;
+    powered = true;
+    tower.powered = true;
+    tower.unuse("shader");
+    tower.animSpeed = TOWER.idleAnimSpeed; // slow, heavy idle
+    getTreeRoot().trigger("golem-powered");
+  });
+
   onUpdate(() => {
     if (!tower) {
       const base = get("base")[0];
@@ -113,7 +143,15 @@ export function startTower() {
   function arm(base) {
     const hp = maxHpFor(picks);
     base.use(health(hp, hp));
-    base.animSpeed = TOWER.idleAnimSpeed; // slow, heavy idle
+    // statue look: grey and frozen on its first idle frame until powered
+    base.powered = powered;
+    if (!powered) {
+      base.use(shader(STATUE_SHADER, { u_amount: TOWER.statueGrey }));
+      base.animSpeed = 0;
+      base.frame = 0;
+    } else {
+      base.animSpeed = TOWER.idleAnimSpeed;
+    }
     base.solidRect = () => solidRect(base);
     base.awake = awake;
     if (!base.has("color")) base.use(color(255, 255, 255)); // for the hurt flash

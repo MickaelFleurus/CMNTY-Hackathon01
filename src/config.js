@@ -458,6 +458,7 @@ export const TOWER = {
   // Enemies and the player can't overlap it; the HP bar sits just above it.
   body: { cell: 32, left: 1, top: 3, right: 1, bottom: 0 },
   idleAnimSpeed: 0.4, // x the golem's authored 8 fps idle (a slow, heavy breathe)
+  statueGrey: 1, // 0..1 how grey the sleeping statue is (1 = fully desaturated)
   playerRadius: 12, // px, the player's body when pushed out of the base
   hp: { base: 200, perLevel: 75 },
   range: { base: 320, perLevel: 30 }, // px, shooting range
