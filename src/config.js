@@ -853,6 +853,19 @@ export const GOLEM_STYLES = {
 };
 
 // ---------------------------------------------------------------------------
+// Minimap (owner: chippe — src/systems/minimap.js), top-left corner
+// ---------------------------------------------------------------------------
+export const MINIMAP = {
+  x: 16, // px, top-left corner of the map on screen
+  y: 16,
+  size: 150, // px, the map is a square
+  range: 1000, // world px from the player to the map's edge
+  golemSize: 7, // px, half-diagonal of the golem diamond
+  attackedFor: 1.5, // s after the golem's last HP loss it pulses red
+  pulseHz: 2, // red pulses per second while under attack
+};
+
+// ---------------------------------------------------------------------------
 // Golem styles (owner: Akram - src/systems/golem-guardian.js)
 // ---------------------------------------------------------------------------
 // Guardian (docs/game-design-v2.md → "The golem awakening flow" → pick 1 of 3

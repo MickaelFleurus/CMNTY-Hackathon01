@@ -215,6 +215,10 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   red off-screen arrow while it is hit (not during the break) and a red edge
   pulse below `BASE_ALERT.dangerRatio`. Fires
   `getTreeRoot().trigger("base-under-attack", { hp, maxHP })` with each banner.
+- **Minimap** (chippe, `minimap.js`): top-left corner, centered on the player.
+  Golem = gold diamond (red pulse while losing HP, clamped to the edge as a
+  compass when far), enemies = red dots (bosses pink, bigger), portal violet,
+  bonus drops yellow. Reads tags only; tuning in `MINIMAP`.
 - **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
   `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
   It is separate from `player.buffs` (auras, rewritten every frame), so both
