@@ -623,6 +623,8 @@ export const DEV = {
   toggleAttackKey: "k", // toggle the player's attack (also ?noattack in the URL)
   endWaveKey: "n", // end the running wave now, as if survived (boss waves too)
   freezeEnemiesKey: "f", // toggle: enemies frozen in place (spawns + wave timer go on)
+  speedKey: "t", // toggle the whole game between x1 and x fastSpeed
+  fastSpeed: 2,
 };
 
 // ---------------------------------------------------------------------------
