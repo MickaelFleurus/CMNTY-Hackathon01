@@ -689,7 +689,7 @@ export const AXE = {
   scale: 2.5,
 };
 
-// Boomerang (src/systems/boomerang.js, card "weapon-boomerang"): flies out to
+// Boomerang (src/systems/boom-stick.js, card "weapon-boomerang"): flies out to
 // the nearest enemy (or the facing side), slows down, comes back to the
 // player; it can hit the same enemies again on the way back.
 // Every level: +damagePerLevel. Path alternates: Lv2 +1 boomerang → Lv3
