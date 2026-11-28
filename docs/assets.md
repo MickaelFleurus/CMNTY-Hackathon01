@@ -78,8 +78,17 @@ Things drawn with stand-in art because the pack has nothing for them yet.
 
 | What | Placeholder now | Where to change it |
 |---|---|---|
-| **Plank** weapon (starter, long poke) | knife sprite (`Proj_Knife`, frame 0), recolored bright pink by a small shader (`PLANK.tint`), stretched to the plank's length (`PLANK.length`, `PLANK.thickness`) | `src/systems/plank.js` (`poke()` + the pink shader, which can go once real art exists), `src/config.js` → `PLANK` |
-| **Plank** level-up card icon | `Icon_Knife` tinted the same pink | `src/systems/upgrades.js` → the `weapon-plank` entry (`icon`, `tint`) |
+| **Plank** weapon (starter, long sweep) | *(replaced)* procedural translucent spectral scythe (`PLANK.visual`), no stretched sprite | `src/systems/plank.js` (`drawScythe()`), `src/config.js` → `PLANK.visual` |
+| **Plank** level-up card icon | *(replaced)* `gfx/ghoul/Icon_Ghoul_Plank.png` | `src/systems/upgrades.js` → the `weapon-plank` entry (`icon`, `iconPath`) |
+
+## Ghoul hero
+
+`gfx/ghoul/` is an AI-generated edit of the knight layout, rebuilt as a
+separate asset (the vendored Survivors pack is untouched). It uses 64px cells
+in a 384x256 sheet, rows Idle(4), Walk(4), Hit(2), Death(6, last frame empty).
+Generated with `google/gemini-nano-banana-2.1` from the knight sheet as a
+layout reference; two requests cost **$0.1008** total. `ghoul-hero-preview.png`
+is an enlarged review image, not loaded by the game.
 
 Owners per `docs/tasks.md`: Akram wires the hero + projectile + tile map,
 Mickael the enemies, chippe the pickups/icons for the level-up UI.

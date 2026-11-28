@@ -343,7 +343,7 @@ export const CFG = {
     invulnTime: 1.0, // s
     respawnInvulnTime: 2.0, // s of protection right after a respawn
     invulnBlinkHz: 10, // blinks per second while invulnerable
-    scale: 2, // sprite scale (16px art -> 32px on screen)
+    scale: 1, // sprite scale (64px hero art -> 64px on screen)
     // Draw layer: above every world object (ground -10, auras -5, enemies 0,
     // coins 4, base 5, portal/projectiles 6) so the player is never hidden,
     // below overlays (HP bars / shield 50, floating text 60, UI 100).
@@ -714,10 +714,8 @@ export const KNIFE = {
 };
 
 // Plank (src/systems/plank.js): the STARTER weapon (every run begins with it
-// at level 1; its card "weapon-plank" levels it up). A long poke in front of
-// the player that hits along its whole length. ART PLACEHOLDER: drawn as the
-// knife sprite, recolored bright pink and stretched, until a real plank
-// sprite exists (see docs/assets.md → "Placeholder art to replace").
+// at level 1; its card "weapon-plank" levels it up). A long spectral scythe
+// thrust in front of the player that hits along its whole length.
 // Every level: +damagePerLevel. Path alternates: Lv2 +length → Lv3 a chained
 // poke the other way → Lv4 +length → Lv5 another chained poke (the other way
 // again).
@@ -732,8 +730,20 @@ export const PLANK = {
   thrust: 26, // px it slides out and back during a poke
   pokeTime: 0.2, // s the poke stays out
   hitRadius: 16, // px, hit circles spaced along the plank
-  thickness: 3, // y scale of the stretched knife sprite
-  tint: [255, 70, 200], // bright pink = placeholder art
+  // Procedural spectral-scythe look (no sprite stretching). Kept here so the
+  // colours and opacity are tunable without touching the weapon logic.
+  visual: {
+    color: [168, 118, 255],
+    coreColor: [235, 220, 255],
+    glowWidth: 18,
+    shaftWidth: 7,
+    coreWidth: 2.5,
+    glowOpacity: 0.22,
+    shaftOpacity: 0.5,
+    coreOpacity: 0.95,
+    headLength: 24,
+    headWidth: 14,
+  },
 };
 
 // Axe (src/systems/axe.js, card "weapon-axe"): thrown up in an arc, falls

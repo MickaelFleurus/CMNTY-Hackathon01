@@ -12,7 +12,7 @@ import { loadSounds, startSounds } from "./systems/sounds.js";
 import { initHud } from "./systems/hud.js";
 import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
-import { initPlank, loadPlankAssets } from "./systems/plank.js";
+import { initPlank } from "./systems/plank.js";
 import { initAxe } from "./systems/axe.js";
 import { initBoomerang } from "./systems/boom-stick.js";
 import { startAuras } from "./systems/auras.js";
@@ -60,9 +60,10 @@ kaplay({
 });
 
 // --- assets (Survivors Starter Kit, see docs/assets.md) ---
-// full character sheet (96x64): 6 cols x 4 rows, one animation per row
-// idle r0(4f) walk r1(4f) hit r2(2f) death r3(6f) - frame indices for sliceX:6
-loadSprite("hero-knight", "gfx/SurvivorsStarterKit_v1.0/Heroes/Hero_Knight.png", {
+// Ghoul hero sheet (384x256, 64px cells): 6 cols x 4 rows, one animation per row.
+// idle r0(4f) walk r1(4f) hit r2(2f) death r3(6f) - frame indices for sliceX:6.
+// 64px art at CFG.player.scale 1: about twice the old hero's on-screen size.
+loadSprite("hero-ghoul", "gfx/ghoul/ghoul-hero.png", {
   sliceX: 6,
   sliceY: 4,
   anims: {
@@ -80,7 +81,6 @@ loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_
   sliceX: 4,
   anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
 });
-loadPlankAssets(); // placeholder pink shader (no plank sprite yet)
 loadSounds();
 loadSprite("proj-axe", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Axe.png", {
   sliceX: 4,

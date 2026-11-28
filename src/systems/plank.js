@@ -5,34 +5,14 @@
 // the other way → Lv4 +length → Lv5 another chained poke (the other way again:
 // front, back, front).
 //
-// ART PLACEHOLDER: there's no plank sprite in the pack yet, so the poke is
-// the knife sprite recolored bright pink (a small shader) and stretched to
-// the plank's length (PLANK.tint / length / thickness).
-// Replace it when real art exists - listed in docs/assets.md →
-// "Placeholder art to replace".
+// The look is a procedural spectral scythe: a translucent violet shaft with a
+// curved blade, bright core and soft glow, so nothing is stretched into blur.
 //
 // Damage goes through the shared projectile contract (enemies.js reads
 // `damage`, `pierce`, `hitRadius`): a row of invisible hit circles along the
 // plank, sharing ONE `hitEnemies` set, so a poke hits every enemy along its
 // length exactly once.
 import { PLANK } from "../config.js";
-
-// PLACEHOLDER recolor: paints the (grey) knife bright pink while keeping its
-// shading. A plain color() multiplies and would turn it dark magenta.
-const PINK_SHADER = "plank-placeholder-pink";
-const PINK_FRAG = `
-uniform vec3 u_tint; // 0..255
-vec4 frag(vec2 pos, vec2 uv, vec4 color, sampler2D tex) {
-  vec4 c = def_frag();
-  float l = dot(c.rgb, vec3(0.299, 0.587, 0.114));
-  return vec4(clamp(u_tint / 255.0 * (0.55 + 0.75 * l), 0.0, 1.0), c.a);
-}
-`;
-let pinkUniform = null;
-
-export function loadPlankAssets() {
-  loadShader(PINK_SHADER, null, PINK_FRAG);
-}
 
 export function initPlank(player) {
   let level = 0;
@@ -115,8 +95,6 @@ function startCountdown(player, secs) {
   });
 }
 
-const KNIFE_ART_PX = 14; // drawn length of the knife art inside its 16 px frame
-
 /**
  * One poke: a plank `length` px long, starting just off the player, slides
  * out by PLANK.thrust and back, following the player.
@@ -126,18 +104,16 @@ function poke(player, side, length, damage) {
   const dir = vec2(side, 0);
   const placeAt = (out) => player.pos.add(dir.scale(14 + PLANK.thrust * out)); // plank's near end
 
-  // the look (no hits): the stretched pink knife
+  // the look (no hits): a translucent spectral scythe
   const look = add([
-    sprite("proj-knife", { frame: 0 }), // PLACEHOLDER art (pink knife)
-    shader(PINK_SHADER, (pinkUniform ??= { u_tint: rgb(...PLANK.tint) })),
-    scale(length / KNIFE_ART_PX, PLANK.thickness),
     pos(placeAt(0).add(dir.scale(length / 2))),
-    anchor("center"),
     rotate(dir.angle()),
     z(6),
     "plank",
     "fx", // cleared with the projectiles when the run is over (runstate.js)
   ]);
+
+  look.onDraw(() => drawScythe(length, t));
 
   // the hits: circles along the plank, one shared hit list per poke
   const hitEnemies = new Set();
@@ -163,4 +139,59 @@ function poke(player, side, length, damage) {
       destroy(look);
     }
   });
+}
+
+/** Draw the spectral scythe in the look object's local space (+x = thrust). */
+function drawScythe(length, t) {
+  const v = PLANK.visual;
+  const half = length / 2;
+  const headBase = half - v.headLength;
+  const tip = half;
+  const pulse = 0.88 + 0.12 * Math.sin(t * 42);
+  const glow = rgb(...v.color);
+  const core = rgb(...v.coreColor);
+  const sway = Math.sin(t * 26) * 2.5;
+
+  // Wispy tail: strokes that taper into nothing behind the grip.
+  drawLine({ p1: vec2(-half - 10, sway * 1.5), p2: vec2(-half + 18, 0), width: 5, color: glow, opacity: 0.2 * pulse });
+  drawLine({ p1: vec2(-half - 4, -sway), p2: vec2(-half + 22, 0), width: 2, color: core, opacity: 0.28 * pulse });
+
+  // Broad translucent aura, a tapered shaft body, and a bright core.
+  drawLine({ p1: vec2(-half, 0), p2: vec2(headBase, 0), width: v.glowWidth, color: glow, opacity: v.glowOpacity * pulse });
+  drawLine({ p1: vec2(-half, 0), p2: vec2(headBase, 0), width: v.shaftWidth, color: glow, opacity: v.shaftOpacity * pulse });
+  drawLine({ p1: vec2(-half + 4, 0), p2: vec2(headBase, 0), width: v.coreWidth, color: core, opacity: v.coreOpacity * pulse });
+
+  // Crescent blade made from layered Bezier strokes (a polygon here
+  // triangulates into a blob because the crescent is concave).
+  const blade = {
+    pt1: vec2(headBase, 0),
+    pt2: vec2(headBase + v.headLength * 0.35, -v.headWidth * 1.25),
+    pt3: vec2(tip - 1, -v.headWidth * 0.85),
+    pt4: vec2(tip, 0),
+    segments: 18,
+  };
+  drawBezier({ ...blade, width: 9, color: glow, opacity: 0.28 * pulse });
+  drawBezier({ ...blade, width: 4.5, color: glow, opacity: 0.62 * pulse });
+  drawBezier({ ...blade, width: 1.6, color: core, opacity: 0.95 * pulse });
+
+  // A shorter inner arc gives the blade a visible cutting edge.
+  drawBezier({
+    pt1: vec2(headBase + 4, -1),
+    pt2: vec2(headBase + v.headLength * 0.45, -v.headWidth * 0.55),
+    pt3: vec2(tip - 4, -v.headWidth * 0.4),
+    pt4: vec2(tip - 2, -1),
+    width: 1.4,
+    color: core,
+    opacity: 0.65 * pulse,
+    segments: 14,
+  });
+
+  // Energy flare at the grip and motes drifting around the blade.
+  drawCircle({ pos: vec2(-half, 0), radius: 5, color: glow, opacity: 0.45 * pulse });
+  for (let i = 0; i < 3; i++) {
+    const k = (t * 1.8 + i / 3) % 1;
+    const x = headBase - 18 + k * (v.headLength + 26);
+    const y = Math.sin(k * Math.PI) * (v.headWidth * 0.8 + i * 2) + sway * (i - 1) * 0.4;
+    drawCircle({ pos: vec2(x, -y), radius: 1.6 + (1 - k) * 1.2, color: core, opacity: 0.55 * (1 - k) });
+  }
 }

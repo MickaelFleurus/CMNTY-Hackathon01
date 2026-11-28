@@ -5,11 +5,13 @@ import { CFG, SHOP, RESPAWN } from "../config.js";
 
 export function makePlayer() {
   const player = add([
-    sprite("hero-knight", { anim: "idle" }),
+    sprite("hero-ghoul", { anim: "idle" }),
     scale(CFG.player.scale),
     // start just below the golem (SHOP.home is its feet), not inside it
     pos(SHOP.home.x, SHOP.home.y + RESPAWN.belowBase),
-    area(),
+    // Keep the gameplay hitbox at the old 32px hero size despite the larger art
+    // (64px sprite): the bigger silhouette must not make the player easier to hit.
+    area({ shape: new Rect(vec2(-16, -16), 32, 32) }),
     anchor("center"),
     z(CFG.player.z), // always drawn above the world (e.g. walking behind the base)
     health(CFG.player.maxHp),
