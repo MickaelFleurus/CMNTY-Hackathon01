@@ -209,7 +209,7 @@ export const ENEMY_TYPES = [
     // the base, attacks it and ignores the player until provoked.
     id: "boss",
     sheet: "boss",
-    knockbackResist: 0.75, // barely moves
+    knockbackResist: 0.9, // barely moves
     pressure: { base: 8, fromSecondBoss: 12 }, // golem drain points
     sprites: [
       "Boss_Slime_King.png",
@@ -218,9 +218,9 @@ export const ENEMY_TYPES = [
       "Boss_Demon_Lord.png",
       "Boss_Treant.png",
     ],
-    scale: 3, // 32 px art -> 96 px
-    hitRadius: 36,
-    baseHp: 150, // 360 at wave 3, 675 at wave 6, 1050 at wave 9
+    scale: 4.5, // 32 px art -> 144 px
+    hitRadius: 54,
+    baseHp: 375, // 900 at wave 3, 1690 at wave 6, 2625 at wave 9
     baseDamage: 8, // 14 per hit at wave 3
     speed: 45,
     tierMinHp: [0, Infinity, Infinity, Infinity, Infinity], // keep the boss art
