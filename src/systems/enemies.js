@@ -49,8 +49,10 @@
 //         on a boss wave the boss died). Waves can't end early otherwise.
 //       On getTreeRoot().on("run-over"): the director freezes (timer stops,
 //         no spawns/hits/new waves, enemies paused in place).
-//         Leftover enemies die on the spot when the wave ends -
-//         death anim, no drops, not counted as kills (ENEMY_WAVES.killOnEnd).
+//         Leftover enemies vanish in a smoke puff when the wave ends - no
+//         drops, not counted as kills (ENEMY_WAVES.killOnEnd).
+//       On getTreeRoot().on("golem-dying") (tower.js): the wave stops without
+//         a "wave-end", every enemy poufs and no further wave can start.
 //   - KNOCKBACK: getTreeRoot().trigger("enemy-knockback", { x, y, radius,
 //       force, damage? }) pushes every visible live enemy within `radius` of
 //       (x, y) straight away from it at `force` px/s (× (1 - type
@@ -634,15 +636,48 @@ function playDeath(enemy) {
 }
 
 /**
- * Kill every live enemy on the spot: death animation, but no "killed" or
- * "drop" events (no XP, doesn't count as a player kill).
+ * Every enemy (live or mid-death) vanishes in a puff of smoke: no "killed"
+ * or "drop" events (no XP, doesn't count as a player kill).
  */
 export function killAllEnemies() {
-  for (const e of [...live]) {
+  for (const e of [...live, ...get("enemy-dying")]) {
     e.dead = true;
     markGone(e);
-    playDeath(e);
+    if (!e.hidden) pouf(e.pos, e.bodyRadius ?? 16); // hidden bats are off-screen
+    destroy(e);
   }
+}
+
+/** A little cloud of smoke that swells and fades where an enemy vanished. */
+function pouf(at, size) {
+  const puffs = Array.from({ length: 5 }, (_, i) => ({
+    dir: Vec2.fromAngle(i * 72 + rand(-20, 20)),
+    r: size * rand(0.35, 0.55),
+  }));
+  let t = 0;
+  const fx = add([
+    pos(at.x, at.y),
+    z(8),
+    "fx",
+    {
+      draw() {
+        const k = Math.min(1, t / ENEMY_WAVES.poufTime);
+        const spread = size * (0.2 + 0.6 * k);
+        for (const p of puffs) {
+          drawCircle({
+            pos: p.dir.scale(spread),
+            radius: p.r * (0.6 + 0.7 * k),
+            color: rgb(236, 236, 244),
+            opacity: 0.85 * (1 - k),
+          });
+        }
+      },
+    },
+  ]);
+  fx.onUpdate(() => {
+    t += dt();
+    if (t >= ENEMY_WAVES.poufTime) destroy(fx);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -992,7 +1027,7 @@ export function startEnemyDirector() {
   const root = getTreeRoot();
 
   function startWave(n = wave + 1) {
-    if (over) return; // the run is over: no more waves
+    if (over || golemDown) return; // the run is over (or ending): no more waves
     wave = n;
     inWave = true;
     waveTime = 0;
@@ -1026,6 +1061,15 @@ export function startEnemyDirector() {
   // and no further wave can start. wave-end is NOT fired.
   let over = false;
   root.on("enemy-knockback", (k) => !over && knockback(k));
+  // The golem fell (tower.js plays its death before "run-over"): stop the
+  // wave without a "wave-end" and pouf everything.
+  let golemDown = false;
+  root.on("golem-dying", () => {
+    golemDown = true;
+    inWave = false;
+    for (const s of schedules) s.active = false;
+    killAllEnemies();
+  });
   root.on("run-over", () => {
     over = true;
     for (const e of [...live, ...get("enemy-dying")]) e.paused = true;

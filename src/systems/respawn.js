@@ -91,6 +91,7 @@ export function startRespawn(player) {
   });
   getTreeRoot().on("boss-defeated", stepDown);
   getTreeRoot().on("run-over", () => (over = true));
+  getTreeRoot().on("golem-dying", () => (over = true)); // no comeback now
 }
 
 /** Respawn point: just below the base (its anchor is "bot"). */
