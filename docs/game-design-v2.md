@@ -28,7 +28,9 @@ must protect - it becomes your life total.
    humblest weapon). Wave 1 of enemies comes at you in the field.
 2. **Survive the wave** - survivors-style: move, auto-attack, XP gems drop,
    collect to level (level-ups still work survivors-style during the wave).
-3. **Portal opens** - when the wave is cleared (or timer expires), a
+   A wave is a **timer, not an enemy count**: enemies keep spawning at a
+   steady rate until it runs out, and the rate gets quicker every wave.
+3. **Portal opens** - when the wave timer runs out, a
    teleport appears; stepping in returns you to your **base**.
 4. **Shop** - at base, a shop opens with **1 pick out of 4**, always the same
    grid:

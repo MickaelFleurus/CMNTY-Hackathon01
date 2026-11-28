@@ -1,6 +1,6 @@
 // Enemies: factory, chase behaviour, contact attack, death + drops, and the
-// wave director (each wave spawns a budget of enemies, then ends when cleared
-// or when its timer runs out - see docs/game-design-v2.md).
+// wave director (each wave spawns enemies at a rate that grows wave after
+// wave, until its timer runs out - see docs/game-design-v2.md).
 //
 // Contract for other systems (no imports needed - use KAPLAY tags/events):
 //   - Live enemies carry the "enemy" tag, a pos and a health() comp. Dying
@@ -45,10 +45,11 @@
 //       getTreeRoot().trigger("enemy-clear")           despawn every enemy, no drops
 //       getTreeRoot().on("wave-start", (n) => …)
 //       getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)
-//         reason: "cleared" (whole budget spawned + killed) or "timeout".
+//         reason: "cleared" = the wave was survived (its timer ran out, or
+//         on a boss wave the boss died). Waves can't end early otherwise.
 //       On getTreeRoot().on("run-over"): the director freezes (timer stops,
 //         no spawns/hits/new waves, enemies paused in place).
-//         Leftover enemies (timeout) die on the spot when the wave ends -
+//         Leftover enemies die on the spot when the wave ends -
 //         death anim, no drops, not counted as kills (ENEMY_WAVES.killOnEnd).
 //   - External spawn triggers (for `{ trigger: "name" }` spawn conditions):
 //       getTreeRoot().trigger("enemy-trigger", "bat-swarm")   // no import needed
@@ -161,14 +162,22 @@ export function isBossWave(wave) {
 
 const isBossType = (type) => type.behavior?.kind === "siege";
 
-/** Total enemies of a type a wave will spawn (its budget). */
-export function waveBudget(type, wave) {
-  const c = type.spawn.count;
-  const n = c.base + Math.floor(c.perWave * (wave - 1));
-  // boss waves bring fewer minions
-  return isBossWave(wave) && !isBossType(type)
-    ? Math.floor(n * ENEMY_WAVES.boss.minionBudgetMult)
-    : n;
+/** Wave multiplier on spawn intervals: < 1 = faster, shrinks every wave. */
+export function waveRateMult(wave) {
+  const r = ENEMY_WAVES.rate;
+  return Math.max(r.minMult, Math.pow(r.perWave, Math.max(0, wave - 1)));
+}
+
+/**
+ * Seconds until a type's next group: its in-wave ramp (startInterval down to
+ * minInterval, activeFor = s it's been spawning this wave), scaled by the
+ * wave multiplier. Boss waves slow the minions down (minionRateMult).
+ */
+export function spawnInterval(type, wave, activeFor) {
+  const sp = type.spawn;
+  const ramp = Math.max(sp.minInterval, sp.startInterval - sp.intervalDecayPerSec * activeFor);
+  const bossSlow = isBossWave(wave) && !isBossType(type) ? 1 / ENEMY_WAVES.boss.minionRateMult : 1;
+  return ramp * waveRateMult(wave) * bossSlow;
 }
 
 /** Wave timer in seconds (boss waves have none: they end with the boss). */
@@ -872,12 +881,11 @@ function formationOffsets(n, radius, spacing) {
  * Send one group of this type (its attack pattern, ENEMY_TYPES[].spawn.group)
  * from a single edge point. Returns how many enemies were spawned.
  */
-function spawnGroup(type, level, budgetLeft) {
+function spawnGroup(type, level) {
   const g = type.spawn.group ?? { min: 1, max: 1, radius: 0, spacing: 0 };
   const room = Math.min(
     ENEMY_SPAWN.maxAlive - live.size,
     (type.spawn.maxAlive ?? Infinity) - liveEnemyCount(type.id),
-    budgetLeft,
   );
   const n = Math.max(0, Math.min(randi(g.min, g.max + 1), room));
   if (n === 0) return 0;
@@ -911,7 +919,6 @@ export function clearEnemies() {
  *
  * Returns a controller for HUD/debug/cycle director:
  *   startWave(n?), clear(), wave(), inWave(), timeLeft(), level(),
- *   remaining()  enemies left this wave (unspawned budget + alive),
  *   alive(type?), activeTypes()
  */
 export function startEnemyDirector() {
@@ -928,7 +935,7 @@ export function startEnemyDirector() {
   // Per-type schedule, reset every wave. activeFor = seconds this type has
   // been spawning this wave, so its interval ramp starts when it appears.
   const schedules = ENEMY_TYPES.map((type) => ({
-    type, active: false, activeFor: 0, untilNext: 0, budget: 0, spawned: 0,
+    type, active: false, activeFor: 0, untilNext: 0, spawned: 0,
   }));
 
   const root = getTreeRoot();
@@ -943,7 +950,6 @@ export function startEnemyDirector() {
     duration = waveDuration(n);
     for (const s of schedules) {
       Object.assign(s, { active: false, activeFor: 0, untilNext: 0, spawned: 0 });
-      s.budget = waveBudget(s.type, n);
     }
     root.trigger("wave-start", n);
     if (isBossWave(n)) root.trigger("boss-wave", { wave: n });
@@ -957,9 +963,6 @@ export function startEnemyDirector() {
     // warn a wave ahead so the player can shop with intent
     if (isBossWave(wave + 1)) root.trigger("boss-incoming", { wave: wave + 1 });
   }
-
-  const unspawned = () =>
-    schedules.reduce((sum, s) => sum + (s.active ? s.budget - s.spawned : 0), 0);
 
   root.on("enemy-trigger", fireEnemyTrigger);
   root.on("enemy-trigger-clear", clearEnemyTrigger);
@@ -995,30 +998,27 @@ export function startEnemyDirector() {
     for (const s of schedules) {
       const sp = s.type.spawn;
       s.active = checkSpawnCondition(sp.when, ctx);
-      if (!s.active || s.spawned >= s.budget) continue;
+      if (!s.active) continue;
+      if (sp.once) {
+        // one group per wave (the boss); retried every frame if there's no room
+        if (s.spawned === 0) s.spawned += spawnGroup(s.type, level);
+        continue;
+      }
 
       s.activeFor += dt();
       s.untilNext -= dt();
       if (s.untilNext > 0) continue;
 
-      s.untilNext = Math.max(
-        sp.minInterval,
-        sp.startInterval - sp.intervalDecayPerSec * s.activeFor,
-      );
-      s.spawned += spawnGroup(s.type, level, s.budget - s.spawned);
+      s.untilNext = spawnInterval(s.type, wave, s.activeFor);
+      s.spawned += spawnGroup(s.type, level);
     }
 
-    // Boss wave: it ends as soon as the boss is down (minions die with it).
+    // Boss wave: no timer, it ends as soon as the boss is down (minions die
+    // with it). Other waves: survived when the timer runs out.
     const bossDown = isBossWave(wave) && schedules.some(
-      (s) => isBossType(s.type) && s.budget > 0 && s.spawned >= s.budget && liveEnemyCount(s.type.id) === 0,
+      (s) => isBossType(s.type) && s.spawned > 0 && liveEnemyCount(s.type.id) === 0,
     );
-    // Cleared = every active type spent its budget and nothing is alive.
-    // (A type whose condition isn't met this wave doesn't block clearing.)
-    if (bossDown || (live.size === 0 && unspawned() === 0 && waveTime > ENEMY_WAVES.minClearTime)) {
-      endWave("cleared");
-    } else if (waveTime >= duration) {
-      endWave("timeout");
-    }
+    if (bossDown || waveTime >= duration) endWave("cleared");
   });
 
   return {
@@ -1030,7 +1030,6 @@ export function startEnemyDirector() {
     isBossWave: () => isBossWave(wave),
     timeLeft: () => (inWave ? Math.max(0, duration - waveTime) : 0),
     level: () => enemyLevelForWave(Math.max(1, wave)),
-    remaining: () => unspawned() + live.size,
     alive: liveEnemyCount,
     activeTypes: () => schedules.filter((s) => s.active).map((s) => s.type.id),
   };

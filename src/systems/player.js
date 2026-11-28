@@ -1,13 +1,14 @@
 // Player entity: sprite, keyboard movement, and an on-screen virtual joystick
 // that appears only when the viewport is too narrow for keyboard comfort
 // (mobile / small window). Joystick input and keyboard input are combined.
-import { CFG } from "../config.js";
+import { CFG, SHOP, RESPAWN } from "../config.js";
 
 export function makePlayer() {
   const player = add([
     sprite("hero-knight", { anim: "idle" }),
     scale(CFG.player.scale),
-    pos(center()),
+    // start just below the golem (SHOP.home is its feet), not inside it
+    pos(SHOP.home.x, SHOP.home.y + RESPAWN.belowBase),
     area(),
     anchor("center"),
     z(CFG.player.z), // always drawn above the world (e.g. walking behind the base)

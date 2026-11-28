@@ -110,7 +110,8 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   - **Gimmick:** it attacks the tower and ignores the player **until the
     player damages it**. Then it chases the player for `provokeDuration`
     (5 s). Shots with `source: "tower"` (the base's bolts) don't provoke it.
-  - Minions come at half their usual count. There is **no timer**: the wave
+  - Minions spawn at half their usual rate (`ENEMY_WAVES.boss.minionRateMult`),
+    for as long as the boss lives. There is **no timer**: the wave
     ends `"cleared"` when the boss dies, and leftover minions die with it.
   - Reward: a big XP gem and 15 coin drops.
   - Root events:
