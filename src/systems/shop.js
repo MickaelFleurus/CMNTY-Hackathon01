@@ -262,6 +262,9 @@ export function makeShop() {
       });
       const keys = SHOP.skipKeys.map((k) => (k === "escape" ? "Esc" : k.toUpperCase())).join(" / ");
       drawText({ text: `Skip - no upgrade (${keys})`, size: 15, pos: vec2(width() / 2, skipRect.y + skipRect.h / 2), anchor: "center" });
+      // Enter always confirms: close the shop like Skip, after the picks
+      // already made. Drawn once next to the skip line so it reads as one hint.
+      drawText({ text: "ENTER: continue", size: 15, pos: vec2(width() / 2, skipRect.y + skipRect.h / 2 + 22), anchor: "center", color: [255, 216, 90] });
     }
 
     // input: manual hit tests (the game is time-scaled to 0 behind the shop)
@@ -340,9 +343,11 @@ export function makeShop() {
     getTreeRoot().trigger("golem-upgraded-free", { id: opt.id, name: opt.name, level: levels[opt.id] });
   });
 
-  // Skip without buying: SHOP.skipKeys or the Skip button. The cycle
-  // director starts the next wave on shop-close, as after a pick.
+  // Skip without buying: SHOP.skipKeys or the Skip button. Enter confirms
+  // the picks already made (the user-requested "Enter confirms" path).
+  // The cycle director starts the next wave on shop-close, as after a pick.
   onKeyPress(SHOP.skipKeys, () => ui && close());
+  onKeyPress("enter", () => ui && close());
 
   return { open, close, isOpen, levels: () => ({ ...levels }), upgradesOwned: () => upgradesOwned };
 }
