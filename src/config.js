@@ -689,6 +689,11 @@ export const RESPAWN = {
 export const XP = {
   firstLevel: 5, // xp needed to reach level 2
   levelStep: 5, // extra xp needed per level after that
+  // Multiplier applied per level: required xp grows geometrically
+  // (next = xpForLevel(level) × xpGrowth), instead of the flat +5 step
+  // that fired the level-up screen every few seconds. lvl 2→5, 3→8.8,
+  // 4→15.2, 5→26.3, 10→207, 15→1633.
+  xpGrowth: 1.75,
   // px; pickups inside this fly to the player. Barely more than
   // collectRadius at the start; each Magnet card adds UPGRADE.magnetBonus
   pickupRadius: 30,

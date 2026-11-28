@@ -22,7 +22,9 @@ export const xpState = {
 };
 
 export function xpForLevel(level) {
-  return XP.firstLevel + (level - 1) * XP.levelStep;
+  // Geometric curve (XP.xpGrowth): the flat +5/level step made the level-up
+  // screen pop every few seconds, drowning out gameplay.
+  return XP.firstLevel * Math.pow(XP.xpGrowth, level - 1);
 }
 
 export function loadXpAssets() {
