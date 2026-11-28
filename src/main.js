@@ -41,11 +41,13 @@ import { loadShopSprites, makeShop } from "./systems/shop.js";
 
 kaplay({
   background: [26, 26, 38],
+  // CFG.viewport swaps to 720x1280 on portrait phones (pickViewport in
+  // config.js) so the game fills a tall screen; desktop keeps 1280x720.
   width: CFG.viewport.width,
   height: CFG.viewport.height,
   // Fill the browser window below the nav bar: the canvas takes #game-root's
-  // full size and the 1280x720 game view is letterboxed inside it (black
-  // bars), keeping the design aspect ratio on any screen, incl. mobile.
+  // full size and the game view is letterboxed inside it (black bars),
+  // keeping the design aspect ratio on any screen, incl. mobile.
   root: document.getElementById("game-root"),
   letterbox: true,
   crisp: true,
