@@ -1,7 +1,8 @@
 // The base IS the tower (docs/game-design-v2.md): the "base" object gets HP
 // and the "tower" tag, enemies attack it once it's awake, and when it's
-// destroyed the run is over. The active-offense shop pick makes it shoot the
-// nearest enemy in range; each further pick levels it up and repairs it.
+// destroyed the run is over. The golem auto-attacks only as the Berserker
+// style (style identity, docs/game-design-v2.md); the active-offense shop
+// branch upgrades that shot (each pick also repairs it).
 //
 // Golem awakening (docs/game-design-v2.md → "The golem awakening flow"): the
 // base starts as an inert statue during wave 1. It is still solid, but
@@ -25,6 +26,7 @@
 //   - base.solidRect() → { x0, y0, x1, y1 }: the golem's visible body in world
 //     px (TOWER.body). Solid for enemies (enemies.js) and the player (here).
 //   - listens to getTreeRoot().on("shop-pick", { quadrant: "active-offense", level, params })
+//     (upgrades the Berserker's shot; never creates a shot for other styles)
 //   - shots are "projectile"s with { damage } → enemies.js applies the hit
 //   - base.awake: false while it's the wave-1 statue, true once awake.
 //     enemies.js only targets / damages a tower with awake === true.
@@ -111,6 +113,13 @@ export function startTower() {
       tower.setHP(tower.maxHP()); // level-up repairs it
     }
   });
+
+  // Style identity gate (docs/game-design-v2.md: the golem fights for you
+  // ONLY as the Berserker style - the generic active-offense branch upgrades
+  // that shot; it must not create one from nothing for other styles).
+  let style = null; // "guardian" | "berserker" | "warden" | null (statue)
+  getTreeRoot().on("golem-style-pick", ({ style: s } = {}) => (style = s));
+  getTreeRoot().on("run-over", () => (style = null));
 
   // Wave repair: when a wave ends, give back TOWER.waveEndRepair of the
   // golem's max HP (only what's missing, never above max).
@@ -208,7 +217,9 @@ export function startTower() {
     if (over || !awake) return; // the statue doesn't shoot
 
     cooldown -= dt();
-    if (!shot || cooldown > 0) return;
+    // The golem auto-attacks only as a Berserker (style identity); other
+    // styles never gain a shot, no matter how many shot picks were bought.
+    if (!shot || style !== "berserker" || cooldown > 0) return;
     const from = center(tower);
     const target = nearestEnemy(from, shot.range);
     if (!target) return;

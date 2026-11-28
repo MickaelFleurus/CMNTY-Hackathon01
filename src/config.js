@@ -448,11 +448,18 @@ export const SHOP = {
       params: { hpPerTick: 4, interval: 3, baseRange: 160, rangePerLevel: 40 },
     },
     {
+      // NOTE: the golem now fights for itself only as the Berserker STYLE
+      // (golem awakening, docs/game-design-v2.md - style identity beats the
+      // generic branch). This node stays for shot UPGRADES; picking it
+      // doesn't make the golem attack from nothing - the golem only fires
+      // while a Berserker pick exists (tower.js: shot requires picks > 0
+      // AND style === "berserker"), otherwise a shot pick here only powers
+      // the existing knockback swipe (dmg bump / smaller radius).
       id: "turret",
       quadrant: "active-offense",
-      name: "Turret",
+      name: "Battle Rhythm",
       icon: "icon-lightning",
-      desc: "The base fights for you.\nIf it dies, you die.",
+      desc: "Berserker golem:\nswipes hit harder and\nrecover faster.",
       baseCost: 20,
       costGrowth: 1.8,
       maxLevel: 8,
@@ -908,7 +915,10 @@ export const SOUND = {
     levelUp: 0.6,
     waveWon: 0.7,
     gameOver: 0.7, // the run is lost
+    // background
+    music: 0.2, // LoopMusic.mp3, looped all run: quiet, under the effects
   },
+  musicFadeOut: 1.5, // s: the music fades out when the run is lost
   killGap: 0.06, // s: at most one kill sound per gap (bombs, big sweeps)
   collectGap: 0.05, // s: same for pickups (magnet bursts)
   // Footsteps follow the real walking speed: one step every `stride` px the
