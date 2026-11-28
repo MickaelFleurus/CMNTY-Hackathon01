@@ -925,17 +925,47 @@ function separateEnemies() {
   }
 }
 
-/** Random point just outside the current camera view. */
+// Camera velocity (px/s, smoothed), tracked by the director: the view keeps
+// moving (it trails the player and leans ahead of it), so a point just off
+// the CURRENT view can be on screen a moment later.
+let camVel = null; // vec2, set by startEnemyDirector (KAPLAY isn't up at import time)
+let lastCam = null;
+function trackCamera() {
+  const c = getCamPos();
+  const d = dt();
+  if (lastCam && d > 0) {
+    const v = c.sub(lastCam).scale(1 / d);
+    // teleports (portal, recall, respawn) aren't movement
+    if (v.len() < 3000) camVel = camVel.lerp(v, 1 - Math.exp(-6 * d));
+  }
+  lastCam = c.clone();
+}
+
+/**
+ * Random point outside the camera view, now AND ENEMY_SPAWN.leadTime s from
+ * now (the view extrapolated with the camera's velocity): the point is on
+ * the border of the rectangle covering both views, plus margins, so walking
+ * toward it doesn't bring it on screen right away.
+ */
 function edgeSpawnPoint(extra = 0) {
   const c = getCamPos();
+  const f = camVel ? c.add(camVel.scale(ENEMY_SPAWN.leadTime ?? 0)) : c;
   const hw = width() / 2 + ENEMY_SPAWN.edgeMargin + extra;
   const hh = height() / 2 + ENEMY_SPAWN.edgeMargin + extra;
-  switch (randi(4)) {
-    case 0: return vec2(c.x + rand(-hw, hw), c.y - hh); // top
-    case 1: return vec2(c.x + rand(-hw, hw), c.y + hh); // bottom
-    case 2: return vec2(c.x - hw, c.y + rand(-hh, hh)); // left
-    default: return vec2(c.x + hw, c.y + rand(-hh, hh)); // right
-  }
+  const x0 = Math.min(c.x, f.x) - hw;
+  const x1 = Math.max(c.x, f.x) + hw;
+  const y0 = Math.min(c.y, f.y) - hh;
+  const y1 = Math.max(c.y, f.y) + hh;
+  // pick a side in proportion to its length, so spawns spread evenly
+  const w = x1 - x0;
+  const h = y1 - y0;
+  let t = rand(0, 2 * (w + h));
+  if (t < w) return vec2(x0 + t, y0); // top
+  t -= w;
+  if (t < w) return vec2(x0 + t, y1); // bottom
+  t -= w;
+  if (t < h) return vec2(x0, y0 + t); // left
+  return vec2(x1, y0 + t - h); // right
 }
 
 // ---------------------------------------------------------------------------
@@ -1080,6 +1110,9 @@ export function clearEnemies() {
  *   alive(type?), activeTypes()
  */
 export function startEnemyDirector() {
+  camVel = vec2(0);
+  lastCam = null;
+  onUpdate(trackCamera);
   live.clear();
   for (const t of ENEMY_TYPES) liveByType.set(t.id, 0);
   activeTriggers.clear();
