@@ -1,6 +1,6 @@
 // Golem self-defense shock wave (docs/game-design-v2.md → "The golem
 // awakening flow" → built-in knockback). Once the golem is awake it sends a
-// circular shock wave every GOLEM_SHOCKWAVE.interval s that flings nearby
+// circular shock wave (at most every GOLEM_SHOCKWAVE.cooldown s) that flings nearby
 // enemies away, so a ring of enemies can't pin it down and kill it in
 // seconds. It works whatever the shop picks (the active-offense "attack mode"
 // is separate, in tower.js).
@@ -9,7 +9,7 @@
 // reach enemies.js uses for contact damage):
 //   - idle: nothing until at least GOLEM_SHOCKWAVE.minContact (3) enemies
 //     are in contact → it fires and turns active;
-//   - active: every `interval` s it checks again: at least one enemy still in
+//   - active: each time the `cooldown` is over it checks again: at least one enemy still in
 //     contact → fires again; none → back to idle (needs minContact again).
 //   The check is made when the wave is ready, not in between: right after a
 //   wave the push itself clears the contact for a moment.
@@ -48,7 +48,7 @@ export function startGolemShockwave() {
     }
 
     active = true;
-    charge = CFG.interval;
+    charge = CFG.cooldown;
     const at = vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2);
     getTreeRoot().trigger("enemy-knockback", {
       x: at.x,
