@@ -8,8 +8,8 @@
 // enemies ignore it (no targeting, no contact damage), it has no HP bar and
 // it doesn't shoot. It wakes up at the end of wave 1 (the first "wave-end").
 // Statue look: grey (desaturated) and not animated, until its power is picked:
-// the first shop close after it woke (pick or skip) - later the golem style
-// pick. Then its colours sweep up from its feet and its idle animation starts.
+// the style pick screen (golem-styles.js) fires "golem-style-pick" right after
+// it woke. Then its colours sweep up from its feet and its idle animation starts.
 //
 // Golem FX: one shader (GOLEM_FX) draws the statue grey, the rainbow swipe
 // at the end of each wave ("golem-swipe" from cycle.js) and the grey/colour
@@ -30,8 +30,9 @@
 //     enemies.js only targets / damages a tower with awake === true.
 //   - on waking: getTreeRoot().trigger("golem-awake") (fired once, on the
 //     first "wave-end"). respawn.js listens: until then, player death = run over.
-//   - powered (look only): on the first "shop-close" after waking, colour
-//     sweeps up the statue (TOWER.powerOnTime), the idle anim starts, then
+//   - powered (look only): on "golem-style-pick" (fired once per life by
+//     golem-styles.js right after waking), colour sweeps up the statue
+//     (TOWER.powerOnTime), the idle anim starts, then
 //     getTreeRoot().trigger("golem-powered") fires (once). base.powered = true.
 //   - listens "golem-swipe" { duration }: rainbow band sweeps up the sprite.
 //   - wave repair: on "wave-end", the golem heals TOWER.waveEndRepair (10%)
@@ -134,10 +135,10 @@ export function startTower() {
     getTreeRoot().trigger("golem-awake");
   });
 
-  // Power picked: the first shop close after waking (pick or skip).
-  // TODO: switch to the golem style pick event once that screen exists.
+  // Power picked: the style pick screen (golem-styles.js) fires
+  // "golem-style-pick" right after waking; the shop-close path is gone.
   let powering = false;
-  getTreeRoot().on("shop-close", () => {
+  getTreeRoot().on("golem-style-pick", () => {
     if (!awake || powered || powering || over || !tower?.exists()) return;
     powering = true;
     tower.animSpeed = TOWER.idleAnimSpeed; // slow, heavy idle
