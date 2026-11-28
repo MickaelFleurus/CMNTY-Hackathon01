@@ -141,24 +141,31 @@ effect sprite in the world, and an icon on its card.
 
 - The player holds up to **4 weapons** and **4 stat upgrades**. Once the
   slots are full, cards only offer levels for what you already have.
-- Each weapon goes up to **level 5**; each level adds one of the weapon
-  upgrades below (fixed path per weapon, so the card can say exactly what
-  you get).
+- Each weapon goes up to **level 5**. **Every level makes the weapon
+  stronger (+damage)**, and on top of that it adds the next step of the
+  weapon's **own upgrade path**. Most paths **alternate between two
+  upgrades** that are specific to that weapon (e.g. Knife: more knives ↔
+  goes through more enemies). The path is fixed, so the card says exactly
+  what you get ("+1 knife, +damage").
 - Weapons all apply the global stats (Might, Cooldown, Area…) and the base
   aura buffs (`player.buffs.damageMult`, `attackSpeedMult`).
 
 ### Weapons
 
-How each one targets is its identity, and no two play the same:
+How each one targets is its identity, and no two play the same. In the
+"Level path" column, **every level also gives +damage** (not repeated in
+each row). Built so far: Plank, Pistol, Knife, Axe, Boomerang (tuning in
+`src/config.js`: `PLANK`, `CFG.weapon`, `KNIFE`, `AXE`, `BOOMERANG`).
 
 | Weapon | Targeting / behaviour | Look (projectile · icon) | Level path (Lv2 → Lv5) |
 |---|---|---|---|
-| **Plank** (starter) | **Hits in front of the player**: long poke in the facing direction, hits along its whole length | placeholder: pink stretched knife (no sprite in the pack yet) · pink `Icon_Knife` | +damage → +length → hits behind too → +damage |
+| **Plank** (starter) | **Hits in front of the player**: long poke in the facing direction, hits along its whole length | placeholder: pink stretched knife (no sprite in the pack yet) · pink `Icon_Knife` | alternates **+length** ↔ **a chained poke the other way**: Lv2 +length → Lv3 chains a 2nd poke behind → Lv4 +length → Lv5 chains a 3rd poke in front (front, back, front) |
 | **Whip** | **Hits in front of the player**: wide horizontal slash in the facing direction | `Proj_Whip` · `Icon_Whip` | +area → also slashes behind → +damage → +area |
 | **Magic Bolt** | **Hits the nearest enemy**: homing bolt | `Proj_Magic_Bolt` · `Icon_Magic_Bolt` | +1 bolt → +damage → **rebound** 1 → +1 bolt |
-| **Knife** | **Throws several**: a fan of knives in the facing direction | `Proj_Knife` · `Icon_Knife` | every level: +1 knife per volley **and** **pierce** +1 (PR #41) |
-| **Axe** | **Goes through enemies**: thrown up in an arc, falls through the horde, high pierce | `Proj_Axe` · `Icon_Axe` | +damage → pierce +3 → +1 axe → +area |
-| **Boomerang** | **Goes through enemies** twice: flies out to the nearest enemy and comes back | `Proj_Boomerang` · `Icon_Boomerang` | pierce +2 → +1 boomerang → +speed → +damage (built; the screen-edge **rebound** idea is parked) |
+| **Pistol** (built, the old starter) | **Hits the nearest enemy**: straight shot | knife sprite · `Icon_Magic_Bolt` | alternates **+1 bullet** (fan) ↔ **fires faster**: Lv2 +1 bullet → Lv3 faster → Lv4 +1 bullet → Lv5 faster |
+| **Knife** | **Throws several**: a fan of knives in the facing direction | `Proj_Knife` · `Icon_Knife` | alternates **+1 knife** ↔ **pierce +1**: Lv2 +1 knife → Lv3 pierce +1 → Lv4 +1 knife → Lv5 pierce +1 |
+| **Axe** | **Goes through enemies**: thrown up in an arc, falls through the horde, high pierce | `Proj_Axe` · `Icon_Axe` | **number of axes** and **the direction they're thrown**: Lv2 +1 axe → Lv3 thrown to both sides → Lv4 +1 axe → Lv5 +1 axe (axes on one side fan out) |
+| **Boomerang** | **Goes through enemies** twice: flies out to the nearest enemy and comes back | `Proj_Boomerang` · `Icon_Boomerang` | alternates **+1 boomerang** ↔ **+range**: Lv2 +1 boomerang → Lv3 flies further → Lv4 +1 boomerang → Lv5 flies further |
 | **Fireball** | **Explodes**: flies to the nearest enemy, blows up on impact (area damage) | `Proj_Fireball` + `FX_Explosion` · `Icon_Fireball` | +blast area → +damage → +1 fireball → leaves a short burn |
 | **Lightning** | **Happens randomly on the screen**: strikes random enemies on screen | `Proj_Lightning` + `FX_Hit_Spark` · `Icon_Lightning` | +1 strike → +damage → **chains** to 1 nearby enemy → +1 strike |
 | **Holy Water** | **Happens randomly on the screen**: flasks land at random spots near the player and leave a burning puddle | `Proj_Holy_Water_Flask` → `Proj_Holy_Water_Flames` · `Icon_Holy_Water` | +duration → +1 flask → +area → +damage |
