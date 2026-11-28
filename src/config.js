@@ -889,19 +889,29 @@ export const GOLEM_GUARDIAN = {
 };
 
 // Sound effects (src/systems/sounds.js, files in gfx/Sounds/).
+// Mix: what you hear = master x volume[sound] (each 0..1). Frequent sounds
+// (attacks, pickups) sit very low so they don't drown the important cues
+// (level up, wave won).
 export const SOUND = {
   master: 0.8, // global volume (0 when muted)
   muteKey: "m", // toggles mute, remembered in the browser
   volume: {
-    plank: 0.45,
-    gun: 0.35,
-    axe: 0.3, // loop while axes are in the air
-    walk: 0.35, // loop while walking
-    kill: 0.35,
-    collect: 0.4,
+    // frequent: really low
+    plank: 0.1, // every plank poke
+    gun: 0.08, // every pistol bullet
+    axe: 0.08, // loop while axes are in the air
+    collect: 0.1, // XP gems, hearts, coins, bonus drops
+    // regular
+    step: 0.3, // one footstep per stride
+    kill: 0.3,
+    // rare, important cues: loud
     levelUp: 0.6,
     waveWon: 0.7,
   },
   killGap: 0.06, // s: at most one kill sound per gap (bombs, big sweeps)
   collectGap: 0.05, // s: same for pickups (magnet bursts)
+  // Footsteps follow the real walking speed: one step every `stride` px the
+  // player actually walks (220 px/s base speed → 4 steps/s; Move Speed cards
+  // make the steps faster). Walking.ogg is a single step, so no loop.
+  stride: 55,
 };
