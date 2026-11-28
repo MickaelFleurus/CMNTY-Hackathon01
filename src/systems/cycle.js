@@ -121,8 +121,10 @@ export function startCycle() {
     phase = "over";
   });
 
-  // Shop circle: a faint glowing ring around the golem during the break,
-  // showing how close the player must get. Fades in, breathes gently.
+  // Shop circle: a glowing ring around the golem during the break, showing
+  // how close the player must get. Fades in, pulses (CYCLE.shopCirclePulseHz),
+  // and a ripple runs from the ring toward the golem: "come here". A hint
+  // under the ring says what it's for (CYCLE.shopHint).
   let circleAlpha = 0;
   const [cr, cg, cb] = CYCLE.shopCircleColor;
   const circle = add([
@@ -132,13 +134,35 @@ export function startCycle() {
       draw() {
         const c = baseCenter();
         if (!c || circleAlpha <= 0) return;
-        const breathe = 0.75 + 0.25 * Math.sin(time() * 2.4);
-        const a = circleAlpha * breathe;
+        const R = CYCLE.shopCircle;
+        const pulse = 0.5 + 0.5 * Math.sin(time() * Math.PI * 2 * CYCLE.shopCirclePulseHz);
+        const a = circleAlpha * (0.45 + 0.55 * pulse);
         const col = rgb(cr, cg, cb);
-        drawCircle({ pos: c, radius: CYCLE.shopCircle, color: col, opacity: 0.07 * a });
-        // soft glow: a wide faint stroke under a thin brighter one
-        drawCircle({ pos: c, radius: CYCLE.shopCircle, fill: false, outline: { width: 10, color: col }, opacity: 0.12 * a });
-        drawCircle({ pos: c, radius: CYCLE.shopCircle, fill: false, outline: { width: 2, color: col }, opacity: 0.55 * a });
+        drawCircle({ pos: c, radius: R, color: col, opacity: 0.1 * a });
+        // glow: a wide soft stroke under a thin bright one
+        drawCircle({ pos: c, radius: R, fill: false, outline: { width: 14, color: col }, opacity: 0.25 * a });
+        drawCircle({ pos: c, radius: R, fill: false, outline: { width: 3, color: col }, opacity: 0.9 * a });
+        // ripple: shrinks from the ring toward the golem, fading out
+        const k = (time() * CYCLE.shopCirclePulseHz) % 1;
+        drawCircle({ pos: c, radius: R * (1 - 0.35 * k), fill: false, outline: { width: 3, color: col }, opacity: 0.6 * circleAlpha * (1 - k) });
+      },
+    },
+  ]);
+  // hint under the ring, above the player and enemies so it stays readable
+  add([
+    pos(0, 0),
+    z(40),
+    {
+      draw() {
+        const c = baseCenter();
+        if (!c || circleAlpha <= 0) return;
+        const at = c.add(0, CYCLE.shopCircle + 26);
+        const bob = Math.sin(time() * 4) * 2;
+        const [title, sub] = CYCLE.shopHint;
+        const w = Math.max(title.length * 18 * 0.62, sub.length * 13 * 0.62) + 28;
+        drawRect({ pos: at.add(0, 10 + bob), width: w, height: 48, anchor: "center", radius: 10, color: rgb(20, 14, 28), opacity: 0.7 * circleAlpha });
+        drawText({ text: title, size: 18, pos: at.add(0, bob), anchor: "center", color: rgb(cr, cg, cb), opacity: circleAlpha });
+        drawText({ text: sub, size: 13, pos: at.add(0, 21 + bob), anchor: "center", color: rgb(235, 230, 220), opacity: circleAlpha });
       },
     },
   ]);

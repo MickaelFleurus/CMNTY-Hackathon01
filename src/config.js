@@ -819,9 +819,11 @@ export const CYCLE = {
   afterWaveDelay: 2.5,
   swipeTime: 0.8,
   // Shop circle (px from the golem's body center): inside it during the
-  // break → the shop opens. Drawn as a faint glowing ring.
+  // break → the shop opens. Drawn as a pulsing glowing ring + a hint under it.
   shopCircle: 130,
   shopCircleColor: [255, 214, 120],
+  shopCirclePulseHz: 1.4, // ring pulses (and inward ripples) per second
+  shopHint: ["UPGRADE THE GOLEM", "Step into the circle"], // title, subtitle under the ring
   arrivalGap: 50, // px below the golem where the portal drops the player
   nextWaveDelay: 2, // s between closing the shop and the next wave
   pauseInShop: true, // freeze the game (time scale 0) while the shop is open
