@@ -896,6 +896,19 @@ export const BASE_ALERT = {
 };
 
 // Boss warning (src/systems/boss-warning.js): announced one wave ahead.
+// Name colors in banners (boss-warning.js, base-alert.js): each boss and the
+// golem get their own color so their names stand out. Bosses by display name
+// (sprite file without "Boss_", underscores → spaces).
+export const NAME_COLORS = {
+  golem: [110, 220, 255], // the golem's glowing cyan eyes
+  "Slime King": [120, 240, 110],
+  "Vampire Lord": [255, 70, 95],
+  Reaper: [195, 165, 255],
+  "Demon Lord": [255, 135, 40],
+  Treant: [215, 185, 100],
+  "Stone Golem": [190, 190, 200],
+};
+
 export const BOSS_WARNING = {
   bannerTime: 4, // s, "BOSS NEXT WAVE" banner when the wave before a boss wave ends
   startBannerTime: 2.5, // s, "BOSS WAVE" banner when the boss wave starts

@@ -12,7 +12,14 @@
 // boss wave, ENEMY_TYPES boss → sprites).
 // Banners time on the real clock: the shop pauses the game (timeScale 0) and
 // a banner must not stay frozen on screen behind it.
-import { BOSS_WARNING as CFG, ENEMY_TYPES, ENEMY_WAVES } from "../config.js";
+import { BOSS_WARNING as CFG, ENEMY_TYPES, ENEMY_WAVES, NAME_COLORS } from "../config.js";
+
+// "[boss]Slime King[/boss]" / "[golem]golem[/golem]" color the names
+// (KAPLAY text styles), each boss in its own NAME_COLORS color
+const nameStyles = (name) => ({
+  boss: { color: rgb(...(NAME_COLORS[name] ?? [255, 255, 255])) },
+  golem: { color: rgb(...NAME_COLORS.golem) },
+});
 
 /** "Vampire Lord" for the boss of `wave`. */
 function bossName(wave) {
@@ -34,13 +41,13 @@ export function startBossWarning() {
     if (over) return;
     const name = bossName(wave);
     reminder = name || "BOSS";
-    banner = { title: "BOSS NEXT WAVE", sub: name ? `The ${name} is coming. Get ready in the shop!` : "Get ready in the shop!", from: now(), until: now() + CFG.bannerTime };
+    banner = { title: "BOSS NEXT WAVE", sub: name ? `The [boss]${name}[/boss] is coming. Get ready in the shop!` : "Get ready in the shop!", name, from: now(), until: now() + CFG.bannerTime };
   });
   root.on("boss-wave", ({ wave } = {}) => {
     if (over) return;
     reminder = null;
     const name = bossName(wave);
-    banner = { title: "BOSS WAVE", sub: name ? `The ${name} attacks your golem!` : "", from: now(), until: now() + CFG.startBannerTime };
+    banner = { title: "BOSS WAVE", sub: name ? `The [boss]${name}[/boss] attacks your [golem]golem[/golem]!` : "", name, from: now(), until: now() + CFG.startBannerTime };
   });
   const hideAll = () => {
     over = true;
@@ -79,16 +86,16 @@ function drawBanner(b, t) {
   const titleY = b.sub ? c.y - 16 * pop : c.y;
   drawText({ text: b.title, size: 40 * pop, pos: vec2(c.x + 3, titleY + 3), anchor: "center", color: rgb(20, 10, 20), opacity: 0.7 * alpha });
   drawText({ text: b.title, size: 40 * pop, pos: vec2(c.x, titleY), anchor: "center", color: rgb(255, 225 * pulse, 120 * pulse), opacity: alpha });
-  if (b.sub) drawText({ text: b.sub, size: 18 * pop, pos: vec2(c.x, c.y + 26 * pop), anchor: "center", color: rgb(255, 210, 210), opacity: alpha });
+  if (b.sub) drawText({ text: b.sub, size: 18 * pop, pos: vec2(c.x, c.y + 26 * pop), anchor: "center", color: rgb(255, 210, 210), opacity: alpha, styles: nameStyles(b.name) });
 }
 
 function drawReminder(name, t) {
-  const label = `BOSS NEXT WAVE: ${name.toUpperCase()}`;
+  const label = `BOSS NEXT WAVE: [boss]${name.toUpperCase()}[/boss]`;
   const size = 16;
-  const w = label.length * size * 0.62 + 28;
+  const w = label.replace(/\[\/?\w+\]/g, "").length * size * 0.62 + 28;
   const h = size + 12;
   const c = vec2(width() / 2, CFG.reminderY);
   const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2 * CFG.reminderHz);
   drawRect({ pos: c, width: w, height: h, anchor: "center", radius: h / 2, color: rgb(90, 16, 40), opacity: 0.8, outline: { width: 2, color: rgb(255, 90 + 80 * pulse, 80) } });
-  drawText({ text: label, size, pos: c, anchor: "center", color: rgb(255, 220, 200) });
+  drawText({ text: label, size, pos: c, anchor: "center", color: rgb(255, 220, 200), styles: nameStyles(name) });
 }
