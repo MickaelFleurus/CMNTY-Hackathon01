@@ -391,7 +391,9 @@ export const SHOP = {
   coins: {
     perKill: 1, // coins granted per enemy kill
     perLevelBonus: 0.25, // extra coins per enemy level (floored)
-    magnetRadius: 110, // px at which coins fly to the player
+    // px at which coins fly to the player: barely more than collectRadius at
+    // the start (you walk onto them); each Magnet card adds UPGRADE.magnetBonus
+    magnetRadius: 32,
     collectRadius: 24, // px at which a coin is collected
     flySpeed: 420, // px/s while flying to the player
     lifetime: 30, // s before an uncollected coin vanishes
@@ -632,7 +634,9 @@ export const RESPAWN = {
 export const XP = {
   firstLevel: 5, // xp needed to reach level 2
   levelStep: 5, // extra xp needed per level after that
-  pickupRadius: 90, // px; pickups inside this fly to the player
+  // px; pickups inside this fly to the player. Barely more than
+  // collectRadius at the start; each Magnet card adds UPGRADE.magnetBonus
+  pickupRadius: 30,
   collectRadius: 20, // px; pickups this close are collected
   magnetSpeed: 420, // px/s when a pickup flies to the player
   pickupScale: 3, // sprite scale (16px art)
@@ -660,7 +664,7 @@ export const PICKUP_SPRITES = {
 
 export const UPGRADE = {
   choices: 3, // cards shown per level up
-  magnetBonus: 40, // pickup radius added per Magnet level
+  magnetBonus: 40, // px added per Magnet level to the XP AND coin magnet radius
   maxHpPerLevel: 20, // max hp added (and healed) per Max HP level
   moveSpeedPerLevel: 0.1, // +10% move speed per level
   mightPerLevel: 0.15, // +15% weapon damage per level
