@@ -1039,3 +1039,126 @@ export const TREASURES = {
   coinMult: 2.5, // bigger than a chest's coin bag
   rareChance: 0.25, // sometimes a rare item from the chest list instead
 };
+
+// Golem style skill trees (owner: Akram - src/systems/golem-{guardian,berserker,warden}.js)
+// ---------------------------------------------------------------------------
+// Per-style skill tree data (docs/game-design-v2.md → "Golem skill tree").
+// The shop's tree UI (shop.js, chippe) renders ONLY the picked style's
+// section via getGolemSkills(style) and fires on buy:
+//   getTreeRoot().trigger("golem-skill-pick", { style, id, level, params })
+// The effect side listens in the style's system file. Same cost counter as
+// the generic shop (SHOP.upgradeCost - the tree is one more way to spend it).
+// A node's `params` override that style's tuning section (GOLEM_GUARDIAN /
+// GOLEM_BERSERKER / GOLEM_WARDEN) with levelStat specs or plain numbers,
+// exactly like a shop pick's params.
+//
+// Node shape: { id, name, desc, icon, requires, maxLevel, params }
+//   requires   id of the node that must be owned first ("" = none) or level
+//              requirement object (kept simple: string id)
+//   icon       sprite key (loaded by the shop UI from Icon_*.png)
+//   params     stat overrides applied per pick (see levelStat.js)
+export const GOLEM_SKILLS = {
+  guardian: [
+    {
+      id: "guardian-aura",
+      name: "Warding Reach",
+      icon: "icon-aura",
+      desc: "The protective aura covers more ground and slows harder.",
+      requires: "",
+      maxLevel: 3,
+      params: { radius: { base: 260, perLevel: 50 }, enemySlow: { base: 0.7, perLevel: -0.05, min: 0.4 } },
+    },
+    {
+      id: "guardian-shield",
+      name: "Aegis",
+      icon: "icon-armor",
+      desc: "A stronger shield that holds longer after you leave the aura.",
+      requires: "guardian-aura",
+      maxLevel: 3,
+      params: { shield: { base: 25, perLevel: 10 }, shieldDuration: 8 },
+    },
+    {
+      id: "guardian-armor",
+      name: "Stone Skin",
+      icon: "icon-max_hp",
+      desc: "The golem grows tougher: more max HP (and the new HP heals).",
+      requires: "guardian-shield",
+      maxLevel: 3,
+      params: { hp: { base: 275, perLevel: 75 } },
+    },
+  ],
+  berserker: [
+    {
+      id: "berserker-swipe",
+      name: "Wider Swipe",
+      icon: "icon-whip",
+      desc: "Swipes hit harder, land faster and cover more ground.",
+      requires: "",
+      maxLevel: 3,
+      params: {
+        swipeDamage: { base: 14, perLevel: 6 },
+        swipeInterval: { base: 2.2, perLevel: -0.2, min: 1.4 },
+        swipeRadius: { base: 220, perLevel: 25 },
+      },
+    },
+    {
+      id: "berserker-charge",
+      name: "Long Charge",
+      icon: "icon-lightning",
+      desc: "Charges reach farther packs and hit harder.",
+      requires: "berserker-swipe",
+      maxLevel: 3,
+      params: {
+        chargeDamage: { base: 20, perLevel: 8 },
+        chargeRange: { base: 480, perLevel: 60 },
+        chargeRadius: { base: 130, perLevel: 15 },
+      },
+    },
+    {
+      id: "berserker-lifesteal",
+      name: "Blood Feast",
+      icon: "icon-regen",
+      desc: "The golem drinks the horde: swipes heal it per enemy hit.",
+      requires: "berserker-charge",
+      maxLevel: 3,
+      params: { lifesteal: { base: 2, perLevel: 2 } },
+    },
+  ],
+  warden: [
+    {
+      id: "warden-field",
+      name: "Deep Field",
+      icon: "icon-area",
+      desc: "The slow field covers more ground.",
+      requires: "",
+      maxLevel: 3,
+      params: { radius: { base: 300, perLevel: 45 } },
+    },
+    {
+      id: "warden-pulse",
+      name: "Quick Pulse",
+      icon: "icon-cooldown",
+      desc: "The hard-slow pulse fires more often and lasts longer.",
+      requires: "warden-field",
+      maxLevel: 3,
+      params: {
+        pulseInterval: { base: 3.5, perLevel: -0.5, min: 2 },
+        pulseDuration: { base: 1.8, perLevel: 0.4 },
+      },
+    },
+    {
+      id: "warden-grip",
+      name: "Iron Grip",
+      icon: "icon-armor",
+      desc: "Inside the field, enemies barely move at all.",
+      requires: "warden-pulse",
+      maxLevel: 3,
+      params: { enemySlow: { base: 0.5, perLevel: -0.08, min: 0.25 } },
+    },
+  ],
+};
+
+/** The picked style's skill tree nodes (shop tree UI consumes this). */
+export function getGolemSkills(style) {
+  return GOLEM_SKILLS[style] ?? [];
+}

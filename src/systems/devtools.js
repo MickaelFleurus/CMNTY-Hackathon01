@@ -28,6 +28,20 @@ export function startDevTools(player) {
 
   player.attackDisabled = new URLSearchParams(location.search).has("noattack");
 
+  // Test bridge (dev only): lets playwright scripts fire root events and
+  // read live game state (scripts/golem-skill-check.mjs). Absent in builds.
+  window.__golemDebug = /** @type {any} */ (window).__golemDebug ??= {
+    trigger: (ev, data) => getTreeRoot().trigger(ev, data),
+    auraRadius: () => {
+      const a = get("aura")[0];
+      return a?.exists() ? a.radius : null;
+    },
+    golemHp: () => {
+      const g = get("tower")[0] ?? get("base")[0];
+      return g?.exists() && g.hp !== undefined ? g.hp() : null;
+    },
+  };
+
   onKeyPress(DEV.endWaveKey, () => {
     if (getTreeRoot().paused || debug.timeScale === 0) return; // level-up / shop open
     getTreeRoot().trigger("enemy-end-wave");

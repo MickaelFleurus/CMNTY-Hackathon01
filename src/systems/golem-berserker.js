@@ -14,21 +14,32 @@
 //     up to chargeRange px away - the knockback lands at the strike point
 //     (not the golem), so distant packs get hit too. Also skipped until a
 //     target is in range, and the cooldown only starts then.
-// Lifesteal (docs: "the more enemies it damages/kills, the more HP …
-// regain") is parked for the golem skill tree, not built here.
+//
+// Per-style skill tree (docs/game-design-v2.md → "Golem skill tree"): the
+// shop tree UI (shop.js) sells this style's GOLEM_SKILLS.berserker nodes and
+// fires "golem-skill-pick" { style, id, level, params }; each pick re-resolves
+// the node's params (levelStat specs at the NODE's level) on top of the style
+// pick's stats. Different nodes may override the same stat - the LAST pick
+// wins. "berserker-lifesteal" adds Blood Feast: each swipe heals the golem
+// lifesteal hp per enemy hit (we count the enemies the swipe reaches).
 //
 // Contract (no imports between systems):
 //   - listens: getTreeRoot().on("golem-style-pick", { style: "berserker" })
 //     (one pick per life, style can't change until you die); "wave-start"
 //     { n } keeps the damage scaling with the wave; stops on "run-over" /
 //     "golem-dying".
+//   - listens: getTreeRoot().on("golem-skill-pick", { style, id, level,
+//     params }) → applies only to this style's node ids (GOLEM_SKILLS.berserker)
 //   - reads the object tagged "base": base.awake (tower.js), base.solidRect(),
 //     and live enemies (tag "enemy": pos) for targeting.
 //   - fires getTreeRoot().trigger("enemy-knockback", { x, y, radius, force,
 //     damage }) → enemies.js damages + pushes the enemies (and fires
 //     "damage-dealt" for the damage numbers).
 //   - fx rings are tagged "fx" (cleared by runstate.js).
-import { GOLEM_BERSERKER as CFG } from "../config.js";
+import { GOLEM_BERSERKER as CFG, GOLEM_SKILLS } from "../config.js";
+import { resolveStats } from "../util/levelStat.js";
+
+const STYLE = "berserker";
 
 export function startGolemBerserker() {
   let picked = false;
@@ -36,9 +47,28 @@ export function startGolemBerserker() {
   let wave = 1;
   let swipeCharge = 0; // s until the next swipe
   let chargeCharge = 0; // s until the next charge strike
+  let base = null; // stats resolved from the style pick
+  let overrides = {}; // skill-pick stat overrides (last wins)
+  /** @type {Record<string, any>} skill picks may add keys (lifesteal) */
+  let stats = { ...CFG }; // { ...base, ...overrides } - the attack loop reads this
+  let lifesteal = 0; // hp per enemy hit by a swipe (Blood Feast node)
 
-  getTreeRoot().on("golem-style-pick", ({ style } = {}) => {
-    if (style === "berserker") picked = true;
+  getTreeRoot().on("golem-style-pick", ({ style, level, params } = {}) => {
+    if (style !== "berserker") return;
+    picked = true;
+    base = resolveStats(CFG, level ?? 1, params);
+    overrides = {};
+    stats = /** @type {Record<string, any>} */ ({ ...base, ...overrides });
+  });
+  getTreeRoot().on("golem-skill-pick", (pick) => {
+    if (!picked || over || pick?.style !== STYLE) return;
+    const node = (GOLEM_SKILLS[STYLE] ?? []).find((n) => n.id === pick?.id);
+    if (!node) return;
+    Object.assign(overrides, resolveStats(node.params, pick.level ?? 1));
+    stats = /** @type {Record<string, any>} */ ({ ...base, ...overrides });
+    if (pick.id === "berserker-lifesteal") {
+      lifesteal = stats.lifesteal ?? 0;
+    }
   });
   getTreeRoot().on("wave-start", (n) => (wave = n ?? wave));
   getTreeRoot().on("run-over", () => (over = true));
@@ -55,35 +85,58 @@ export function startGolemBerserker() {
     const at = vec2((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2);
     const dmg = (d) => Math.round(d * (1 + CFG.damageGrowth * (wave - 1)));
 
-    if (swipeCharge <= 0 && anyEnemyNear(at, CFG.swipeRadius)) {
-      swipeCharge = CFG.swipeInterval;
+    if (swipeCharge <= 0 && anyEnemyNear(at, stats.swipeRadius)) {
+      swipeCharge = stats.swipeInterval;
+      const hits = enemiesIn(at, stats.swipeRadius);
       getTreeRoot().trigger("enemy-knockback", {
         x: at.x,
         y: at.y,
-        radius: CFG.swipeRadius,
-        force: CFG.swipeForce,
-        damage: dmg(CFG.swipeDamage),
+        radius: stats.swipeRadius,
+        force: stats.swipeForce,
+        damage: dmg(stats.swipeDamage),
       });
-      ring(at, CFG.swipeRadius, CFG.ringTime, CFG.swipeColor);
+      ring(at, stats.swipeRadius, CFG.ringTime, stats.swipeColor);
+      if (lifesteal > 0 && hits.length) healGolem(lifesteal * hits.length);
     }
 
     if (chargeCharge <= 0) {
-      const target = nearestEnemy(at, CFG.chargeRange);
+      const target = nearestEnemy(at, stats.chargeRange);
       if (target) {
         chargeCharge = CFG.chargeInterval;
         const dir = target.pos.sub(at).unit();
-        const hitAt = at.add(dir.scale(Math.min(at.dist(target.pos), CFG.chargeReach)));
+        const hitAt = at.add(dir.scale(Math.min(at.dist(target.pos), stats.chargeReach)));
         getTreeRoot().trigger("enemy-knockback", {
           x: hitAt.x,
           y: hitAt.y,
-          radius: CFG.chargeRadius,
-          force: CFG.chargeForce,
-          damage: dmg(CFG.chargeDamage),
+          radius: stats.chargeRadius,
+          force: stats.chargeForce,
+          damage: dmg(stats.chargeDamage),
         });
-        streak(at, hitAt, CFG.ringTime, CFG.chargeColor);
-        ring(hitAt, CFG.chargeRadius, CFG.ringTime, CFG.chargeColor);
+        streak(at, hitAt, CFG.ringTime, stats.chargeColor);
+        ring(hitAt, stats.chargeRadius, CFG.ringTime, stats.chargeColor);
       }
     }
+  });
+
+  /** Heal the golem n hp (capped at its max), with a small green +n. */
+  function healGolem(n) {
+    const golem = get("tower")[0];
+    if (!golem?.exists?.() || golem.hp?.() === undefined) return;
+    const amount = Math.min(n, golem.maxHP() - golem.hp());
+    if (amount <= 0) return;
+    golem.setHP(golem.hp() + amount);
+    getTreeRoot().trigger("golem-lifesteal", { amount: Math.round(amount) });
+  }
+}
+
+/** Live enemies within `radius` of `at` (skips hidden waiting bats). */
+function enemiesIn(at, radius) {
+  const r2 = radius * radius;
+  return get("enemy").filter((e) => {
+    if (e.dead || e.hidden) return false;
+    const dx = e.pos.x - at.x;
+    const dy = e.pos.y - at.y;
+    return dx * dx + dy * dy <= r2;
   });
 }
 
