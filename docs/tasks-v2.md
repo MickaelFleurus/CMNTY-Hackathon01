@@ -59,7 +59,9 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     game-design-v2). From the start of the run, `tower.js` gives the `"base"`
     object `health()` and the `"tower"` tag, and enemies attack it. The pick
     makes it shoot. Keys `hp`, `range`, `fireInterval`, `damage`. A new pick
-    levels it up and repairs it. When it's destroyed:
+    levels it up and repairs it. At every `wave-end` the golem gets back
+    `TOWER.waveEndRepair` (half) of the HP it lost during that wave, and
+    `golem-repaired { amount }` fires. When it's destroyed:
     `getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })`, the
     **only** lose condition once the golem is awake (see below).
   - `level` = how many times that quadrant has been picked (1, 2, 3…).
@@ -138,7 +140,10 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     flies straight across the screen, leaves it, waits `returnDelay` s,
     then sweeps back. They fly over the golem (no collision) but hurt
     whatever they touch on the way: the player, and the tower when they
-    pass over it. Their `target` is always `null`.
+    pass over it. Their `target` is always `null`. While they wait
+    off-screen they are **hidden and out of play**: `hidden = true`, no
+    `"enemy"` tag (weapons and the tower can't aim at them), and no hits or
+    contact damage either way.
   - Walkers steer around the solid golem (shortest path via its corners)
     unless the golem is their target.
 - **Smart enemy targeting** (`enemies.js`, tuning in `ENEMY_TARGETING`):

@@ -19,6 +19,9 @@
 //     enemies.js only targets / damages a tower with awake === true.
 //   - on waking: getTreeRoot().trigger("golem-awake") (fired once, on the
 //     first "wave-end"). respawn.js listens: until then, player death = run over.
+//   - wave repair: on "wave-end", the golem heals TOWER.waveEndRepair (half)
+//     of the HP it lost since "wave-start" (capped at max HP), with a green
+//     "+N" above it, and fires getTreeRoot().trigger("golem-repaired", { amount }).
 //   - on destruction: getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })
 //     (fired once). Once the golem is awake, this is the run's ONLY lose condition.
 import boltUrl from "../../gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Magic_Bolt.png";
@@ -56,6 +59,23 @@ export function startTower() {
       tower.setMaxHP(maxHpFor(picks));
       tower.setHP(tower.maxHP()); // level-up repairs it
     }
+  });
+
+  // Wave repair: remember the golem's HP when a wave starts; when it ends,
+  // give back TOWER.waveEndRepair of what was lost during the wave.
+  let hpAtWaveStart = null;
+  getTreeRoot().on("wave-start", () => {
+    hpAtWaveStart = tower?.exists() ? tower.hp() : null;
+  });
+  getTreeRoot().on("wave-end", () => {
+    if (over || !tower?.exists() || hpAtWaveStart == null) return;
+    const lost = hpAtWaveStart - tower.hp();
+    hpAtWaveStart = null;
+    const amount = Math.min(Math.round(lost * TOWER.waveEndRepair), tower.maxHP() - tower.hp());
+    if (amount <= 0) return;
+    tower.setHP(tower.hp() + amount);
+    repairText(tower, amount);
+    getTreeRoot().trigger("golem-repaired", { amount });
   });
 
   // The golem wakes up when wave 1 ends (cleared or timed out). A run-over
@@ -155,6 +175,22 @@ function solidRect(base) {
     x1: b.pos.x + b.width - right * sx,
     y1: b.pos.y + b.height - bottom * sy,
   };
+}
+
+/** Green "+N" rising above the golem's head after a wave repair. */
+function repairText(base, amount) {
+  const r = base.solidRect();
+  const t = add([
+    text(`+${amount}`, { size: 20 }),
+    pos((r.x0 + r.x1) / 2, r.y0 - 24),
+    anchor("center"),
+    color(90, 230, 110),
+    opacity(1),
+    z(60),
+    lifespan(1.2, { fade: 0.6 }),
+    "fx", // short-lived effect (cleared when the run is over)
+  ]);
+  t.onUpdate(() => t.move(0, -30));
 }
 
 /** Visual center of the base (its anchor is "bot"). */
