@@ -3,7 +3,9 @@
 // on top (deeper, reaching further in), as extra "you're in danger" feedback.
 //
 // Each vignette is painted ONCE into an image (radial gradient on a hidden
-// 2D canvas, loaded as a sprite) and drawn stretched over the screen, BETWEEN
+// 2D canvas, loaded as a sprite) and drawn stretched over the screen (resized
+// every frame: on phones the view follows rotation, width() / height() change
+// live - config.js pickViewport), BETWEEN
 // the world and the HUD (z 850; HUD is 900+), so the minimap, HP orb and
 // banners stay unshaded. Tuning: VIGNETTE in config.js.
 //
@@ -48,9 +50,17 @@ export function startVignette() {
       z(850),
       opacity(1),
     ]);
-  layer("vignette");
+  const dark = layer("vignette");
   const red = layer("vignette-low");
   red.opacity = 0;
+
+  // runs while paused too (level up / shop), so a rotation then still resizes
+  onDraw(() => {
+    for (const l of [dark, red]) {
+      if (l.width !== width()) l.width = width();
+      if (l.height !== height()) l.height = height();
+    }
+  });
 
   red.onUpdate(() => {
     const p = get("player")[0];
