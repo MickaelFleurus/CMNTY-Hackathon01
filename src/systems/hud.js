@@ -10,8 +10,7 @@
 //   - player.hp() / player.maxHP()                    player object
 //   - player.shield                                   from regen.js (shown when > 0)
 //   - player.down / respawnIn / nextRespawn           from respawn.js
-//   - get("base")[0].hp() / maxHP()                   the base is the tower (base.js),
-//     shown once base.awake (tower.js); the wave-1 statue has no HP to lose
+//   (golem HP is drawn by base-alert.js as a bar under the timer)
 //   - player.canRespawn                               false in wave 1 (respawn.js)
 import { xpState } from "./xp.js";
 import { HUD } from "../config.js";
@@ -84,9 +83,8 @@ export function initHud() {
       if (p.canRespawn === false) hp += "\nNext death: run over";
       else if (p.nextRespawn != null) hp += `\nNext death: ${p.nextRespawn}s`;
     }
-    const base = get("base")[0];
-    const baseHp = base?.hp && base.awake ? `\nBase ${Math.max(0, Math.ceil(base.hp()))}/${base.maxHP()}` : "";
-    stats.text = `LV ${xpState.level}\n${hp}${baseHp}\nCoins ${hudState.coins}\nKills ${hudState.kills}`;
+    // golem HP has its own bar under the timer (base-alert.js)
+    stats.text = `LV ${xpState.level}\n${hp}\nCoins ${hudState.coins}\nKills ${hudState.kills}`;
   });
 
   // small hp bar that follows the player (world space)
