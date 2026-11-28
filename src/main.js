@@ -7,6 +7,8 @@ import { makeWeapon } from "./systems/weapons.js";
 import { loadEnemySprites, startEnemyDirector } from "./systems/enemies.js";
 import { loadXpAssets, initXp } from "./systems/xp.js";
 import { loadUpgradeAssets, initUpgrades, grantUpgrade } from "./systems/upgrades.js";
+import { startRunStats } from "./systems/run-stats.js";
+import { loadSounds, startSounds } from "./systems/sounds.js";
 import { initHud } from "./systems/hud.js";
 import { initUpgradeEffects } from "./systems/upgrade-effects.js";
 import { initKnife } from "./systems/knife.js";
@@ -31,7 +33,6 @@ import { startGolemBerserker } from "./systems/golem-berserker.js";
 import { startGuideArrow } from "./systems/guide-arrow.js";
 import { loadBonusAssets, startBonusDrops } from "./systems/bonus.js";
 import { startBaseAlert } from "./systems/base-alert.js";
-import { targetCounts } from "./systems/enemies.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
 import { loadShopSprites, makeShop } from "./systems/shop.js";
@@ -74,6 +75,7 @@ loadSprite("proj-knife", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_
   anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
 });
 loadPlankAssets(); // placeholder pink shader (no plank sprite yet)
+loadSounds();
 loadSprite("proj-axe", "gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Axe.png", {
   sliceX: 4,
   anims: { spin: { from: 0, to: 3, loop: true, speed: 10 } },
@@ -104,7 +106,9 @@ initPlank(player);
 initAxe(player);
 initBoomerang(player);
 grantUpgrade("weapon-plank"); // the starter weapon (Plank Lv1)
-const enemyDirector = startEnemyDirector();
+startRunStats(player); // after the starter grant: it isn't a "picked" card
+startSounds(player);
+startEnemyDirector();
 startAuras();
 startRegen();
 startTower();
@@ -156,14 +160,6 @@ getTreeRoot().on("wave-end", ({ wave, reason, kills }) => {
   console.log(`wave ${wave} ended (${reason}), ${kills} kills`);
 });
 
-add([
-  text("Wave 1 - WASD/arrows to move\n(your plank pokes on its own)", {
-    size: 20,
-  }),
-  pos(16, 16),
-  fixed(),
-]);
-
 // TEMP debug: P teleports home. C grants 50 coins.
 onKeyPress("c", () => {
   if (!gamePaused()) addCoins(50);
@@ -174,33 +170,3 @@ onKeyPress("p", () => {
   if (p) p.pos = vec2(SHOP.home.x + 80, SHOP.home.y);
 });
 
-const debugLabel = add([text("", { size: 18 }), pos(24, 90), fixed()]);
-debugLabel.onUpdate(() => {
-  const types = enemyDirector.activeTypes().map((t) => `${t} ${enemyDirector.alive(t)}`);
-  const d = enemyDirector;
-  const status = d.isOver()
-    ? `RUN OVER on wave ${d.wave()} · timer stopped at ${Math.ceil(d.timeLeft())}s`
-    : d.inWave()
-    ? d.isBossWave()
-      ? `BOSS WAVE ${d.wave()} · ${d.alive()} alive`
-      : `wave ${d.wave()} · ${Math.ceil(d.timeLeft())}s left · ${d.alive()} alive`
-    : cycle.phase() === "shop"
-    ? `wave ${d.wave()} cleared - shop open`
-    : cycle.phase() === "starting"
-    ? `wave ${d.wave() + 1} incoming…`
-    : cycle.phase() === "aftermath"
-    ? `wave ${d.wave()} survived…`
-    : cycle.phase() === "over"
-    ? `the golem has fallen…`
-    : `wave ${d.wave()} over - go back to the golem for the shop`;
-  const tc = targetCounts();
-  // down/respawnIn/nextRespawn are assigned dynamically by respawn.js
-  const /** @type {any} */ respawnState = player;
-  const respawn = respawnState.down
-    ? `DEAD - respawn in ${respawnState.respawnIn.toFixed(1)}s`
-    : respawnState.canRespawn === false
-    ? "next death: run over (golem asleep)"
-    : `next death: ${respawnState.nextRespawn}s respawn`;
-  debugLabel.text = `${status}\nenemy lvl ${d.level()} · alive ${d.alive()} · ${types.join(" · ")}` +
-    `\ntargeting: player ${tc.player} · tower ${tc.tower} · ${respawn}`;
-});

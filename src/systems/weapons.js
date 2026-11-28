@@ -68,6 +68,7 @@ function fire(from, targetPos, damage) {
     opacity(1),
     lifespan(1.2, { fade: 0.2 }),
     "projectile",
+    "bullet", // sounds.js plays the gun sound for each one
     // Damage on contact is applied by enemies.js (enemies aren't in KAPLAY's
     // collision system - see the shared contract in docs/tasks.md): it hurts
     // each overlapped enemy once and destroys the knife after `pierce` hits.

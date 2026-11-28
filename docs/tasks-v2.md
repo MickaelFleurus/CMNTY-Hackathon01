@@ -237,6 +237,17 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   (`SHOP`, `CYCLE`, `AURA`, `REGEN`, `TOWER`, `BOSS`); expect config
   conflicts, rebase before PR.
 
+## Sounds (`sounds.js`)
+
+- Every sound is triggered from events or tags other systems already
+  produce; no gameplay file calls `play()`. To give something a sound, fire
+  an event (or tag the object) and hook it in `sounds.js`.
+- Tags it reads: `"plank"` + `"fx"` (one per poke), `"bullet"` (pistol, set in
+  `weapons.js`), `"axe"` (loop while any exist). Events: `killed`,
+  `pickup-collected`, `bonus-picked`, player `levelup`, `wave-end`.
+- Loops pause whenever the game doesn't run (level-up screen, shop,
+  pause, frozen / down player). **M** toggles mute (saved in the browser).
+
 ## Run stats (`run-stats.js`)
 
 - Saved as ONE JSON object in `localStorage["golem-necromancer-stats"]`:
