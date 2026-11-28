@@ -47,6 +47,13 @@ export const ENEMY = {
   // Despawn enemies that drift this far from the player (they get respawned
   // at the edge by the director, keeping the horde around you).
   despawnDistance: 1600,
+
+  // Knockback ("enemy-knockback" event): the push speed decays by this rate
+  // per second (travel ≈ force / knockbackDecay px); the enemy doesn't chase
+  // until its push speed drops below knockbackStop px/s. A type can resist
+  // with knockbackResist (0 = full push, 1 = immovable).
+  knockbackDecay: 5,
+  knockbackStop: 40,
 };
 
 // Enemy types. Each has its own stats, spawn schedule and spawn condition.
@@ -155,6 +162,7 @@ export const ENEMY_TYPES = [
     id: "golem",
     sprite: "Enemy_Crystal_Golem.png",
     scale: 3, // bigger than the rest (48px)
+    knockbackResist: 0.5, // heavy: pushed half as far
     hitRadius: 16,
     baseHp: 45, // a lot of HP: 15x a zombie
     baseDamage: 12,
@@ -183,6 +191,7 @@ export const ENEMY_TYPES = [
     // the base, attacks it and ignores the player until provoked.
     id: "boss",
     sheet: "boss",
+    knockbackResist: 0.75, // barely moves
     sprites: [
       "Boss_Slime_King.png",
       "Boss_Vampire_Lord.png",
@@ -468,6 +477,21 @@ export const TOWER = {
   // When a wave ends, the golem gets back this fraction of the HP it lost
   // during that wave (lost 80 → +40). Never above its max HP.
   waveEndRepair: 0.5,
+};
+
+// Golem self-defense (docs/game-design-v2.md → "The golem awakening flow"):
+// once awake, the golem sends a shock wave every `interval` s that flings
+// nearby enemies away, whatever the shop picks (golem-shockwave.js). It only
+// fires when an enemy is within `radius`; otherwise it stays charged.
+export const GOLEM_SHOCKWAVE = {
+  // Playtest (wave 5 horde, player dead, everything on the golem): golem
+  // survives ~2x longer with 3 s / 1200 than with no shock wave.
+  interval: 3, // s between waves
+  radius: 170, // px from the golem's center (its body is ~120 px wide)
+  force: 1200, // px/s initial push (≈ 240 px travel with ENEMY.knockbackDecay 5)
+  damage: 0, // optional damage per wave (0 = pure push)
+  ringTime: 0.45, // s, ring animation length
+  color: [150, 220, 255], // ring color (the golem's crystal blue)
 };
 
 // Smart enemy targeting (docs/game-design-v2.md → "Enemy targeting").

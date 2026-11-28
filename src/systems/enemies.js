@@ -51,6 +51,11 @@
 //         no spawns/hits/new waves, enemies paused in place).
 //         Leftover enemies die on the spot when the wave ends -
 //         death anim, no drops, not counted as kills (ENEMY_WAVES.killOnEnd).
+//   - KNOCKBACK: getTreeRoot().trigger("enemy-knockback", { x, y, radius,
+//       force, damage? }) pushes every visible live enemy within `radius` of
+//       (x, y) straight away from it at `force` px/s (× (1 - type
+//       knockbackResist)), decaying by ENEMY.knockbackDecay. While pushed an
+//       enemy doesn't chase or sweep. Optional `damage` hurts each one.
 //   - External spawn triggers (for `{ trigger: "name" }` spawn conditions):
 //       getTreeRoot().trigger("enemy-trigger", "bat-swarm")   // no import needed
 //     or import { fireEnemyTrigger } from this file. Triggers stay on until
@@ -370,6 +375,7 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) 
       // Each enemy aims at its own point near the player, so an overlapping
       // horde fans out a little instead of stacking on one pixel.
       chaseOffset: Vec2.fromAngle(rand(360)).scale(rand(0, ENEMY.chaseOffset)),
+      knock: null, // knockback velocity (px/s), see knockback()
     },
   ]);
 
@@ -387,6 +393,17 @@ export function spawnEnemy(p, level = 1, typeId = ENEMY_TYPES[0].id, opts = {}) 
     const towerDist = T.avail ? Math.hypot(T.x - enemy.pos.x, T.y - enemy.pos.y) : Infinity;
     if (Math.min(playerDist, towerDist) > ENEMY.despawnDistance) {
       destroy(enemy);
+      return;
+    }
+
+    // Being knocked back: slide with the push, no chasing until it fades.
+    if (enemy.knock) {
+      enemy.move(enemy.knock);
+      enemy.knock = enemy.knock.scale(Math.exp(-ENEMY.knockbackDecay * dt()));
+      if (enemy.knock.len() < ENEMY.knockbackStop) enemy.knock = null;
+      if (enemy.behavior !== "sweep" && targets.tower.solid) {
+        pushOutOfRect(enemy, targets.tower.rect, enemy.bodyRadius);
+      }
       return;
     }
 
@@ -919,6 +936,28 @@ function spawnGroup(type, level) {
   return n;
 }
 
+/** Push every visible live enemy within radius of (x, y) away from it. */
+function knockback({ x, y, radius, force, damage = 0 } = {}) {
+  if (![x, y, radius, force].every(Number.isFinite)) return;
+  const r2 = radius * radius;
+  for (const e of [...live]) {
+    if (e.dead || e.hidden) continue; // hidden = bats waiting off-screen
+    const dx = e.pos.x - x;
+    const dy = e.pos.y - y;
+    const d2 = dx * dx + dy * dy;
+    if (d2 > r2) continue;
+    const push = force * (1 - (TYPES[e.type].knockbackResist ?? 0));
+    if (push > 0) {
+      const dir = d2 > 0.01 ? vec2(dx, dy).unit() : Vec2.fromAngle(rand(360));
+      e.knock = dir.scale(push);
+    }
+    if (damage > 0) {
+      e.hurt(damage);
+      getTreeRoot().trigger("damage-dealt", { pos: e.pos, amount: damage });
+    }
+  }
+}
+
 /** Remove every enemy (live or dying) without kills or drops. */
 export function clearEnemies() {
   for (const e of [...live]) destroy(e);
@@ -986,6 +1025,7 @@ export function startEnemyDirector() {
   // (and their animations) freeze in place, no more hits or contact damage,
   // and no further wave can start. wave-end is NOT fired.
   let over = false;
+  root.on("enemy-knockback", (k) => !over && knockback(k));
   root.on("run-over", () => {
     over = true;
     for (const e of [...live, ...get("enemy-dying")]) e.paused = true;
