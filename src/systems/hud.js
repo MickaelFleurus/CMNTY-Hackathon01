@@ -64,6 +64,13 @@ export function initHud() {
     hudState.coins = n;
   });
 
+  // cycle.js phases: only "wave" (and "idle" before the first one) is wave
+  // time; aftermath / break / shop / starting are the upgrade phase
+  let inWave = true;
+  getTreeRoot().on("cycle-phase", ({ phase } = {}) => {
+    inWave = phase === "wave" || phase === "idle";
+  });
+
   const hud = add([fixed(), z(900), "hud"]);
 
   const waveLabel = hud.add([
@@ -82,8 +89,9 @@ export function initHud() {
     const p = get("player")[0];
     // keep centered when the screen size changes (phone rotation, fill mode)
     waveLabel.pos.x = timeLabel.pos.x = width() / 2;
-    waveLabel.text = hudState.wave > 0 ? `WAVE ${hudState.wave}` : "";
-    if (!p?.frozen) hudState.time += dt();
+    // between waves (upgrade phase) no "WAVE N" and the timer holds still
+    waveLabel.text = hudState.wave > 0 && inWave ? `WAVE ${hudState.wave}` : "";
+    if (!p?.frozen && inWave) hudState.time += dt();
     timeLabel.text = formatTime(hudState.time);
   });
 

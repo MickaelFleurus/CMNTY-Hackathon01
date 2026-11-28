@@ -39,6 +39,10 @@ export function startCycle() {
 
   const setPhase = (p, extra = {}) => {
     phase = p;
+    // between waves (aftermath, break, shop, starting) the player doesn't
+    // attack: weapons check player.resting
+    const pl = player();
+    if (pl) pl.resting = p !== "wave" && p !== "idle";
     root.trigger("cycle-phase", { phase: p, wave, ...extra });
   };
 

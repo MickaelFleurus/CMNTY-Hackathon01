@@ -32,7 +32,7 @@ export function initPlank(player) {
     cooldown -= dt();
     // no attacking while dead (respawn.js), after the run is over (runstate.js)
     // or with the dev playtest switch on (devtools.js, K / ?noattack)
-    const blocked = player.down || player.frozen || player.attackDisabled;
+    const blocked = player.down || player.frozen || player.attackDisabled || player.resting; // resting: between waves (cycle.js)
     if (blocked) chain = [];
     for (const c of chain) c.in -= dt();
     for (const c of chain.filter((c) => c.in <= 0)) poke(player, c.side, c.length, c.damage);
