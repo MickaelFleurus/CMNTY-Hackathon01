@@ -43,6 +43,8 @@
 //   - WAVES (root events, no import needed - e.g. for the cycle director):
 //       getTreeRoot().trigger("enemy-start-wave", n)   start wave n (omit n = next)
 //       getTreeRoot().trigger("enemy-clear")           despawn every enemy, no drops
+//       getTreeRoot().trigger("enemy-end-wave")        end the running wave now
+//                                                      ("cleared"; dev key, devtools.js)
 //       getTreeRoot().on("wave-start", (n) => …)
 //       getTreeRoot().on("wave-end", ({ wave, reason, kills }) => …)
 //         reason: "cleared" = the wave was survived (its timer ran out, or
@@ -1053,6 +1055,9 @@ export function startEnemyDirector() {
   root.on("enemy-trigger", fireEnemyTrigger);
   root.on("enemy-trigger-clear", clearEnemyTrigger);
   root.on("enemy-start-wave", (n) => startWave(n ?? wave + 1));
+  root.on("enemy-end-wave", () => {
+    if (inWave && !over && !golemDown) endWave("cleared");
+  });
   root.on("enemy-clear", clearEnemies);
 
   // Run over (tower destroyed, or player died in wave 1): everything enemy-side stops where it is.

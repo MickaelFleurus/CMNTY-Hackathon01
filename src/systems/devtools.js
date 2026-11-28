@@ -2,6 +2,9 @@
 // (`npm run dev`, import.meta.env.DEV); compiled out of production builds.
 //
 //   K              toggle the player's attack on/off (DEV.toggleAttackKey)
+//   N              end the running wave now, as if survived (DEV.endWaveKey):
+//                  fires "enemy-end-wave" (enemies.js) → the normal wave-end
+//                  sequence (pouf, golem swipe, shop circle)
 //   ?noattack      URL param: start with the player's attack off
 //                  (e.g. http://localhost:5173/?noattack)
 //
@@ -14,6 +17,12 @@ export function startDevTools(player) {
   if (!import.meta.env.DEV) return;
 
   player.attackDisabled = new URLSearchParams(location.search).has("noattack");
+
+  onKeyPress(DEV.endWaveKey, () => {
+    if (getTreeRoot().paused || debug.timeScale === 0) return; // level-up / shop open
+    getTreeRoot().trigger("enemy-end-wave");
+    console.log("[dev] wave ended early");
+  });
 
   onKeyPress(DEV.toggleAttackKey, () => {
     player.attackDisabled = !player.attackDisabled;
