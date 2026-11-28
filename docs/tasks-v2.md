@@ -44,7 +44,7 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
     golem.
   - **Shop** (`shop.js`): the cycle director fires `shop-open` when the
     player is inside the **shop circle** (`CYCLE.shopCircle` px from the
-    golem's body center, drawn as a faint glowing ring during the break)
+    golem's body center, drawn during the break as a pulsing glowing ring with an inward ripple and an "UPGRADE THE GOLEM / Step into the circle" hint under it, `CYCLE.shopCirclePulseHz` / `shopHint`)
     (alive, not frozen). The shop doesn't teleport anyone. Closing it (pick
     or **E** to skip) fires `shop-close`, and the cycle director starts the
     next wave after `CYCLE.nextWaveDelay`.
