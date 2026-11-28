@@ -64,6 +64,10 @@ must protect - it becomes your life total.
   the moment the golem wakes up** (end of wave 1).
 - **The tower being destroyed is the game over.** It is the run's life
   total. Player death is **not** game over.
+- **The golem repairs between waves.** When a wave ends, the golem gets
+  back **half of the HP it lost during that wave** (lost 80 → +40, never
+  above its max; tuned in `src/config.js`, `TOWER.waveEndRepair`). Damage
+  still adds up over a run, but one bad wave isn't fatal for the rest of it.
 - **Player death → respawn timer.** When the player dies they are out until
   the respawn timer runs out, then they respawn at the base and go back to
   protecting the tower. While the player is dead, the tower is on its own,
