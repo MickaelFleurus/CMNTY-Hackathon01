@@ -11,6 +11,10 @@
 //                  wave timer go on (new enemies arrive frozen). They can
 //                  still be shot and killed. Same freeze as the future
 //                  power-up, which passes a duration.
+//   T              toggle the whole game speed x1 / x DEV.fastSpeed (2)
+//                  (DEV.speedKey): KAPLAY's debug.timeScale, so everything
+//                  driven by dt (movement, timers, spawns, animations) runs
+//                  faster. The shop's pause saves/restores it (cycle.js).
 //   ?noattack      URL param: start with the player's attack off
 //                  (e.g. http://localhost:5173/?noattack)
 //
@@ -36,6 +40,12 @@ export function startDevTools(player) {
     if (getTreeRoot().paused || debug.timeScale === 0) return; // level-up / shop open
     getTreeRoot().trigger("enemy-freeze", { frozen: !enemiesFrozen });
     console.log(`[dev] enemies ${enemiesFrozen ? "FROZEN" : "unfrozen"}`);
+  });
+
+  onKeyPress(DEV.speedKey, () => {
+    if (getTreeRoot().paused || debug.timeScale === 0) return; // level-up / shop open
+    debug.timeScale = debug.timeScale === 1 ? DEV.fastSpeed : 1;
+    console.log(`[dev] game speed x${debug.timeScale}`);
   });
 
   onKeyPress(DEV.toggleAttackKey, () => {
@@ -75,6 +85,7 @@ export function startDevTools(player) {
     const lines = [];
     if (player.attackDisabled) lines.push(`DEV: player attack OFF (${DEV.toggleAttackKey.toUpperCase()})`);
     if (enemiesFrozen) lines.push(`DEV: enemies FROZEN (${DEV.freezeEnemiesKey.toUpperCase()})`);
+    if (debug.timeScale > 1) lines.push(`DEV: speed x${debug.timeScale} (${DEV.speedKey.toUpperCase()})`);
     label.text = lines.join("\n");
   });
 }
