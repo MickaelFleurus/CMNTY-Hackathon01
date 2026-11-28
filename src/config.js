@@ -523,6 +523,7 @@ export const GOLEM_SHOCKWAVE = {
   // survived ~2x longer with a 3 s cooldown than with no shock wave; 3 s
   // felt too frequent in play, so 6 s.
   minContact: 3, // enemies touching the golem before the first wave
+  windup: 1.5, // s those enemies must stay in contact before the first wave
   cooldown: 6, // s, minimum time between two waves (also the repeat while swarmed)
   radius: 170, // px from the golem's center (its body is ~120 px wide)
   force: 1200, // px/s initial push (≈ 240 px travel with ENEMY.knockbackDecay 5)
