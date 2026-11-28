@@ -11,8 +11,8 @@
 //   top right     coins and kills, icon + number
 //   world         small HP bar under the player, green → amber → red
 //
-// It sits bottom left rather than in a top strip because the TEMP help and
-// debug text in main.js own the top left for now.
+// It sits bottom left (Diablo-style), keeping the top for wave, timer and
+// the golem bar. HUD.orb / HUD.slot in config.js move it.
 //
 // The survival timer runs on dt(), so it stops while the game is paused
 // (level up screen, shop) and when the run is over (player.frozen).
