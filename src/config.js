@@ -860,3 +860,21 @@ export const GOLEM_GUARDIAN = {
   shieldDuration: 6, // s the shield holds after leaving the aura
   color: [200, 212, 230], // white/gray: defense paths (game-design-v2.md)
 };
+
+// Sound effects (src/systems/sounds.js, files in gfx/Sounds/).
+export const SOUND = {
+  master: 0.8, // global volume (0 when muted)
+  muteKey: "m", // toggles mute, remembered in the browser
+  volume: {
+    plank: 0.45,
+    gun: 0.35,
+    axe: 0.3, // loop while axes are in the air
+    walk: 0.35, // loop while walking
+    kill: 0.35,
+    collect: 0.4,
+    levelUp: 0.6,
+    waveWon: 0.7,
+  },
+  killGap: 0.06, // s: at most one kill sound per gap (bombs, big sweeps)
+  collectGap: 0.05, // s: same for pickups (magnet bursts)
+};
