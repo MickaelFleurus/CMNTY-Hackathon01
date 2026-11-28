@@ -15,6 +15,7 @@ import { hudState } from "./hud.js";
 import { xpState } from "./xp.js";
 import { loadStats } from "./run-stats.js";
 import { isFocusClick } from "../util/focusClick.js";
+import { RUN_OVER } from "../config.js";
 
 let stats = null;
 
@@ -64,7 +65,8 @@ function open({ reason, secs, wave, kills, coins }) {
   }
   const bestLine = best.wave ? `${better ? "NEW BEST! " : ""}best: wave ${best.wave} · ${best.time}` : "";
 
-  add([rect(width(), height()), color(10, 10, 16), fixed(), z(990)]);
+  // see-through backdrop: the frozen game stays visible behind
+  add([rect(width(), height()), color(10, 10, 16), opacity(RUN_OVER.overlayOpacity), fixed(), z(990)]);
   add([text("RUN OVER", { align: "center", size: 64, width: width() }), pos(0, height() * 0.2), fixed(), z(1000), color(220, 60, 60)]);
   add([text((REASON_TEXT[reason] ?? REASON_TEXT["tower-destroyed"])(wave), { align: "center", size: 26, width: width() }), pos(0, height() * 0.32), fixed(), z(1000)]);
   add([text(`time survived ${survived}\nkills ${kills}\nlevel ${level}\ncoins ${coins}`, { align: "center", size: 26, lineSpacing: 10, width: width() }), pos(0, height() * 0.48), fixed(), z(1000)]);

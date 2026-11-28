@@ -549,6 +549,15 @@ export const REGEN = {
 // active-offense pick makes it shoot; each further pick levels it up.
 // HP uses the tower level = picks + 1 (unpicked base: 200 hp, 1 pick: 275…);
 // shooting stats use the pick level (no shooting before the first pick).
+// End of run (runstate.js, gameover.js).
+export const RUN_OVER = {
+  // player death (wave 1): the world freezes, the hero plays its death
+  // animation, then this many s of stillness before the game-over screen
+  deathAnimTime: 0.5, // s: Hero_Knight "death" = 6 frames at 12 fps
+  afterDeathPause: 1,
+  overlayOpacity: 0.75, // game-over screen backdrop: the frozen game shows through
+};
+
 export const TOWER = {
   // Solid body = the golem's VISIBLE pixels (measured on its idle frames:
   // x 1-30, y 3-31 of the 32 px cell), in art px; scaled with the sprite.

@@ -139,8 +139,12 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   portal are paused in place. `player.frozen = true` stops movement,
   weapons and regen, so **any new player-driven system must check
   `player.frozen` as well as `player.down`**. Input is NOT blocked (the
-  scene isn't paused), so the game-over screen's Restart works. It can open
-  on `"run-over"` or `"run-frozen"`. The director exposes `isOver()`.
+  scene isn't paused), so the game-over screen's Restart works. It opens on
+  `"run-frozen"`: right after `"run-over"`, except when the player died
+  (`reason: "player-died"`): the hero's death animation plays on the frozen
+  world, then `RUN_OVER.afterDeathPause` s, then `"run-frozen"`. The
+  game-over backdrop is see-through (`RUN_OVER.overlayOpacity`). The
+  director exposes `isOver()`.
 - **Player death → respawn** (`respawn.js`). Once the golem is awake,
   player death is not game over:
   - `player.down` is true while dead. Movement, weapons, regen and enemies
