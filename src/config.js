@@ -729,6 +729,7 @@ export const PLANK = {
   chainDelay: 0.16, // s between the chained pokes of one attack
   thrust: 26, // px it slides out and back during a poke
   pokeTime: 0.2, // s the poke stays out
+  attackPoseTime: 0.24, // s the hero holds the extended-arm strike pose
   hitRadius: 16, // px, hit circles spaced along the plank
   // Procedural spectral-scythe look (no sprite stretching). Kept here so the
   // colours and opacity are tunable without touching the weapon logic.
@@ -742,8 +743,7 @@ export const PLANK = {
     glowOpacity: 0.2,
     bladeOpacity: 0.52,
     coreOpacity: 0.95,
-    gripWidth: 5,
-    gripColor: [62, 44, 86],
+    originRadius: 4, // spectral flare where the blade leaves the player
   },
 };
 

@@ -102,6 +102,9 @@ function startCountdown(player, secs) {
 function poke(player, side, length, damage) {
   let t = 0;
   const dir = vec2(side, 0);
+  // Put the hero into the extended-arm strike pose for the whole hit. The
+  // player's normal idle/walk switcher respects this timer (player.js).
+  player.attackPoseFor = Math.max(player.attackPoseFor ?? 0, PLANK.attackPoseTime);
   const placeAt = (out) => player.pos.add(dir.scale(14 + PLANK.thrust * out)); // plank's near end
 
   // the look (no hits): a translucent spectral scythe
@@ -172,10 +175,10 @@ function drawScythe(length, t, side) {
   drawLines({ pts: points, width: v.bladeWidth, color: glow, opacity: v.bladeOpacity * pulse, join: "round", cap: "round" });
   drawLines({ pts: points, width: v.coreWidth, color: core, opacity: v.coreOpacity * pulse, join: "round", cap: "round" });
 
-  // A short dark grip anchors the blade to the player's hand.
-  const grip = vec2(-half - 8, 4);
-  drawLine({ p1: grip, p2: points[0], width: v.gripWidth, color: rgb(...v.gripColor), opacity: 0.9 });
-  drawCircle({ pos: grip, radius: 3.5, color: glow, opacity: 0.45 * pulse });
+  // No fake hand/grip: the scythe is summoned spectral energy, so it fades
+  // out of a soft flare at the player's side instead of being "held".
+  drawCircle({ pos: points[0], radius: v.originRadius, color: glow, opacity: 0.32 * pulse });
+  drawCircle({ pos: points[0], radius: v.originRadius * 0.45, color: core, opacity: 0.55 * pulse });
 
   // Bright tip and a few motes sliding along the crescent.
   drawCircle({ pos: points[steps], radius: 3, color: core, opacity: 0.8 * pulse });

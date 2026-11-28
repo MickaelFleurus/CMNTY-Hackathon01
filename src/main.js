@@ -69,6 +69,9 @@ loadSprite("hero-ghoul", "gfx/ghoul/ghoul-hero.png", {
   anims: {
     idle: { from: 0, to: 3, loop: true, speed: 6 },
     walk: { from: 6, to: 9, loop: true, speed: 10 },
+    // One-shot strike pose: extended arm from the walk row, held through
+    // PLANK.attackPoseTime by player.js, then released back to idle/walk.
+    attack: { frames: [8, 9], speed: 18 },
     hit: { from: 12, to: 13, speed: 12 },
     death: { from: 18, to: 23, speed: 12 },
   },
