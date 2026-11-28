@@ -3,7 +3,9 @@
 // best-run record, and restarts the run on Space/Enter or click.
 //
 // Events it reads (no imports from other owners' systems):
-//   - "run-over" { reason }    from tower.js - reason + stats snapshot
+//   - "run-over" { reason }    reason + stats snapshot. reason is
+//       "tower-destroyed" (tower.js) or "player-died" (respawn.js: the player
+//       died in wave 1, before the golem woke up)
 //   - "run-frozen"             from runstate.js - opens the screen
 // Restarts by reloading the page - every system boots fresh in main.js, and a
 // reload cannot leak module state (coins, xpState, cycle phase, upgrades).
@@ -24,7 +26,13 @@ export function startGameOver() {
   });
 }
 
-function open({ at, wave, kills, coins }) {
+// Why the run ended, by "run-over" reason.
+const REASON_TEXT = {
+  "tower-destroyed": (wave) => `the base golem was destroyed on wave ${wave}`,
+  "player-died": (wave) => `you fell on wave ${wave}, before the golem woke up`,
+};
+
+function open({ reason, at, wave, kills, coins }) {
   const survived = fmt(time() - at);
   const level = xpState.level;
 
@@ -49,7 +57,7 @@ function open({ at, wave, kills, coins }) {
 
   add([rect(width(), height()), color(10, 10, 16), fixed(), z(990)]);
   add([text("RUN OVER", { align: "center", size: 64, width: width() }), pos(0, height() * 0.2), fixed(), z(1000), color(220, 60, 60)]);
-  add([text(`the base golem was destroyed on wave ${wave}`, { align: "center", size: 26, width: width() }), pos(0, height() * 0.32), fixed(), z(1000)]);
+  add([text((REASON_TEXT[reason] ?? REASON_TEXT["tower-destroyed"])(wave), { align: "center", size: 26, width: width() }), pos(0, height() * 0.32), fixed(), z(1000)]);
   add([text(`time survived ${survived}\nkills ${kills}\nlevel ${level}\ncoins ${coins}`, { align: "center", size: 26, lineSpacing: 10, width: width() }), pos(0, height() * 0.48), fixed(), z(1000)]);
   if (bestLine) {
     add([text(bestLine, { align: "center", size: 22, width: width() }), pos(0, height() * 0.72), fixed(), z(1000), color(240, 200, 80)]);

@@ -10,7 +10,9 @@
 //   - player.hp() / player.maxHP()                    player object
 //   - player.shield                                   from regen.js (shown when > 0)
 //   - player.down / respawnIn / nextRespawn           from respawn.js
-//   - get("base")[0].hp() / maxHP()                   the base is the tower (base.js)
+//   - get("base")[0].hp() / maxHP()                   the base is the tower (base.js),
+//     shown once base.awake (tower.js); the wave-1 statue has no HP to lose
+//   - player.canRespawn                               false in wave 1 (respawn.js)
 import { xpState } from "./xp.js";
 import { HUD } from "../config.js";
 
@@ -79,10 +81,11 @@ export function initHud() {
     } else if (p?.hp) {
       hp = `HP ${Math.max(0, Math.ceil(p.hp()))}/${p.maxHP()}`;
       if (p.shield > 0) hp += `\nShield ${Math.ceil(p.shield)}`;
-      if (p.nextRespawn != null) hp += `\nNext death: ${p.nextRespawn}s`;
+      if (p.canRespawn === false) hp += "\nNext death: run over";
+      else if (p.nextRespawn != null) hp += `\nNext death: ${p.nextRespawn}s`;
     }
     const base = get("base")[0];
-    const baseHp = base?.hp ? `\nBase ${Math.max(0, Math.ceil(base.hp()))}/${base.maxHP()}` : "";
+    const baseHp = base?.hp && base.awake ? `\nBase ${Math.max(0, Math.ceil(base.hp()))}/${base.maxHP()}` : "";
     stats.text = `LV ${xpState.level}\n${hp}${baseHp}\nCoins ${hudState.coins}\nKills ${hudState.kills}`;
   });
 

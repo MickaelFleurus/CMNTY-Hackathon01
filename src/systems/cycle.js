@@ -22,7 +22,7 @@
 //           getTreeRoot().trigger("shop-open")          → shop.js opens its UI
 //           getTreeRoot().trigger("enemy-start-wave", n) → enemies.js
 //   listens "wave-start", "wave-end" (enemies.js), "portal-enter" (portal.js),
-//           "shop-close" (shop.js), "run-over" (tower.js)
+//           "shop-close" (shop.js), "run-over" (tower.js, respawn.js)
 import { CYCLE } from "../config.js";
 import { rectDistance } from "../util/solid.js";
 

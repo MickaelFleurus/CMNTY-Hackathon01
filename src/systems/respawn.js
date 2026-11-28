@@ -1,7 +1,11 @@
 // Player death → respawn (docs/game-design-v2.md → "Lose condition + player
-// respawn"). Player death is NOT game over: the player is out for a while,
-// then respawns at the base with full HP. The tower (the base) is alone in
-// the meantime.
+// respawn"). Once the golem is awake, player death is NOT game over: the
+// player is out for a while, then respawns at the base with full HP. The
+// tower (the base) is alone in the meantime.
+//
+// Wave 1 exception ("The golem awakening flow"): until the golem wakes up
+// ("golem-awake", tower.js) the player is the run's only life. Dying then
+// ends the run: "run-over" { reason: "player-died" }, no respawn.
 //
 // The respawn time is a ladder (RESPAWN.steps): every death uses the current
 // step and then moves one step up; every wave cleared ("wave-end" with
@@ -18,12 +22,15 @@
 //   - getTreeRoot().on("player-down", ({ respawnIn, step }) => …)
 //   - getTreeRoot().on("player-respawn", () => …)
 //   - getTreeRoot().on("respawn-step", ({ step, nextRespawn }) => …)  ladder moved
+//   - player.canRespawn    false until "golem-awake" (a death now = run over)
+//   - before "golem-awake": getTreeRoot().trigger("run-over", { reason: "player-died" })
 import { RESPAWN, CFG } from "../config.js";
 
 export function startRespawn(player) {
   const steps = RESPAWN.steps;
   let step = 0;
   let over = false; // run over: no more respawns
+  let golemAwake = false; // wave 1: no respawn, death = run over
 
   const publish = () => {
     player.respawnStep = step;
@@ -39,10 +46,22 @@ export function startRespawn(player) {
 
   player.down = false;
   player.respawnIn = 0;
+  player.canRespawn = false;
   publish();
+
+  getTreeRoot().on("golem-awake", () => {
+    golemAwake = true;
+    player.canRespawn = true;
+  });
 
   player.onDeath(() => {
     if (player.down || over) return;
+    if (!golemAwake) {
+      // the statue can't bring the player back: this is the run's end
+      over = true;
+      getTreeRoot().trigger("run-over", { reason: "player-died" });
+      return;
+    }
     const wait = steps[step];
     step = Math.min(step + 1, steps.length - 1);
     publish();

@@ -1,7 +1,12 @@
-// The base IS the tower (docs/game-design-v2.md): from the start of the run
-// the "base" object gets HP and the "tower" tag, enemies attack it, and when
-// it's destroyed the run is over. The active-offense shop pick makes it shoot
-// the nearest enemy in range; each further pick levels it up and repairs it.
+// The base IS the tower (docs/game-design-v2.md): the "base" object gets HP
+// and the "tower" tag, enemies attack it once it's awake, and when it's
+// destroyed the run is over. The active-offense shop pick makes it shoot the
+// nearest enemy in range; each further pick levels it up and repairs it.
+//
+// Golem awakening (docs/game-design-v2.md → "The golem awakening flow"): the
+// base starts as an inert statue during wave 1. It is still solid, but
+// enemies ignore it (no targeting, no contact damage), it has no HP bar and
+// it doesn't shoot. It wakes up at the end of wave 1 (the first "wave-end").
 //
 // Contract (no imports between systems):
 //   - attaches to the object tagged "base" (base.js) once it exists: adds
@@ -10,8 +15,12 @@
 //     px (TOWER.body). Solid for enemies (enemies.js) and the player (here).
 //   - listens to getTreeRoot().on("shop-pick", { quadrant: "active-offense", level, params })
 //   - shots are "projectile"s with { damage } → enemies.js applies the hit
+//   - base.awake: false while it's the wave-1 statue, true once awake.
+//     enemies.js only targets / damages a tower with awake === true.
+//   - on waking: getTreeRoot().trigger("golem-awake") (fired once, on the
+//     first "wave-end"). respawn.js listens: until then, player death = run over.
 //   - on destruction: getTreeRoot().trigger("run-over", { reason: "tower-destroyed" })
-//     (fired once). This is the run's ONLY lose condition.
+//     (fired once). Once the golem is awake, this is the run's ONLY lose condition.
 import boltUrl from "../../gfx/SurvivorsStarterKit_v1.0/Weapons/Projectiles/Proj_Magic_Bolt.png";
 import { TOWER } from "../config.js";
 import { levelStat, resolveStats } from "../util/levelStat.js";
@@ -34,6 +43,7 @@ export function startTower() {
   let shot = null; // shooting stats, null until picked
   let cooldown = 0;
   let over = false;
+  let awake = false; // wave 1: inert statue
 
   const maxHpFor = (p) => Math.round(levelStat(params.hp ?? TOWER.hp, p + 1));
 
@@ -48,6 +58,15 @@ export function startTower() {
     }
   });
 
+  // The golem wakes up when wave 1 ends (cleared or timed out). A run-over
+  // stops waves, so this can't fire after the run has ended.
+  getTreeRoot().on("wave-end", () => {
+    if (awake || over) return;
+    awake = true;
+    if (tower) tower.awake = true;
+    getTreeRoot().trigger("golem-awake");
+  });
+
   onUpdate(() => {
     if (!tower) {
       const base = get("base")[0];
@@ -60,7 +79,7 @@ export function startTower() {
     const player = get("player")[0];
     if (player) pushOutOfRect(player, tower.solidRect(), TOWER.playerRadius);
 
-    if (over) return;
+    if (over || !awake) return; // the statue doesn't shoot
 
     cooldown -= dt();
     if (!shot || cooldown > 0) return;
@@ -76,6 +95,7 @@ export function startTower() {
     base.use(health(hp, hp));
     base.animSpeed = TOWER.idleAnimSpeed; // slow, heavy idle
     base.solidRect = () => solidRect(base);
+    base.awake = awake;
     if (!base.has("color")) base.use(color(255, 255, 255)); // for the hurt flash
     base.tag("tower");
 
@@ -102,7 +122,7 @@ export function startTower() {
       z(50),
       {
         draw() {
-          if (!base.exists()) return;
+          if (!base.exists() || !base.awake) return; // no HP bar on the statue
           const r = base.solidRect(); // sits just above the golem's head
           const w = Math.max(60, (r.x1 - r.x0) * 0.8);
           const x = (r.x0 + r.x1) / 2 - w / 2;
