@@ -66,6 +66,12 @@ must protect - it becomes your life total.
   the moment the golem wakes up** (end of wave 1).
 - **The tower being destroyed is the game over.** It is the run's life
   total. Player death is **not** game over.
+- **The golem's HP drains while it's surrounded.** Enemies don't hit it one
+  attack at a time: as long as enemies touch it, its HP goes down at a
+  steady rate, and every extra enemy (weighted by how strong it is) makes
+  it drain faster. No enemy on it means no drain. A faint red pulse on the
+  golem speeds up with the drain, so the player can read the pressure at a
+  glance.
 - **The golem repairs between waves.** When a wave ends, the golem gets
   back **half of the HP it lost during that wave** (lost 80 → +40, never
   above its max; tuned in `src/config.js`, `TOWER.waveEndRepair`). Damage

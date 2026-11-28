@@ -28,8 +28,11 @@
 //         target and can't be hit.
 //       * The tower is SOLID for enemies: they're pushed out of its body box
 //         (tower.solidRect(), else its world-area box) by their full drawn
-//         size, so no sprite hides behind the golem,
-//         and hit it (tower.hurt(n)) when touching its edge.
+//         size, so no sprite hides behind the golem.
+//       * The tower's HP DRAINS while enemies touch it (no per-hit damage):
+//         every frame tower.hurt(sum of touching enemies' damage x
+//         ENEMY.towerDrain.perDamage x dt). "damage-taken" { kind: "tower" }
+//         reports the drained total every towerDrain.reportInterval s.
 //       * A tower with awake === false (the wave-1 statue, tower.js) is
 //         still solid, but is NOT a target and takes no contact damage.
 //       * AURAS: objects tagged "aura" with { radius, enemySlow } slow every
@@ -834,22 +837,44 @@ function resolvePlayerContact() {
   resolveContact(player, ENEMY.defaultPlayerRadius, (dmg) => damagePlayer(player, dmg));
 }
 
+// Drained but not yet reported ("damage-taken"), and time since the last report.
+let towerDrainPending = 0;
+let towerDrainClock = 0;
+
 function resolveTowerContact() {
   const T = targets.tower;
   const t = T.obj;
   if (!T.avail || !t || typeof t.hurt !== "function") return;
   const r = T.rect;
   const reach = Math.hypot(r.x1 - r.x0, r.y1 - r.y0) / 2 + MAX_BODY_RADIUS + ENEMY.towerContactSlack;
+  // Drain rate = the weight of everything touching it (count x strength).
+  let weight = 0;
   forEachEnemyNear(T.x, T.y, reach, (e) => {
-    // sweepers (bats) don't target the tower but do hit it when flying over it
-    if (e.dead || e.attackTimer > 0) return false;
+    // sweepers (bats) don't target the tower but drain it while flying over it
+    if (e.dead) return false;
     if (rectDistance(e.pos.x, e.pos.y, r).d > e.bodyRadius + ENEMY.towerContactSlack) return false;
-    t.hurt(e.damage);
-    getTreeRoot().trigger("damage-taken", { kind: "tower", pos: t.pos, amount: e.damage });
-    playAttack(e);
-    e.attackTimer = ENEMY.attackCooldown;
+    weight += e.damage;
+    if (e.attackTimer <= 0) {
+      playAttack(e); // visual only: swing every attackCooldown
+      e.attackTimer = ENEMY.attackCooldown;
+    }
     return false;
   });
+
+  const cfg = ENEMY.towerDrain;
+  const drain = weight * cfg.perDamage * dt();
+  if (drain > 0) {
+    towerDrainPending += drain;
+    t.hurt(drain);
+  }
+  towerDrainClock += dt();
+  if (towerDrainClock >= cfg.reportInterval) {
+    towerDrainClock = 0;
+    if (towerDrainPending >= 0.5) {
+      getTreeRoot().trigger("damage-taken", { kind: "tower", pos: t.pos, amount: Math.round(towerDrainPending) });
+    }
+    towerDrainPending = 0;
+  }
 }
 
 // Optional soft spacing (ENEMY.separationRadius > 0). Off by default: enemies

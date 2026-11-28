@@ -236,12 +236,28 @@ export function startTower() {
     if (!base.has("color")) base.use(color(255, 255, 255)); // for the hurt flash
     base.tag("tower");
 
-    let flash = null; // pending colour restore of the hurt flash
-    base.onHurt(() => {
-      if (over) return;
-      flash?.cancel();
-      base.color = rgb(255, 140, 140);
-      flash = wait(0.08, () => base.exists() && !over && (base.color = rgb(255, 255, 255)));
+    // Drain flash: the golem's HP drains smoothly while enemies touch it
+    // (enemies.js). Measure the actual loss rate (smoothed HP/s) and pulse a
+    // faint red tint, faster the faster it drains (TOWER.drainFlash).
+    let lastHp = base.hp();
+    let rate = 0; // smoothed HP lost per second
+    let phase = 0;
+    base.onUpdate(() => {
+      if (over || dt() === 0) return;
+      const lost = Math.max(0, lastHp - base.hp()); // repairs / level-ups don't count
+      lastHp = base.hp();
+      rate += (lost / dt() - rate) * (1 - Math.exp(-6 * dt()));
+      if (rate < 0.3) {
+        rate = lost > 0 ? rate : 0;
+        phase = 0;
+        base.color = rgb(255, 255, 255);
+        return;
+      }
+      const f = TOWER.drainFlash;
+      phase += dt() * Math.min(f.maxHz, f.minHz + f.hzPerHp * rate);
+      const pulse = 0.5 - 0.5 * Math.cos(phase * Math.PI * 2); // 0 → 1 → 0
+      const cut = Math.round(f.strength * pulse);
+      base.color = rgb(255, 255 - cut, 255 - cut);
     });
 
     // Death sequence: enemies pouf + everything stops ("golem-dying"), a
@@ -250,7 +266,6 @@ export function startTower() {
     base.onDeath(() => {
       if (over) return;
       over = true;
-      flash?.cancel();
       base.color = rgb(255, 255, 255);
       base.animSpeed = 0; // the golem goes still
       base.untag("tower"); // enemies stop targeting it
