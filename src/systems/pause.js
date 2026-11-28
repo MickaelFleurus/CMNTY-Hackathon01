@@ -38,6 +38,7 @@ export function startPause() {
       getTreeRoot().trigger("game-unpaused");
     } else if (!blocked()) {
       root.paused = true;
+      overlayText.pos = center(); // the screen may have rotated (phones)
       overlayText.hidden = false;
       getTreeRoot().trigger("game-paused");
     }

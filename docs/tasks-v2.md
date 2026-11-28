@@ -241,6 +241,16 @@ wave, survival time, level, HP/shield/respawn, base HP, coins and kills.
   Treasures (tag `"treasure"`, invisible): sparkle within `hintRadius`, dig
   `digTime` s. Events: `"chest-opened"`, `"treasure-dug"`. Level up never opens
   over another paused screen (golem style pick / golem chest).
+- **Screen size can change (phones)**: on touch screens (short side < 900 px)
+  the game runs in FILL mode (`CFG.viewport.fill`, `pickViewport()`): no
+  fixed resolution, the canvas fills the whole screen, the short side is 720
+  game px, and rotating the phone resizes the view. So **read `width()` /
+  `height()` / `center()` when you draw, don't store them at startup** (an
+  object placed once with `pos(width() / 2, …)` must be moved in its
+  onUpdate, or when it's shown). Desktop is still a fixed 1280x720 letterbox.
+  Nav bar hidden on phones; fullscreen on first touch (Android,
+  `src/util/fullscreen.js`); `public/manifest.webmanifest` for Add to Home
+  Screen (iPhone).
 - **Level up stats** (chippe, `upgrade-effects.js`): level up cards write
   `player.stats = { speedMult, damageMult, attackSpeedMult }` (all start at 1).
   It is separate from `player.buffs` (auras, rewritten every frame), so both

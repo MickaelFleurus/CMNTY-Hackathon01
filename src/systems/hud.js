@@ -79,6 +79,8 @@ export function initHud() {
 
   hud.onUpdate(() => {
     const p = get("player")[0];
+    // keep centered when the screen size changes (phone rotation, fill mode)
+    waveLabel.pos.x = timeLabel.pos.x = width() / 2;
     waveLabel.text = hudState.wave > 0 ? `WAVE ${hudState.wave}` : "";
     if (!p?.frozen) hudState.time += dt();
     timeLabel.text = formatTime(hudState.time);

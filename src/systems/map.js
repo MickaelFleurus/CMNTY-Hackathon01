@@ -63,7 +63,7 @@ function frameAt(col, row) {
 }
 
 export function buildGround() {
-  const { tileSize, tileScale, gridW, gridH } = CFG.map;
+  const { tileSize, tileScale } = CFG.map;
   const size = tileSize * tileScale;
 
   const ground = add([
@@ -72,22 +72,40 @@ export function buildGround() {
     "ground",
   ]);
 
-  const tiles = [];
-  for (let i = 0; i < gridW * gridH; i++) {
-    tiles.push(ground.add([
-      sprite(TILE_ART, { frame: 0 }), // real variant set by placeAt()
-      scale(tileScale),
-      pos(
-        (i % gridW) * size,
-        Math.floor(i / gridW) * size,
-      ),
-    ]));
+  // The band covers the screen with a tile of margin on every side (desktop
+  // 1280x720: 30 x 18 tiles, the same as CFG.map.gridW / gridH).
+  // On phones the view follows the screen's shape (CFG.viewport.fill: tall
+  // in portrait, wide in landscape, and rotating resizes it), so the band is
+  // rebuilt whenever the screen needs more or fewer tiles.
+  const needW = () => Math.ceil(width() / size) + 3; // 1280 / 48 -> 30 (= CFG.map.gridW)
+  const needH = () => Math.ceil(height() / size) + 3; // 720 / 48 -> 18 (= CFG.map.gridH)
+  let gridW = 0;
+  let gridH = 0;
+  let tiles = [];
+
+  function buildTiles() {
+    tiles.forEach((t) => t.destroy());
+    gridW = needW();
+    gridH = needH();
+    tiles = [];
+    for (let i = 0; i < gridW * gridH; i++) {
+      tiles.push(ground.add([
+        sprite(TILE_ART, { frame: 0 }), // real variant set by placeAt()
+        scale(tileScale),
+        pos(
+          (i % gridW) * size,
+          Math.floor(i / gridW) * size,
+        ),
+      ]));
+    }
+    originCol = null; // re-pick every tile on the next update
   }
 
   // Band origin in world tile coords; re-snap + re-pick variants only when
   // the camera has moved into a new tile.
   let originCol = null;
   let originRow = null;
+  buildTiles();
 
   function placeAt(col, row) {
     originCol = col;
@@ -99,6 +117,8 @@ export function buildGround() {
   }
 
   ground.onUpdate(() => {
+    // the screen changed shape (phone rotation): resize the band first
+    if (needW() !== gridW || needH() !== gridH) buildTiles();
     // snap the tile band to the camera so it always covers the viewport;
     // aligned to the tile grid so tiling never shifts under the player
     const cam = getCamPos();

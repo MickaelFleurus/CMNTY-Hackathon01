@@ -96,6 +96,7 @@ export function startDevTools(player) {
     },
   ]);
   label.onUpdate(() => {
+    label.pos = vec2(width() - 16, 16); // follows the screen width (phone rotation)
     const lines = [];
     if (player.attackDisabled) lines.push(`DEV: player attack OFF (${DEV.toggleAttackKey.toUpperCase()})`);
     if (enemiesFrozen) lines.push(`DEV: enemies FROZEN (${DEV.freezeEnemiesKey.toUpperCase()})`);
