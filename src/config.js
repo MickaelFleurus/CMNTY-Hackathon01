@@ -555,7 +555,7 @@ export const RUN_OVER = {
   // animation, then this many s of stillness before the game-over screen
   deathAnimTime: 0.5, // s: Hero_Knight "death" = 6 frames at 12 fps
   afterDeathPause: 1,
-  overlayOpacity: 0.75, // game-over screen backdrop: the frozen game shows through
+  overlayOpacity: 0.88, // game-over screen backdrop: the frozen game shows through, faintly
 };
 
 export const TOWER = {
