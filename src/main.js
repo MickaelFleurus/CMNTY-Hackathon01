@@ -39,6 +39,7 @@ import { loadBonusAssets, startBonusDrops } from "./systems/bonus.js";
 import { startBaseAlert } from "./systems/base-alert.js";
 import { startBossWarning } from "./systems/boss-warning.js";
 import { loadVignette, startVignette } from "./systems/vignette.js";
+import { startScreenShake } from "./systems/screen-shake.js";
 import { loadBaseSprites, makeBase, addCoins } from "./systems/base.js";
 import { loadPortalSprites, makePortal } from "./systems/portal.js";
 import { loadShopSprites, makeShop } from "./systems/shop.js";
@@ -147,6 +148,7 @@ startBonusDrops(player);
 startBaseAlert();
 startBossWarning();
 startVignette();
+startScreenShake();
 startDevTools(player);
 
 // Global key handlers still fire while the level up screen pauses the game

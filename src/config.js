@@ -927,6 +927,20 @@ export const VIGNETTE = {
   },
 };
 
+// Screen shake (src/systems/screen-shake.js): only on rare, big moments.
+// Values are KAPLAY shake() strengths: the view jumps by up to that many px
+// and settles in a fraction of a second.
+export const SCREEN_SHAKE = {
+  toggleKey: "v", // turns screen shake off / on (remembered in the browser)
+  golemDying: 16,
+  bossDefeated: 14,
+  bossWave: 10,
+  bomb: 9,
+  shockwave: 4,
+  playerHit: 3,
+  hitCooldown: 0.5, // s: at most one hit shake per this, so a crowd doesn't rattle the screen
+};
+
 // Boss warning (src/systems/boss-warning.js): announced one wave ahead.
 // Name colors in banners (boss-warning.js, base-alert.js): each boss and the
 // golem get their own color so their names stand out. Bosses by display name
