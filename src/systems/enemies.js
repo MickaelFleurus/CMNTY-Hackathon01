@@ -519,6 +519,9 @@ function killEnemy(enemy) {
 // Sweep behavior (bats): fly straight across the screen, leave it, wait, come
 // back. The group shares one sweep state (a virtual center moving in a straight
 // line); each member flies to center + its formation offset.
+// While they wait off-screen before turning back, they're HIDDEN and out of
+// play: no "enemy" tag (weapons / the tower don't aim at them) and out of the
+// hit grid (no projectile hits, no contact damage).
 // ---------------------------------------------------------------------------
 
 function aimSweep(s, cfg) {
@@ -563,6 +566,14 @@ function sweep(enemy) {
       s.wait -= dt();
       if (s.wait <= 0) aimSweep(s, cfg); // come back across the screen
     }
+  }
+
+  // hidden + out of play while waiting to turn back (see the section header)
+  const away = s.phase === "wait";
+  if (!!enemy.hidden !== away) {
+    enemy.hidden = away;
+    if (away) enemy.untag("enemy");
+    else enemy.tag("enemy");
   }
 
   // fly to my slot in the formation (a little faster than the center, so
@@ -629,6 +640,7 @@ function buildGrid() {
   const c = ENEMY.gridCell;
   grid.clear();
   for (const e of live) {
+    if (e.hidden) continue; // bats waiting off-screen: can't hit or be hit
     const key = cellKey(Math.floor(e.pos.x / c), Math.floor(e.pos.y / c));
     let cell = grid.get(key);
     if (!cell) grid.set(key, (cell = []));

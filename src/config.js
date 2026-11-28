@@ -464,6 +464,9 @@ export const TOWER = {
   fireInterval: { base: 0.8, perLevel: -0.08, min: 0.3 }, // s
   damage: { base: 12, perLevel: 6 },
   projectileSpeed: 420, // px/s
+  // When a wave ends, the golem gets back this fraction of the HP it lost
+  // during that wave (lost 80 → +40). Never above its max HP.
+  waveEndRepair: 0.5,
 };
 
 // Smart enemy targeting (docs/game-design-v2.md → "Enemy targeting").
